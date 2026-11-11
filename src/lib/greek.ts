@@ -24,6 +24,27 @@ export function lookupForm(word: string): string {
   return w;
 }
 
+const isElided = (word: string) => /[ʼ’'᾽]$/.test(word);
+
+/** Lower-case the first letter, for words capitalised only because they begin a sentence. */
+const decapitalise = (w: string) => w.charAt(0).toLocaleLowerCase("el") + w.slice(1);
+
+/**
+ * The dictionary forms worth trying for a word as printed, when there is no analysis to give its dictionary form: the word
+ * with a grave made acute; an elided word with each vowel it may have lost; and each of these without a sentence's capital.
+ */
+export function candidates(word: string): string[] {
+  const base = lookupForm(word);
+  const out: string[] = [];
+  const add = (w: string) => { if (w && !out.includes(w)) out.push(w); };
+  if (isElided(word)) {
+    for (const v of ["α", "ε", "ο", "ι"]) add(base + v);
+    for (const v of ["ά", "έ", "ό", "ί"]) add(base + v);
+  } else add(base);
+  for (const w of [...out]) if (w !== decapitalise(w)) add(decapitalise(w));
+  return out;
+}
+
 /** Plain-text normalisation for searching: no accents, breathings or case; final sigma folded. */
 export function fold(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ̓̔͂ͅ]/g, "").toLowerCase().replace(/[ςϲ]/g, "σ");

@@ -1,0 +1,341 @@
+/* =====================================================================
+   Mathesis Stoicheion: design tokens for "the printed page with real photographs", chosen by the owner on 2026-10-22
+   ("Printed page with real photos is our new design choice"; the sample is printed-photos.html, and the rules are in
+   redesign/printed-page/SPEC.md and DECISIONS.md in the project files). A fine two-language edition: warm paper, black ink,
+   red for what matters, wide margins, and real colour photographs set as numbered plates. Nothing glows, nothing is carved,
+   nothing moves once it has inked in.
+
+   Paper or Night follows the device (decision 2): Paper when the phone or computer is in light mode, Night when it is in
+   dark mode, and Settings can choose either for good (data-theme="paper" or "night" on <html>, written by lib/settings.ts).
+
+   Two layers:
+   - primitives: the paper's and the night page's colours, the spacing steps and the type sizes;
+   - semantic tokens, which the site's styles use (--bg, --ink, --accent, --rule …). Components use only these, so a
+     restyle changes this file. (Some names, --slab, --groove, --lintel…, are older than the printed page: they now name
+     a hairline frame, a rule across the page and the paper of the bars.)
+   Every value the site paints with is named here; scripts/check-tokens.mjs stops new hardcoded values creeping in.
+   ===================================================================== */
+
+:root {
+  /* ---------------------------------------------------------- primitives */
+  /* the paper (SPEC.md 3.1) */
+  --paper: #f3ece0;
+  --paper-2: #e9dfcd;      /* the second surface: a plate's mount, a margin, a pressed key */
+  --paper-ink: #1e1a15;
+  /* the softer inks, for captions, notes, credits and the English beside the Greek: deeper than the sample's, so every
+     line of words reads at 7 : 1 or more on the paper and on its second surface (the owner, 2026-10-23: "the grey text
+     can be a little unintelligible when reading"; scripts/check-ink.mjs) */
+  --paper-ink-2: #41382f;  /* captions: 9.8 : 1 on the paper */
+  --paper-ink-3: #4f4336;  /* small print and credits: 8.2 : 1 on the paper */
+  --paper-rubric: #a3301a; /* red: headings' numbers, the Σ, links, the chosen thing */
+  --paper-rubric-2: #c4553a;
+  --paper-word-on: #e4d8c2;  /* the word looked up: a soft tone of the paper behind it (the quiet desk, ticket 04) */
+  /* the night page */
+  --night: #1b1814;
+  --night-2: #24201a;
+  --night-ink: #ebe1cf;
+  --night-ink-2: #d2c4ab;  /* 10.3 : 1 on the night page */
+  --night-ink-3: #bdad93;  /* 8 : 1 */
+  --night-faint: #8c7f6c;
+  --night-rubric: #e0805f;
+  --night-rubric-2: #f09a7b;
+  --night-word-on: #3a3127;
+  /* the few other colours a page needs, chosen to sit on paper and on the night page alike */
+  --verdigris: #3f6b5f;    /* the one cool mark (well established; the second mark in the reader) */
+  --ochre-ink: #8a5a12;    /* debated; finds in the reader */
+  --sage-ink: #4a6b3c;     /* done, right */
+  /* the four pens a reader highlights the Greek with (Mine), the same on paper and at night */
+  --pen-red: #c0492b;
+  --pen-ochre: #d9a441;
+  --pen-blue: #4f7ca8;
+  --pen-green: #6e9a5b;
+  /* a scribe's page, in the reader's "How it was written" (Manuscript.module.css): parchment and its brown ink */
+  --vellum: #d9c49a;
+  --vellum-ink: #3b2110;
+
+  /* spacing: 4, 8, 12, 16, 24, 36, 56 and 80 px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 36px;
+  --space-7: 56px;
+  --space-8: 80px;
+  /* hairlines: the few gaps of a line's own width, outside the scale */
+  --hair: 1px;
+  --hair-2: 2px;
+
+  /* type sizes: a book's, its text set in EB Garamond at 19 px on a computer and 18 px on a phone (the sample's body).
+     Every size of words on the site is one of these (scripts/check-design.mjs); only lettering in GFS Didot (titles,
+     numerals, the logo) and the reader's own Greek size stand outside them. */
+  --step--2: 0.75rem;                         /* small capitals spaced wide: labels, kickers, plate numbers */
+  --step--1: 0.875rem;                        /* captions, credits, small print */
+  --step-0: 1rem;                             /* a quieter line beside the text: a note, a hint, a gloss */
+  --step-sub: 1.125rem;                       /* a small heading, a row's name */
+  --step-text: 1.1875rem;                     /* the text itself (18 px on phones and narrow screens, below) */
+  --step-1: 1.25rem;                          /* a lede */
+  --step-2: 1.6rem;                           /* h3 */
+  --step-3: clamp(1.9rem, 3.4vw, 2.6rem);     /* h2 */
+  --step-4: clamp(2.8rem, 6.6vw, 5.6rem);     /* a page's title */
+  /* the Greek being read, when the reader has not chosen a size (the quiet desk, ticket 10, the owner, 2026-10-30): 18 px on a phone 390 px wide, growing with the
+     window to 26 px from 1100 px on, where the look-up's note stands in the margin. The cap is 26 px, in px and not in rem: above 1600 px the rem itself grows,
+     to 18 px (--root-grow, below), and 1.625rem would have set the Greek at 29.25 px on a 1920 px screen. A size the reader chooses is --greek-chosen
+     (lib/settings.ts, applySettings), which wins everywhere; the reader's own rule is in Reader.module.css, and the rest of the site's in globals.css (--greek-size). */
+  --greek-auto: clamp(1.125rem, 0.85rem + 1.13vw, 26px);
+
+  /* typefaces, three and no more (SPEC.md 3.2): EB Garamond for English, GFS Didot for titles, Greek room names and the
+     logo, Gentium Book Plus for Greek being read. The next/font variables are set in app/layout.tsx. Each list starts with
+     the typefaces' own arrows and signs (--font-*-signs: only those few signs, so for every other letter the browser goes
+     on to the typeface itself); without them a device would draw "→" or "✓" in a font of its own. */
+  --face-garamond: var(--font-garamond-signs), var(--font-gentium-signs), var(--font-garamond), "EB Garamond", var(--font-gentium), Georgia, serif;
+  --face-didot: var(--font-gentium-signs), var(--font-garamond-signs), var(--font-didot), "GFS Didot", var(--font-gentium), serif;
+  --face-gentium: var(--font-gentium-signs), var(--font-garamond-signs), var(--font-gentium), "Gentium Book Plus", var(--font-garamond), serif;
+  --face-ipa: var(--font-gentium-ipa), var(--face-gentium); /* the sounds in the IPA: Gentium's letters with their marks */
+
+  /* motion (decision 3): one movement only, ink-in. Text and photographs settle onto the page as they arrive, then nothing
+     moves. Reduced motion turns it off (globals.css). Quick colour changes under the hand are not movement. */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ink-in: 1.4s;          /* how long a line takes to ink in */
+  --ink-step: 0.12s;       /* each line a step after the one before */
+  --dur-quick: 0.2s;
+  --dur: 0.4s;
+  --dur-slow: 0.6s;
+  --enter-step: var(--ink-step);
+
+  /* the small triangle of a fold (pointing right while it is shut, down when open) and of a button that plays: drawn,
+     not set in type, since none of the three typefaces has one. A box of --tri-size, painted in the colour of the words
+     (background: currentColor) and cut to one of these shapes with clip-path. */
+  --tri-size: 0.46em;
+  --tri-right: polygon(0 0, 100% 50%, 0 100%);
+  --tri-down: polygon(0 0, 100% 0, 50% 100%);
+  --tri-up: polygon(50% 0, 100% 100%, 0 100%);
+
+  /* shape: hairlines and square corners, as a printed page has */
+  --radius: 0px;
+  --radius-round: 50%;
+
+  /* layers: just above the header */
+  --z-over-header: 31;
+  --z-bar: 5;
+  /* the reader's foot bar and the menus that rise from it (the quiet desk, ticket 09, the owner, 2026-10-30): above the side panels (40) and
+     Listen's player (45), under the passage toolbar (55) */
+  --z-foot: 46;
+  /* a small leaf of paper laid over the page, and a sheet rising from the foot of the screen (the reader's Aa, Study and Go to) */
+  --shadow-leaf: 0 18px 40px -22px var(--shadow);
+  --shadow-sheet: 0 -8px 24px -16px var(--shadow);
+
+  /* layout. The type area fills a computer's screen as it fills a sheet, inside a margin of a twentieth of the window
+     either side (the owner, 2026-10-23: "the pc version also doesn't use a lot of the available space on the page";
+     scripts/check-room.mjs); running text keeps its own measure, about 80 characters to a line, however wide the page. */
+  --gutter: clamp(16px, 4vw, 56px);
+  --maxw: 1760px;
+  /* (in em, not ch: a ch is the width of the face's nought, which changes when the web face replaces its stand-in, and
+     every paragraph would rewrap a moment after the page appears; scripts/check-heads.mjs) */
+  --measure: 30em;
+  /* above 1600 px the type grows a little with the window, up to 18 px to the rem */
+  --root-grow: clamp(100%, calc(100% + (100vw - 1600px) / 160), 112.5%);
+  /* the date's column in a timeline set as a chronology table */
+  --date-col: 11rem;
+  /* a part of reading on a wide screen, as a book sets it: its heading hung in the left margin, the text at its measure,
+     a narrower margin to the right (scripts/check-room.mjs) */
+  --hang-cols: minmax(11rem, 1fr) minmax(0, 46rem) minmax(0, 0.5fr);
+  --hang-gap: clamp(32px, 4vw, 72px);
+  --page-foot: clamp(32px, 5vw, 56px);        /* the room under a page's last part, above the footer (the lyre, the potter) */
+  --tap: 44px;
+  /* the reader's side panel (vocabulary, find, places…), and its width on a narrower computer */
+  --side-panel: 400px;
+  --side-panel-narrow: 340px;
+  /* the reader's margin on a computer, where the look-up is written as a note beside its line (the quiet desk, ticket 04) */
+  --margin-note: 300px;
+  /* the padding above and below a line of text that makes it a finger's target, --tap tall, whatever its size (lh: the
+     line's own height, where the token is used). The browser lays boxes out in 64ths of a pixel and rounds each part
+     down, so the exact half came out at 43.98 px, and a link in a list ran a hair under the next one's; half a pixel
+     more each side keeps every target at least --tap tall */
+  --tap-pad: calc((var(--tap) - 1lh) / 2 + 0.5px);
+}
+/* a wide screen: the margin grows with the window, a twentieth of it either side */
+@media (min-width: 1400px) { :root { --gutter: 5vw; } }
+
+/* ---------------------------------------------------------- the roles: Paper */
+:root,
+:root[data-theme="paper"] {
+  --bg: var(--paper);
+  --bg-deep: var(--paper-2);
+  --bg-2: var(--paper-2);
+  --word-on: var(--paper-word-on);
+  --surface: var(--paper);
+  --ink: var(--paper-ink);
+  --ink-2: var(--paper-ink-2);
+  --ink-3: var(--paper-ink-3);
+  --rubric: var(--paper-rubric);
+  --rubric-2: var(--paper-rubric-2);
+  --rubric-on-ink: var(--night-rubric);   /* red on a block of ink: the dark ink takes the night page's red */
+  --rule: rgba(30, 26, 21, 0.2);
+  --rule-2: rgba(30, 26, 21, 0.1);
+  --paper-shade: rgba(120, 90, 50, 0.09);   /* the paper's still, faint fibre at its edges (globals.css) */
+  --gutter-shade: rgba(80, 55, 25, 0.12);   /* the fold between two facing pages */
+  --shadow: rgba(40, 28, 14, 0.18);
+  --blue: var(--verdigris);
+  --ochre: var(--ochre-ink);
+  --legend: #8a3e1e;
+  --ok: var(--sage-ink);
+  --map-land-wash: rgba(160, 130, 90, 0.28);
+  --map-sea-wash: rgba(225, 207, 174, 0.6);
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231e1a15' stroke-width='1.3'/%3E%3C/svg%3E");
+  /* the sign at the end of a row that takes you to another page: the icons' chevron (components/Icon.tsx), as a mask,
+     so the row paints it in its own ink */
+  --go-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+  /* Colour by case in the reader: after Okabe and Ito's colours for colour-blind readers, deepened for paper so each line
+     stands at 3 : 1 or more on it, and kept at least 45 apart as readers with protanopia, deuteranopia or tritanopia see
+     them (each case also has its own kind of line: Reader.module.css, scripts/check-reader.mjs) */
+  --case-nom: #0b5394; --case-gen: #6b4f00; --case-dat: #00916e; --case-acc: #d55e00; --case-voc: #cf5fa0;
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------- the roles: Night (the device's dark mode, or chosen) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="paper"]) {
+    --bg: var(--night); --bg-deep: var(--night-2); --bg-2: var(--night-2); --surface: var(--night); --word-on: var(--night-word-on);
+    --ink: var(--night-ink); --ink-2: var(--night-ink-2); --ink-3: var(--night-ink-3);
+    --rubric: var(--night-rubric); --rubric-2: var(--night-rubric-2); --rubric-on-ink: var(--paper-rubric);
+    --rule: rgba(235, 225, 207, 0.2); --rule-2: rgba(235, 225, 207, 0.1);
+    --paper-shade: rgba(0, 0, 0, 0.22); --gutter-shade: rgba(0, 0, 0, 0.28); --shadow: rgba(0, 0, 0, 0.5);
+    --blue: #8fb5a8; --ochre: #d9a85a; --legend: #e09a7a; --ok: #9fc39a;
+    --map-land-wash: rgba(92, 72, 50, 0.45); --map-sea-wash: rgba(10, 9, 8, 0.6);
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23ebe1cf' stroke-width='1.3'/%3E%3C/svg%3E");
+    --case-nom: #56b4e9; --case-gen: #d9c24a; --case-dat: #009e73; --case-acc: #d55e00; --case-voc: #cc79a7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="night"] {
+  --bg: var(--night); --bg-deep: var(--night-2); --bg-2: var(--night-2); --surface: var(--night); --word-on: var(--night-word-on);
+  --ink: var(--night-ink); --ink-2: var(--night-ink-2); --ink-3: var(--night-ink-3);
+  --rubric: var(--night-rubric); --rubric-2: var(--night-rubric-2); --rubric-on-ink: var(--paper-rubric);
+  --rule: rgba(235, 225, 207, 0.2); --rule-2: rgba(235, 225, 207, 0.1);
+  --paper-shade: rgba(0, 0, 0, 0.22); --gutter-shade: rgba(0, 0, 0, 0.28); --shadow: rgba(0, 0, 0, 0.5);
+  --blue: #8fb5a8; --ochre: #d9a85a; --legend: #e09a7a; --ok: #9fc39a;
+  --map-land-wash: rgba(92, 72, 50, 0.45); --map-sea-wash: rgba(10, 9, 8, 0.6);
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23ebe1cf' stroke-width='1.3'/%3E%3C/svg%3E");
+  --case-nom: #56b4e9; --case-gen: #d9c24a; --case-dat: #009e73; --case-acc: #d55e00; --case-voc: #cc79a7;
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------- the maps
+   The small maps (the reader's Places, the Treasury's places, the Explore card) are printed like an atlas's plates: the
+   land a warm tint of the paper, the sea a shade darker, the coast a fine line of ink, the names in ink with a halo of the
+   land. The Periplus lies on NASA's satellite picture, softened for the page (--map-dim multiplies it). */
+:root {
+  --map-land: #e6d8bd; --map-sea: #cfc3ab; --map-coast: rgba(30, 26, 21, 0.45); --map-wave: rgba(30, 26, 21, 0.05);
+  --map-name: #1e1a15; --map-halo: #e6d8bd; --map-accent-sea: #a3301a;
+  --map-edge: #b9aa8e; --map-dim: #f3ece0; --map-shadow: rgba(40, 28, 14, 0.4);
+  --map-sea-name: #2f4f5a; --map-sea-halo: rgba(207, 195, 171, 0.8); --map-region: #5c5043; --map-region-halo: rgba(243, 236, 224, 0.75);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="paper"]) {
+    --map-land: #3b3026; --map-sea: #0f1011; --map-coast: rgba(235, 225, 207, 0.34); --map-wave: rgba(235, 225, 207, 0.05);
+    --map-name: #ebe1cf; --map-halo: #3b3026; --map-accent-sea: #e0805f;
+    --map-edge: #15120f; --map-dim: #858b9c; --map-shadow: #000;
+    --map-sea-name: #c4dae6; --map-sea-halo: rgba(3, 10, 22, 0.75); --map-region: #eadbc0; --map-region-halo: rgba(0, 0, 0, 0.65);
+  }
+}
+:root[data-theme="night"] {
+  --map-land: #3b3026; --map-sea: #0f1011; --map-coast: rgba(235, 225, 207, 0.34); --map-wave: rgba(235, 225, 207, 0.05);
+  --map-name: #ebe1cf; --map-halo: #3b3026; --map-accent-sea: #e0805f;
+  --map-edge: #15120f; --map-dim: #858b9c; --map-shadow: #000;
+  --map-sea-name: #c4dae6; --map-sea-halo: rgba(3, 10, 22, 0.75); --map-region: #eadbc0; --map-region-halo: rgba(0, 0, 0, 0.65);
+}
+
+/* ---------------------------------------------------------- the roles every stylesheet uses, made from the above.
+   Paper and Night are switched on <html> itself, so these follow whichever is in force. */
+:root {
+  /* the accent is the red; there is no gold */
+  --accent: var(--rubric);
+  --accent-2: var(--rubric);
+  --accent-ink: var(--bg);           /* text on a red field */
+  --band: var(--rule);
+  --cut-l: transparent;
+  --veil: color-mix(in srgb, var(--bg) 70%, transparent);   /* behind a dialog: the page, dimmed like a leaf turned over it */
+
+  /* surfaces: on a printed page a panel is a hairline frame on the paper, never a raised box */
+  --field: transparent;
+  --field-edge: inset 0 0 0 1px var(--rule);
+  /* the chosen one of a row of framed choices: a red rule along its top (a shelf in the census, a song on the lyre) */
+  --chosen-top: inset 0 2px 0 var(--rubric);
+  /* a part's rule of ink drawn as a line along a framed box's top */
+  --part-edge: inset 0 1px 0 var(--ink);
+  --slab: transparent;
+  --slab-edge: inset 0 0 0 1px var(--rule);
+  --slab-lit: var(--bg-2);
+  --moulding: 1px solid var(--rule-2);
+  --moulding-in: -5px;
+  /* a rule across the page */
+  --groove: var(--rule);
+  --lip: transparent;
+  --cut-line: linear-gradient(var(--groove) 0 1px, var(--lip) 1px 2px);
+  --cut-line-v: linear-gradient(90deg, var(--groove) 0 1px, var(--lip) 1px 2px);
+  --cut-under: inset 0 -1px 0 var(--groove);
+  --cut-over: inset 0 1px 0 var(--groove);
+  --cut-left: inset 1px 0 0 var(--groove);
+  --frame-line: 0 0 0 1px var(--rule);
+  /* a call-out's edge: a red rule down its left, as a printed note in the margin */
+  --inlay-left: inset 1px 0 0 var(--rubric);
+  --inlay-left-ok: inset 1px 0 0 var(--ok);
+  --inlay-left-ochre: inset 1px 0 0 var(--ochre);
+  --inlay-left-blue: inset 1px 0 0 var(--blue);
+  --inlay-left-legend: inset 1px 0 0 var(--legend);
+  --inlay-top: inset 0 1px 0 var(--rubric);
+  --inlay-top-blue: inset 0 1px 0 var(--blue);
+  --chosen-foot: inset 0 -2px 0 var(--rubric);
+  /* a channel for a bar or a meter, and the ink that fills it */
+  --channel: var(--rule-2);
+  --channel-edge: inset 0 0 0 1px var(--rule);
+  --inlay: linear-gradient(var(--rubric), var(--rubric));
+  --inlay-edge: 0 0 0 0 transparent;
+  /* the same lines under plain names (the quiet desk, ticket 03): the reader uses these; the older names above (cut,
+     slab, inlay, groove, channel: from the stone look) stay only for the pages not yet tidied */
+  --rule-under: inset 0 -1px 0 var(--rule);
+  --rule-over: inset 0 1px 0 var(--rule);
+  --rule-left: inset 1px 0 0 var(--rule);
+  --rule-box: inset 0 0 0 1px var(--rule);
+  --rule-round: 0 0 0 1px var(--rule);
+  --rule-band: linear-gradient(var(--rule) 0 1px, transparent 1px 2px);
+  --red-left: inset 1px 0 0 var(--rubric);
+  --ok-left: inset 1px 0 0 var(--ok);
+  --red-fill: linear-gradient(var(--rubric), var(--rubric));
+  /* a key's raised edge, a boss and its ring */
+  --bezel: 0 0 0 1px var(--bg), 0 0 0 2px var(--ink-3);
+  --gem-shine: none;
+  --boss: var(--bg);
+  --boss-edge: 0 0 0 1px var(--ink);
+  --warn: var(--ochre);
+  --danger: var(--rubric);
+
+  /* chosen things (a pressed key, the chosen tab): the ink itself, with paper letters, as the sample's .seg */
+  /* red on ink: at Night the ink is light, so the red is the paper's own (each reads at 4.5 : 1 or more on its ink:
+     e2e/a11y.spec.ts, the quick search's chosen result) */
+  --accent-on-ink: var(--rubric-on-ink);
+  --accent-ink-on-ink: var(--ink);
+  --ink-2-on-ink: color-mix(in srgb, var(--bg) 80%, var(--ink));
+  --inv-bg: var(--ink);
+  --inv-fg: var(--bg);
+  --sel-bg: var(--ink);
+  --sel-fg: var(--bg);
+  --sel-edge: var(--ink);
+
+  /* the main button: ink with paper capitals; under the hand it turns red (the sample's .btn) */
+  --btn-bg: var(--ink);
+  --btn-ink: var(--bg);
+
+  /* type roles */
+  --f-greek: var(--face-gentium);
+  --f-display: var(--face-garamond);
+  --f-title: var(--face-didot);
+  --f-body: var(--face-garamond);
+  --f-label: var(--face-garamond);
+
+  /* older names for the paper and the ink, so nothing that still names them falls back to a browser colour */
+  --frame: var(--bg);
+  --red: var(--rubric);
+  --sage: var(--ok);
+}

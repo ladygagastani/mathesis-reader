@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { lookupForm, GREEK_WORD, greekKey } from "./greek";
+import { candidates, lookupForm, GREEK_WORD, greekKey } from "./greek";
+
+describe("dictionary forms to try for a printed word", () => {
+  it("makes a grave acute and lowers a sentence's capital", () => {
+    expect(candidates("Καὶ")).toEqual(["Καί", "καί"]);
+  });
+  it("tries each vowel an elided word may have lost", () => {
+    expect(candidates("δʼ")).toEqual(["δα", "δε", "δο", "δι", "δά", "δέ", "δό", "δί"]);
+  });
+});
 
 describe("Greek helpers", () => {
   it("turns a final grave accent into an acute for look-up", () => {

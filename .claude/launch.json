@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "reader-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3200"],
+      "port": 3200
+    },
+    {
+      "name": "reader-built",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/serve-out.mjs", "3300"],
+      "port": 3300
+    }
+  ]
+}
