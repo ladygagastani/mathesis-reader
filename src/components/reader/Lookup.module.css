@@ -52,6 +52,7 @@
   padding-inline: var(--space-2); margin-left: calc(-1 * var(--space-2)); font-size: var(--step-0); color: var(--ink-2); text-decoration: none;
 }
 @media (hover: hover) { .back:global(.text-btn):hover { color: var(--rubric); } }
+@media (pointer: coarse) { .back:global(.text-btn) { min-height: var(--tap); padding-inline: var(--space-3); margin-left: calc(-1 * var(--space-3)); } }
 
 .body { display: grid; align-content: start; gap: var(--space-3); }
 
@@ -60,7 +61,6 @@
 .kind { font-size: var(--step--1); line-height: 1.4; color: var(--ink-2); }
 /* the meaning is never smaller than the Greek it explains */
 .meaning { font: 400 var(--step-2) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; font-size: max(var(--step-2), var(--greek-size)); }
-.sheet .meaning { font-size: max(calc((var(--step-1) + var(--step-2)) / 2), var(--greek-size)); }
 .role { font-size: var(--step-0); line-height: 1.4; color: var(--ink); }
 .grammar { color: var(--ink-2); }
 .unsure { font-size: var(--step--1); font-style: italic; color: var(--ink-2); }

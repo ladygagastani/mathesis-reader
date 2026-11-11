@@ -102,7 +102,8 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
         <button type="button" className={`icon-btn ${styles.x}`} onClick={onClose} aria-label="Close the look-up">×</button>
       </div>
 
-      <div className={styles.body} aria-live="polite" aria-busy={!l && !failed}>
+      {/* (the sheet's body scrolls by itself: it is in the Tab order, so a keyboard can scroll it) */}
+      <div className={styles.body} aria-live="polite" aria-busy={!l && !failed} tabIndex={place === "sheet" ? 0 : undefined}>
         {!l && !failed && <p className="muted">Looking it up…</p>}
         {failed && <p className="muted">The look-up could not be loaded ({got.error}). Check your connection and try the word again.</p>}
 

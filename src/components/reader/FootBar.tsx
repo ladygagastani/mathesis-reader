@@ -90,8 +90,8 @@ export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hi
       <div className={`wrap ${styles.barIn}`}>
         <Link href="/" className={`${styles.quiet} ${styles.back}`}><span aria-hidden="true">‹</span> Library</Link>
         <button ref={pagesBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.where}`} aria-expanded={open === "pages"} aria-haspopup="dialog"
-          onClick={() => toggle("pages")} aria-label={`Pages: ${where}, ${at}`}>
-          <span className={styles.part}>{where}</span><span className={styles.at}>{at}</span>
+          onClick={() => toggle("pages")}>
+          <span className="visually-hidden">Pages: </span><span className={styles.part}>{where}</span><span className="visually-hidden">, </span><span className={styles.at}>{at}</span>
         </button>
         <button ref={aaBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.aa}`} aria-expanded={open === "aa"} aria-haspopup="dialog"
           onClick={() => toggle("aa")} aria-label="Page and text"><span aria-hidden="true" className={styles.aaSign}>Aa</span></button>
@@ -116,10 +116,10 @@ export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hi
           <div className={styles.field}>
             <span className="label" id="size-label">Greek size</span>
             <div className={styles.sizeRow} role="group" aria-labelledby="size-label">
-              <button type="button" className="btn ghost" aria-label="Smaller Greek" disabled={s.greekSize === GREEK_SIZES.min}
-                onClick={() => setSettings({ greekSize: stepSize(s.greekSize, -1, shownRem()) })}><span lang="grc">α</span>−</button>
-              <button type="button" className="btn ghost" aria-label="Larger Greek" disabled={s.greekSize === GREEK_SIZES.max}
-                onClick={() => setSettings({ greekSize: stepSize(s.greekSize, 1, shownRem()) })}><span lang="grc">α</span>+</button>
+              <button type="button" className="btn ghost" disabled={s.greekSize === GREEK_SIZES.min}
+                onClick={() => setSettings({ greekSize: stepSize(s.greekSize, -1, shownRem()) })}>Smaller</button>
+              <button type="button" className="btn ghost" disabled={s.greekSize === GREEK_SIZES.max}
+                onClick={() => setSettings({ greekSize: stepSize(s.greekSize, 1, shownRem()) })}>Larger</button>
               <span className={styles.sizeNow} aria-live="polite">{size}</span>
               {s.greekSize !== "auto" && <button type="button" className="text-btn" onClick={() => setSettings({ greekSize: "auto" })}>Device size</button>}
             </div>

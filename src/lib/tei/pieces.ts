@@ -11,6 +11,8 @@ import type { Inline } from "./types";
 export type Piece =
   | { k: "w"; text: string }
   | { k: "t"; text: string }
+  /** Greek quoted inside English: drawn in the Greek face, not clickable */
+  | { k: "g"; text: string }
   | { k: "mark"; kind: string; n: string }
   | { k: "note"; text: string }
   | { k: "gap" };
@@ -25,15 +27,23 @@ export function repeatsMargin(n: string, margin: string): boolean {
   return parts.some((_, i) => { const c = parts.slice(i).join("."); return n === c || (/^\d+$/.test(c) && n === `${c}a`); });
 }
 
-/** `greek`: split the text into clickable words. `margin`: the passage's number, when this run opens the passage. */
+/**
+ * `greek`: split the text into clickable words. `margin`: the passage's number, when this run opens the passage.
+ * Text is drawn in Unicode's composed form (NFC), which is the same text: a few files spell a letter as a base letter and a
+ * separate mark (Α + ̓ for Ἀ in the Apology's heading), which no typeface of the three draws as a pair, so the device would
+ * draw that letter in a font of its own.
+ */
 export function pieces(c: Inline[], greek: boolean, margin?: string): Piece[] {
   const out: Piece[] = [];
   let lead = margin !== undefined;
   c.forEach((x, i) => {
     if (typeof x === "string") {
       if (x.trim()) lead = false;
-      if (!greek) { if (x) out.push({ k: "t", text: x }); return; }
-      for (const part of x.split(GREEK_WORD)) if (part) out.push(isGreekWord(part) ? { k: "w", text: part } : { k: "t", text: part });
+      for (const part of x.normalize("NFC").split(GREEK_WORD)) {
+        if (!part) continue;
+        if (!isGreekWord(part)) out.push({ k: "t", text: part });
+        else out.push({ k: greek ? "w" : "g", text: part });
+      }
       return;
     }
     if ("gap" in x) { lead = false; out.push({ k: "gap" }); return; }

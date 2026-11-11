@@ -68,7 +68,7 @@ const RowView = memo(function RowView({ row, cols, open, onToggle, credit }: {
               {open ? "Hide the English" : "Show the English"}
             </button>
             {open && (
-              <div className={styles.one}>
+              <div className={styles.one} data-reading="">
                 <Blocks blocks={row.trans} greek={false} />
                 {credit && <p className={styles.oneCredit}>{credit}</p>}
               </div>
@@ -77,7 +77,7 @@ const RowView = memo(function RowView({ row, cols, open, onToggle, credit }: {
         )}
       </div>
       {cols !== "greek" && (
-        <div className={styles.tr} lang="en">
+        <div className={styles.tr} lang="en" data-reading="">
           {english ? <Blocks blocks={row.trans} greek={false} /> : !row.cont && <span className={styles.untr}>This translation has no English for this passage.</span>}
         </div>
       )}
