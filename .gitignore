@@ -1,0 +1,9 @@
+_old-reference/
+node_modules/
+.next/
+out/
+dist/
+test-results/
+playwright-report/
+.env*
+!.env.example
