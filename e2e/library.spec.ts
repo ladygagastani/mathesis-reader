@@ -3,17 +3,24 @@ import { expect, test, type Page } from "@playwright/test";
 // The library of version 1 (SPEC.md, "The library"), clicked in a real browser at a computer's width and a phone's.
 const ready = async (page: Page) => { await page.locator("main h3").first().waitFor({ timeout: 30_000 }); };
 
-test("the catalogue lists every work by kind, and Authors A–Z as one list", async ({ page }) => {
+test("the catalogue opens as one A to Z list of authors, and By kind groups it", async ({ page }) => {
   await page.goto("/");
   await ready(page);
   await expect(page.locator("main h1")).toContainText("The library");
   await expect(page.getByText(/Greek works by \d+ authors/)).toBeVisible();
-  await expect(page.locator("main h3").first()).toHaveText("Epic");
-  await page.getByRole("radio", { name: "Authors A–Z" }).click();
-  await expect(page).toHaveURL(/sort=az/);
+  await expect(page.getByRole("radio", { name: "Authors A–Z" })).toHaveAttribute("aria-checked", "true");
   await expect(page.locator("main h3").first()).toHaveText("A");
   await page.getByRole("radio", { name: "By kind" }).click();
+  await expect(page).toHaveURL(/sort=kind/);
   await expect(page.locator("main h3").first()).toHaveText("Epic");
+  await page.getByRole("radio", { name: "Authors A–Z" }).click();
+  await expect(page).not.toHaveURL(/sort=/);
+  await expect(page.locator("main h3").first()).toHaveText("A");
+  // a fresh visit opens on A to Z again, whatever was chosen before
+  await page.getByRole("radio", { name: "By kind" }).click();
+  await page.goto("/");
+  await ready(page);
+  await expect(page.locator("main h3").first()).toHaveText("A");
 });
 
 test("the search finds an author by an English or Greek name, and a work by its title", async ({ page }) => {

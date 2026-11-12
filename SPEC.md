@@ -18,7 +18,8 @@ the sentence.
    every analysis the data gives. An uncertain parsing says so. Escape or the close button shuts it and puts the
    focus back on the word.
 3. **The library.** A search field first: an author, a title, or a Greek word in a title. Under it the catalogue,
-   authors A to Z, each with their works. A work opens straight into the reader.
+   always opening as one list of authors A to Z, each with their works; "By kind" groups them by kind of writing. A work
+   opens straight into the reader.
 4. **Sign-in and private texts.** You sign in with the existing Supabase project. Once signed in, your private texts
    (table `private_translations`) appear at the top of the library and open in the same reader. Nobody else sees
    them, and the app never reads or types your password.

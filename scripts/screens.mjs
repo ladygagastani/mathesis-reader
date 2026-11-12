@@ -5,7 +5,7 @@ export const SCREENS = [
   { name: "library", path: "/" },
   { name: "library, search", path: "/?q=plato" },
   { name: "library, an author opened", path: "/?q=plato", act: "author" },
-  { name: "library, A to Z", path: "/?sort=az" },
+  { name: "library, by kind", path: "/?sort=kind" },
   { name: "reader", path: "/read?w=tlg0059.tlg002" },
   { name: "reader, English shown", path: "/read?w=tlg0059.tlg002", act: "english" },
   { name: "reader, Both", path: "/read?w=tlg0059.tlg002", columns: "both" },

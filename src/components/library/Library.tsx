@@ -1,8 +1,9 @@
 "use client";
 /**
- * The library (SPEC.md, "The library"; ADR 0008, decision 11): the search first, then every work, by kind of writing with authors
- * A to Z inside each, or as one A to Z list of authors. An author with one work opens it at once; one with several shows them.
- * The address keeps the search (/?q=plato&show=english&sort=az), so the browser's Back returns to the same list.
+ * The library (SPEC.md, "The library"; ADR 0008, decision 11): the search first, then every work, as one A to Z list of authors
+ * (always the order a page opens in: the owner, 2026-11-12), or by kind of writing with authors A to Z inside each. An author with
+ * one work opens it at once; one with several shows them. The address keeps the search (/?q=plato&show=english&sort=kind), so
+ * the browser's Back returns to the same list.
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -17,7 +18,7 @@ import styles from "./Library.module.css";
 
 type Sort = "kind" | "az";
 const SHOWS: [Show, string][] = [["all", "All"], ["english", "With English"], ["greek", "Greek only"]];
-const SORTS: [Sort, string][] = [["kind", "By kind"], ["az", "Authors A–Z"]];
+const SORTS: [Sort, string][] = [["az", "Authors A–Z"], ["kind", "By kind"]];
 const n = (x: number) => x.toLocaleString("en-GB");
 
 interface Loaded { idx: CatalogIndex; names: Record<string, AuthorNames>; who: Record<string, AuthorMeta>; kinds: Map<string, string> }
@@ -69,7 +70,7 @@ export default function Library({ before }: { before?: React.ReactNode }) {
   const router = useRouter();
   const [query, setQuery] = useState(params.get("q") ?? "");
   const show = (SHOWS.find(([s]) => s === params.get("show"))?.[0] ?? "all") as Show;
-  const sort = (params.get("sort") === "az" ? "az" : "kind") as Sort;
+  const sort = (params.get("sort") === "kind" ? "kind" : "az") as Sort;
   const [got, setGot] = useState<{ data?: Loaded; error?: string }>({});
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function Library({ before }: { before?: React.ReactNode }) {
   /** the address follows the search and the choices, replaced rather than added to, so Back leaves the library */
   const setParam = (patch: Record<string, string>) => {
     const q = new URLSearchParams(params);
-    for (const [k, v] of Object.entries(patch)) { if (v && v !== "all" && v !== "kind") q.set(k, v); else q.delete(k); }
+    for (const [k, v] of Object.entries(patch)) { if (v && v !== "all" && v !== "az") q.set(k, v); else q.delete(k); }
     router.replace(q.size ? `/?${q}` : "/", { scroll: false });
   };
   useEffect(() => {
