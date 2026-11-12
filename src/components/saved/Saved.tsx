@@ -1,7 +1,8 @@
 "use client";
 /**
- * Saved (SPEC.md, "Notes and Saved"): every note on this device, book by book, the newest first in each. A note opens at its place in
- * the book, and can be edited or removed here. Says whether the notes go with a sync code or stay on this device only.
+ * Saved (SPEC.md, "Notes and Saved"; DESIGN.md, "Saved"): every note on this device, book by book, the newest first in each, with
+ * the books listed at the left to show one at a time. A note opens at its place in the book, and can be edited or removed here.
+ * Says whether the notes go with a sync code or stay on this device only.
  */
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -57,6 +58,10 @@ export default function Saved() {
     for (const n of shown(all).sort(byNewest)) by.set(n.work, [...(by.get(n.work) ?? []), n]);
     return [...by.values()];
   }, [all]);
+  // the one book shown, or every book ("")
+  const [only, setOnly] = useState("");
+  const showing = only && books.some((b) => b[0].work === only) ? books.filter((b) => b[0].work === only) : books;
+  const total = books.reduce((k, b) => k + b.length, 0);
 
   return (
     <main id="main" className={`wrap ${styles.page}`}>
@@ -70,13 +75,28 @@ export default function Saved() {
           {code && sync.state === "done" && <>Synced. These notes go with your code.</>}
         </p>
       </header>
-      {books.length === 0 && <p className={styles.none}>Nothing saved yet. In a book, tap a word, then Note.</p>}
-      {books.map((notes) => (
-        <section key={notes[0].work} className={styles.book} aria-labelledby={`b-${notes[0].id}`}>
-          <h2 id={`b-${notes[0].id}`} className={styles.bookName}>{notes[0].book}</h2>
-          <ul className={styles.list}>{notes.map((n) => <Item key={n.id} n={n} />)}</ul>
-        </section>
-      ))}
+      {books.length === 0 && <p className={styles.none}>Nothing saved yet. In a book, click a word, then Note; or select a few words.</p>}
+      {books.length > 0 && (
+        <div className={styles.cols}>
+          <nav className={styles.books} aria-label="Books">
+            <span className="label">Books</span>
+            <ul>
+              <li><button type="button" aria-pressed={!only || !showing.length} onClick={() => setOnly("")}>Every book<span className={styles.n}>{total}</span></button></li>
+              {books.map((b) => (
+                <li key={b[0].work}><button type="button" aria-pressed={only === b[0].work} onClick={() => setOnly(b[0].work)}>{b[0].book}<span className={styles.n}>{b.length}</span></button></li>
+              ))}
+            </ul>
+          </nav>
+          <div className={styles.notes}>
+            {showing.map((notes) => (
+              <section key={notes[0].work} className={styles.book} aria-labelledby={`b-${notes[0].id}`}>
+                <h2 id={`b-${notes[0].id}`} className={styles.bookName}>{notes[0].book}</h2>
+                <ul className={styles.list}>{notes.map((n) => <Item key={n.id} n={n} />)}</ul>
+              </section>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
