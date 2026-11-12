@@ -14,6 +14,8 @@ export const SCREENS = [
   { name: "library, search", path: "/?q=plato" },
   { name: "library, an author opened", path: "/?q=plato", act: "author" },
   { name: "library, by kind", path: "/?sort=kind" },
+  { name: "library, titles", path: "/?sort=titles" },
+  { name: "library, by period", path: "/?sort=period&vocab=familiar" },
   { name: "reader", path: "/read?w=tlg0059.tlg002" },
   { name: "reader, English shown", path: "/read?w=tlg0059.tlg002", act: "english" },
   { name: "reader, Both", path: "/read?w=tlg0059.tlg002", columns: "both" },
@@ -21,6 +23,8 @@ export const SCREENS = [
   { name: "look-up, more", path: "/read?w=tlg0059.tlg002", act: "more" },
   { name: "Aa", path: "/read?w=tlg0059.tlg002", act: "aa" },
   { name: "pages", path: "/read?w=tlg0059.tlg002", act: "pages" },
+  { name: "go to, found", path: "/read?w=tlg0059.tlg002", act: "find" },
+  { name: "keys", path: "/read?w=tlg0059.tlg002", act: "keys" },
   { name: "credits", path: "/credits" },
   { name: "sync", path: "/sync" },
   { name: "sync, synced", path: "/sync", synced: true },
@@ -32,6 +36,7 @@ export const SCREENS = [
   { name: "reader, notes", path: "/read?w=tlg0059.tlg002", notes: true, act: "notes" },
   { name: "note", path: "/read?w=tlg0059.tlg002", notes: true, act: "mark" },
   { name: "new note", path: "/read?w=tlg0059.tlg002", act: "new-note" },
+  { name: "not found", path: "/no-such-page" },
 ];
 
 /** Settings as the app keeps them (lib/settings.ts), set before the page loads; the Apology counts as opened before (no title page).
@@ -52,7 +57,7 @@ export async function open(page, base, s) {
   await page.locator("h1, main a, main button").first().waitFor({ timeout: 30_000 });
   if (s.path.startsWith("/read")) await page.locator("[role=button]").first().waitFor({ timeout: 30_000 });
   else if (s.path.startsWith("/sync")) await page.locator("main form, main .btn").first().waitFor({ timeout: 30_000 });
-  else if (s.path.startsWith("/credits") || s.path.startsWith("/saved")) await page.locator("main h1").waitFor({ timeout: 30_000 });
+  else if (s.path.startsWith("/credits") || s.path.startsWith("/saved") || s.path.startsWith("/no-such")) await page.locator("main h1").waitFor({ timeout: 30_000 });
   else await page.locator("main h3").first().waitFor({ timeout: 30_000 });
   if (s.act === "author") await page.locator("main button[aria-expanded]").first().click();
   await page.evaluate(() => document.fonts.ready);
@@ -64,6 +69,12 @@ export async function open(page, base, s) {
   }
   if (s.act === "aa") await page.getByRole("button", { name: "Text", exact: true }).click();
   if (s.act === "pages") await page.getByRole("button", { name: /^Go to:/ }).click();
+  if (s.act === "find") {
+    await page.getByRole("button", { name: /^Go to:/ }).click();
+    await page.getByLabel("Find in this book").fill("μελητ");
+    await page.getByRole("button", { name: "Find", exact: true }).click();
+  }
+  if (s.act === "keys") await page.getByRole("button", { name: "Keys" }).click();
   if (s.act === "private") await page.getByRole("button", { name: /^Private texts/ }).click();
   if (s.act === "make") await page.getByRole("button", { name: "Make a new code" }).click();
   if (s.act === "notes") await page.getByRole("button", { name: /^Notes/ }).click();
