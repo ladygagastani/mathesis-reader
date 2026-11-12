@@ -7,4 +7,3 @@
 .mast::before { bottom: 3px; border-bottom: 1px solid var(--rule); }
 .mast::after { bottom: 0; border-bottom: 1px solid var(--rule-2); }
 .in { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 68px; padding-block: var(--space-2); }
-.end { display: flex; align-items: center; gap: var(--space-3); }

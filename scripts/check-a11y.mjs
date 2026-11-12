@@ -20,7 +20,7 @@ const found = [];
 for (const [w, h, phone, theme] of [[1440, 900, false, "paper"], [1440, 900, false, "night"], [390, 844, true, "paper"], [390, 844, true, "night"]]) {
   for (const s of SCREENS) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: phone, isMobile: phone, reducedMotion: "reduce" });
-    await prepare(ctx, { theme, columns: s.columns });
+    await prepare(ctx, { theme, columns: s.columns, signedIn: s.signedIn });
     if (process.env.PROVE_CSS) await ctx.addInitScript((c) => addEventListener("load", () => document.head.append(Object.assign(document.createElement("style"), { textContent: c }))), process.env.PROVE_CSS);
     const page = await ctx.newPage();
     const at = `${s.name} ${w}px ${theme}`;
@@ -42,9 +42,12 @@ for (const [w, h, phone, theme] of [[1440, 900, false, "paper"], [1440, 900, fal
             if (el.disabled || el.closest("[inert], [aria-hidden=true]") || !shown(el)) continue;
             const b0 = el.getBoundingClientRect();
             if (b0.width >= 44 && b0.height >= 44) continue;
-            // a target inside running text: the sentence around it is its spacing (WCAG 2.5.8, inline)
+            // a target inside running text: the sentence around it is its spacing (WCAG 2.5.8, inline); and a word of the text being
+            // read, whose size is set by the text's line height wherever it stands, even alone on its line (WCAG 2.5.8: "otherwise
+            // constrained by the line-height")
             const block = el.parentElement?.closest("p, li, dd, span, div");
             if (getComputedStyle(el).display === "inline" && block && block.textContent.trim().length > el.textContent.trim().length + 2) continue;
+            if (el.matches("[data-u] [role=button]")) continue;
             el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
             const b = el.getBoundingClientRect(), cx = b.left + b.width / 2, cy = b.top + b.height / 2;
             const mine = (t) => t === el || el.contains(t);

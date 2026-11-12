@@ -22,6 +22,11 @@
 .orn { display: flex; justify-content: center; align-items: center; gap: var(--space-3); width: min(340px, 80%); margin: var(--space-5) auto 0; color: var(--rubric); }
 .orn::before, .orn::after { content: ""; height: 1px; flex: 1; background: var(--rubric); opacity: 0.6; }
 .tpEd { margin-top: var(--space-5); font-size: var(--step--1); color: var(--ink-3); }
+/* a private text's seal: small capitals in red in a red hairline frame (the old title page's) */
+.tpPrivate {
+  display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-1) var(--space-3);
+  font: 500 var(--step--2) / 1.35 var(--f-label); letter-spacing: 0.16em; text-transform: uppercase; color: var(--rubric); border: 1px solid var(--rubric);
+}
 .edKind { font-size: var(--step--2); letter-spacing: 0.16em; text-transform: uppercase; }
 
 /* ------------------------------------------------------------ the one-line title on every later opening: the Greek title in ink,
@@ -29,6 +34,8 @@
 .rlWrap { padding-block: var(--space-6) var(--space-3); }
 .rl { margin: 0 0 0 calc(var(--num-w) + var(--row-gap)); font: 400 var(--step-0) / 1.35 var(--f-body); letter-spacing: 0; color: var(--ink-2); }
 .rlGr { font-family: var(--f-greek); font-size: var(--step-1); color: var(--ink); }
+/* a private text: a lock after the line, in red (the old one-line title's) */
+.lock { display: inline-flex; margin-left: var(--space-2); color: var(--rubric); vertical-align: -0.15em; }
 
 /* ------------------------------------------------------------ the passages (the sample's .sec) */
 .text { padding-bottom: var(--space-5); }

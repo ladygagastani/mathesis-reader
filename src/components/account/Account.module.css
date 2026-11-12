@@ -1,0 +1,19 @@
+/* The sign-in page, as the library's head and a printed form: lines to write on, small-capital names over them, one main button. */
+.page { padding-bottom: var(--space-8); }
+.head { padding-block: clamp(28px, 5vh, var(--space-7)) var(--space-5); }
+.title { margin: 18px 0 10px; font-size: clamp(2.4rem, 5vw, 4rem); line-height: 1; letter-spacing: -0.015em; }
+.purpose { max-width: 31em; margin-top: var(--space-3); font-size: var(--step-sub); line-height: 1.5; color: var(--ink-2); }
+.box { display: grid; gap: var(--space-5); max-width: 28rem; padding-top: var(--space-5); border-top: 1px solid var(--ink); }
+.field { display: grid; gap: 2px; }
+.field :global(.label) { color: var(--ink-3); }
+.field input { width: 100%; min-height: var(--tap); padding: 6px 0; font: 400 var(--step-1) / 1.3 var(--f-body); }
+.row { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.error { margin-top: var(--space-4); color: var(--rubric); }
+.error:empty { display: none; }
+
+/* the masthead's link: no frame, ink-2, red under the hand, a finger's height */
+.link {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--tap); padding-inline: var(--space-1);
+  color: var(--ink-2); font-size: var(--step-0); text-decoration: none; transition: color var(--dur-quick) var(--ease);
+}
+@media (hover: hover) { .link:hover { color: var(--rubric); } }

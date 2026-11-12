@@ -40,6 +40,8 @@
 .status { padding-block: var(--space-5); }
 
 .part { margin-top: var(--space-5); }
+.private { margin-block: var(--space-5) var(--space-6); }
+.partCount :global(svg) { vertical-align: -0.2em; color: var(--rubric); }
 .partHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--ink); }
 .partName { font: 500 var(--step--2) / 1.35 var(--f-label); letter-spacing: 0.2em; text-transform: uppercase; color: var(--rubric); }
 

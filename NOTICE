@@ -1,0 +1,59 @@
+Mathesis Reader · Μάθησις Στοιχείων
+
+The code in this repository is MIT and the app's own writing is CC BY-SA 4.0 (see LICENSE).
+This file lists the material from other sources that the app shows, its licence, and what the app
+changes in it. The app's Credits page (src/app/credits/page.tsx) gives the same list, with links.
+None of this material is copied into the repository: the app reads it, when it is needed, from the
+old site (https://mathesisstoicheion.com/data/ and /packs/) and from GitHub. The test fixtures in
+test-fixtures/ and src/lib/lookup/fixtures/ are unchanged copies kept for the automated tests only.
+
+
+TEXTS AND TRANSLATIONS
+
+Shown exactly as published, never edited. The catalogue (the old site's data/catalog.json) is built
+from these collections, each pinned to one commit:
+
+- Perseus Digital Library, Tufts University: canonical-greekLit (PerseusDL/canonical-greekLit,
+  commit bcc5df0602f3b3fe6fefe1e1d575602a25ab1db6). CC BY-SA 4.0. doi:10.5281/zenodo.596309.
+  Perseus asks that any modifications be offered back to Perseus.
+- Open Greek and Latin, First Thousand Years of Greek (OpenGreekAndLatin/First1KGreek,
+  commit 8ee111eb44ecef4120c844e10749178d95d1f30c). CC BY-SA 4.0. doi:10.5281/zenodo.596723.
+- The editor and translator of each text, as named in that text file's header.
+
+
+WORDS AND DICTIONARIES
+
+- GLAUx, by Alek Keersmaekers: word analyses, sentence structure, and each work's genre.
+  CC BY-SA 4.0; some source texts and hand annotations inside GLAUx carry other licences, listed in
+  GLAUx's metadata. Keersmaekers, A. (2021), "The GLAUx corpus: methodological issues in designing a
+  long-term, diverse, multi-layered corpus of Ancient Greek", Proceedings of the 2nd International
+  Workshop on Computational Approaches to Historical Language Change, 39-50.
+- Liddell-Scott-Jones Greek-English Lexicon (LSJ): Text provided under a CC BY-SA license by Perseus
+  Digital Library, http://www.perseus.tufts.edu, with funding from The National Endowment for the
+  Humanities. Data accessed from https://github.com/PerseusDL/lexica/.
+- Dickinson College Commentaries Greek Core Vocabulary, by Christopher Francese and collaborators.
+  CC BY-SA 3.0.
+- Wikidata (authors' Greek names, other names, occupations and descriptions). CC0.
+
+
+FONTS AND SOFTWARE
+
+- EB Garamond (Georg Duffner and Octavio Pardo), GFS Didot (Greek Font Society) and Gentium Book
+  Plus (SIL International). SIL Open Font License 1.1. The old site's copies of the arrows and signs
+  of EB Garamond and Gentium Book Plus are in src/fonts/, with their licences beside them.
+- Next.js, React, supabase-js: MIT. saxes: ISC.
+- The icons on the buttons are Lucide's (https://lucide.dev), ISC License, Copyright (c) Lucide
+  Contributors 2022, portions Copyright (c) Cole Bemis 2013-2022 as part of Feather (MIT); copied as
+  drawings into src/components/Icon.tsx with the licence beside them.
+
+
+WHAT THIS APP CHANGES
+
+As CC BY-SA asks, the changes made to the material above:
+- Texts are split into citable passages and lined up with their translations. Their words are not
+  changed. Text is drawn in Unicode's composed form (NFC), which is the same text: a letter that a
+  file writes as a base letter and a separate mark is drawn as the one letter it is.
+- LSJ entries keep their wording; Beta Code is turned into Greek letters, and a short gloss is taken
+  from each entry for the look-up (both done by the old site's pipeline).
+- Works are grouped by kind of writing, from GLAUx's genres and Wikidata's occupations.
+- Wikidata's descriptions are shown with BCE and CE written as BC and AD.

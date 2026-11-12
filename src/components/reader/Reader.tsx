@@ -12,7 +12,7 @@ import { loadAuthorNames, titleCaps } from "@/lib/authors";
 import { describe } from "@/lib/catalog";
 import { lookupPlace, type LookupPlace } from "@/lib/lookup/placement";
 import type { WordAt } from "@/lib/lookup/lookup";
-import { openBook, type Book } from "@/lib/reader/book";
+import { openBook, SignInFirst, type Book } from "@/lib/reader/book";
 import type { Columns } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
 import { alignChunk, type Row } from "@/lib/tei/align";
@@ -109,7 +109,7 @@ export default function Reader() {
   const router = useRouter();
   const workId = params.get("w") ?? "";
   const { columns } = useSettings();
-  const [got, setGot] = useState<{ id: string; book?: Book; error?: string }>({ id: "" });
+  const [got, setGot] = useState<{ id: string; book?: Book; error?: string; signIn?: boolean }>({ id: "" });
   const [english, setEnglish] = useState<{ page: string; open: Set<string> }>({ page: "", open: new Set() });
   const [chosen, setWord] = useState<{ el: HTMLElement; at: WordAt; keyboard: boolean; page: string } | null>(null);
   const [layer, setLayer] = useState<1 | 2>(1);
@@ -119,7 +119,7 @@ export default function Reader() {
   useEffect(() => {
     if (!workId) return;
     let live = true;
-    openBook(workId).then((book) => { if (live) setGot({ id: workId, book }); }, (e: Error) => { if (live) setGot({ id: workId, error: e.message }); });
+    openBook(workId).then((book) => { if (live) setGot({ id: workId, book }); }, (e: Error) => { if (live) setGot({ id: workId, error: e.message, signIn: e instanceof SignInFirst }); });
     return () => { live = false; };
   }, [workId]);
 
@@ -150,7 +150,7 @@ export default function Reader() {
   }, []);
   const choose = useCallback((el: HTMLElement, keyboard: boolean) => {
     if (!book) return;
-    const at = wordAt(el, book.work.id, book.doc);
+    const at = wordAt(el, book.lookupWork, book.doc);
     if (!at) return;
     setWord((w) => { w?.el.removeAttribute("aria-current"); return { el, at, keyboard, page: pageKey }; });
     el.setAttribute("aria-current", "true");
@@ -212,6 +212,14 @@ export default function Reader() {
       </main>
     );
   }
+  if (got.id === workId && got.signIn) {
+    return (
+      <main id="main" className={`wrap ${styles.status}`}>
+        <p>This is one of your private texts. Sign in to open it.</p>
+        <Link className="btn" href={`/account?next=${encodeURIComponent(`/read?w=${workId}`)}`}><Icon name="sign-in" />Sign in</Link>
+      </main>
+    );
+  }
   if (got.id === workId && got.error) {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
@@ -226,7 +234,8 @@ export default function Reader() {
 
   const chunk = doc.chunks[page];
   const greekTitle = book.grc.label && /[Ͱ-Ͽἀ-῿]/.test(book.grc.label) ? book.grc.label : null;
-  const credit = book.tr ? `English: ${describe(book.tr, book.work.texts)}, Perseus Digital Library, CC BY-SA 4.0.` : null;
+  // (a private text's English is the owner's own, or the published one it carries: no Perseus credit)
+  const credit = book.tr && !book.private ? `English: ${describe(book.tr, book.work.texts)}, Perseus Digital Library, CC BY-SA 4.0.` : null;
   const sheetOpen = !!word && place === "sheet";
 
   const onText = (e: React.MouseEvent) => {
@@ -255,6 +264,7 @@ export default function Reader() {
           <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
           {greekTitle && <p className={styles.tpEn}>{book.work.title}</p>}
           <p className={styles.orn} aria-hidden="true">❦</p>
+          {book.private && <p className={styles.tpPrivate}><Icon name="lock" />Only you can see this</p>}
           <p className={styles.tpEd}>
             <span className={styles.edKind}>Greek</span> {describe(book.grc, book.work.texts)}
             {book.tr && <> · <span className={styles.edKind}>English</span> {describe(book.tr, book.work.texts)}</>}
@@ -265,6 +275,7 @@ export default function Reader() {
           <h1 className={styles.rl}>
             {greekTitle && <><span lang="grc" className={styles.rlGr}>{greekTitle}</span><span aria-hidden="true"> · </span></>}
             {book.author.name}, {book.work.title}, {chunk.label}
+            {book.private && <span className={styles.lock}><Icon name="lock" label="Only you can see this" /></span>}
           </h1>
         </div>
       )}

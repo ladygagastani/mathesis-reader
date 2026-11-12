@@ -70,3 +70,11 @@ test("the device at the head of the page leads home, and nothing scrolls sideway
   await page.getByRole("link", { name: /Mathesis Stoicheion, the library/ }).click();
   await expect(page).toHaveURL(/\/$/);
 });
+
+test("the credits name every source with its licence", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Credits and licences" }).click();
+  await expect(page).toHaveURL(/\/credits$/);
+  for (const name of ["Perseus Digital Library, canonical-greekLit", "GLAUx, by Alek Keersmaekers", "Liddell–Scott–Jones", "Dickinson College Commentaries", "Wikidata", "Lucide"])
+    await expect(page.getByRole("link", { name: new RegExp(name) })).toBeVisible();
+});
