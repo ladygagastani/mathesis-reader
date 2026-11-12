@@ -1,5 +1,5 @@
 /* The reader (DESIGN.md, "Reader"): the bar along the top; under it the text column, centred, with the passage numbers in red in
-   a rail at its left. The look-up floats by the word (Lookup.module.css). The Greek alone by default, a hairline between the passages. */
+   a rail at its left. The look-up slides in from the right (Lookup.module.css). The Greek alone by default, a hairline between the passages. */
 .reader {
   --greek-size: var(--greek-chosen, var(--greek-auto));
   /* the text column: the rail and 28 em of Greek (about 60 letters a line); English alone, 34 em of English; Both, the two side by side */
@@ -34,11 +34,16 @@
 .barGr { font-family: var(--f-greek); color: var(--ink); }
 .lock { display: inline-flex; margin-left: var(--space-2); color: var(--accent); vertical-align: -0.15em; }
 
-/* ------------------------------------------------------------ the text column, centred (the look-up floats by the word) */
+/* ------------------------------------------------------------ the text column, centred; it moves aside, as the look-up's panel
+   slides in from the right, where the window has room for both (lib/lookup/placement.ts) */
 .layout {
   display: grid; grid-template-columns: minmax(0, var(--col)); justify-content: center;
   padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)) max(var(--gutter), env(safe-area-inset-right, 0px));
+  transition: padding-right var(--dur-slow) var(--ease);
 }
+.reader[data-shift] .layout { padding-right: calc(var(--drawer) + var(--gutter)); }
+/* the column's full width, measured (never seen) */
+.colProbe { position: absolute; width: var(--col); height: 0; visibility: hidden; pointer-events: none; }
 .column { min-width: 0; padding-top: var(--space-5); }
 
 /* ------------------------------------------------------------ the passages (the sample's .sec) */

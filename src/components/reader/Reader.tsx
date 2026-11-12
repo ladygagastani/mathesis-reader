@@ -15,7 +15,7 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 import { loadAuthorNames, titleCaps } from "@/lib/authors";
 import { describe, versionOf } from "@/lib/catalog";
 import { fold } from "@/lib/greek";
-import { lookupPlace, type LookupPlace } from "@/lib/lookup/placement";
+import { lookupPlace, panelPlace, type LookupPlace } from "@/lib/lookup/placement";
 import type { WordAt } from "@/lib/lookup/lookup";
 import { openBook, SyncFirst, type Book } from "@/lib/reader/book";
 import { findInBook, type Found } from "@/lib/reader/find";
@@ -136,7 +136,7 @@ export default function Reader() {
   const workId = params.get("w") ?? "";
   const edParam = params.get("ed"), trParam = params.get("tr");
   const findParam = params.get("find");
-  const { columns } = useSettings();
+  const { columns, greekSize } = useSettings();
   const [got, setGot] = useState<{ id: string; book?: Book; error?: string; syncFirst?: boolean }>({ id: "" });
   // a menu the keyboard asks the bar for
   const [ask, setAsk] = useState<{ menu: Open; n: number } | null>(null);
@@ -145,8 +145,9 @@ export default function Reader() {
   const [english, setEnglish] = useState<{ page: string; open: Set<string> }>({ page: "", open: new Set() });
   const [chosen, setWord] = useState<{ el: HTMLElement; at: WordAt; keyboard: boolean; page: string } | null>(null);
   const [layer, setLayer] = useState<1 | 2>(1);
-  // the look-up's place: a card floating by the word, or a sheet on a phone
-  const [place, setPlace] = useState<LookupPlace>("float");
+  // the look-up's place: the panel from the right or the sheet; and whether the text moves aside for the panel
+  const [place, setPlace] = useState<LookupPlace>("drawer");
+  const [shift, setShift] = useState(true);
   const [editing, setEditing] = useState<{ e: Editing; page: string; back: HTMLElement | null } | null>(null);
   const allNotes = useNotes();
   // words selected in the text: a note can stand on them (the button under the selection)
@@ -337,36 +338,32 @@ export default function Reader() {
     if (n && el) { opened.current = `${pageKey}|${noteParam}`; queueMicrotask(() => openNote(n, el)); }
   }, [noteParam, notes, pageKey, openNote]);
 
+  // the look-up's place (lib/lookup/placement.ts): the panel from the right, with the text moved aside for it where the column fits
+  // beside it, or over the English where the Greek ends clear of it; otherwise the sheet
   useLayoutEffect(() => {
-    const measure = () => setPlace(lookupPlace(window.innerWidth));
+    const measure = () => {
+      const column = document.querySelector<HTMLElement>("[data-col-probe]")?.getBoundingClientRect().width ?? Infinity;
+      const greek = document.querySelector<HTMLElement>(`main[data-cols="both"] .${styles.grc}:not([hidden])`);
+      const p = panelPlace(document.documentElement.clientWidth, column, greek ? greek.getBoundingClientRect().right : null);
+      setPlace(p.place);
+      setShift(p.shift);
+    };
     measure();
     addEventListener("resize", measure);
     return () => removeEventListener("resize", measure);
-  }, []);
+  }, [rows, columns, greekSize]);
 
-  // a click anywhere but on the floating look-up or on another word puts the look-up away (another word is looked up instead)
-  useEffect(() => {
-    if (!word || place !== "float") return;
-    const away = (e: PointerEvent) => {
-      const t = e.target as Element | null;
-      if (!t || t.closest(`[data-lookup], .${styles.w}`)) return;
-      close();
-    };
-    document.addEventListener("pointerdown", away);
-    return () => document.removeEventListener("pointerdown", away);
-  }, [word, place, close]);
-
-  // on a phone the word stays in sight, above the sheet (as the sheet grows when its words arrive, too); the floating card keeps
-  // clear of the word by itself (useFloat.ts)
+  // the word stays in sight, never under the look-up: above the sheet (as the sheet grows when its words arrive, too), or, beside
+  // the panel, inside the screen below the bar
   useLayoutEffect(() => {
     const panel = document.querySelector<HTMLElement>("[data-lookup]");
-    if (!word || !panel || place !== "sheet") return;
+    if (!word || !panel) return;
     const keepClear = () => {
       const r = word.el.getBoundingClientRect();
       const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
-      const bottom = panel.getBoundingClientRect().top;
+      const bottom = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight;
       const room = 16;
-      if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + r.height });
+      if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + (place === "sheet" ? r.height : 0) });
       else if (r.top < bar + room) window.scrollBy({ top: r.top - bar - room * 4 });
     };
     keepClear();
@@ -408,6 +405,8 @@ export default function Reader() {
   // (a private text's English is the owner's own, or the published one it carries: no Perseus credit)
   const credit = book.tr && !book.private ? `English: ${describe(book.tr, book.work.texts)}, Perseus Digital Library, CC BY-SA 4.0.` : null;
   const sheetOpen = (!!word || !!edit) && place === "sheet";
+  // the panel open, with room for the text beside it: the text moves aside (Reader.module.css)
+  const aside = (!!word || !!edit) && place === "drawer" && shift;
   const bookName = `${book.author.name}, ${book.work.title}`;
   const fromMenu = (n: Note) => {
     const el = locate(n.anchor);
@@ -509,7 +508,7 @@ export default function Reader() {
     </>
   );
   const lookup = word && (
-    <Lookup at={word.at} anchor={word.el} place={place} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
+    <Lookup at={word.at} place={place} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
       workTitle={book.work.title} book={{ work: workId, name: bookName }} takeFocus={word.keyboard} onNote={noteWord} />
   );
   const editor = edit && (
@@ -517,7 +516,9 @@ export default function Reader() {
   );
 
   return (
-    <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined}>
+    <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined} data-shift={aside || undefined}>
+      {/* the text column's full width, measured to decide whether the text can move aside for the look-up */}
+      <div data-col-probe="" className={styles.colProbe} aria-hidden="true" />
       <ReaderBar title={barTitle} showTitle={!titlePage} onTop={() => window.scrollTo(0, 0)} where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`}
         pages={doc.chunks.map((c) => c.label)} page={page} onPage={go} hasEnglish={!!book.tr} notes={notes} onNote={fromMenu} ask={ask}
         example={example} goTo={goTo} find={(q) => findInBook(doc, q)} onFound={onFound}
