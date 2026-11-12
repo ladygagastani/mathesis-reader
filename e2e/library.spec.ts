@@ -157,6 +157,8 @@ test("the books you are reading come first; where to begin opens, and stays open
 test("/ searches the library from any page", async ({ page, isMobile }) => {
   test.skip(isMobile, "a key");
   await page.goto("/credits");
+  // (the switch appears once the page's scripts run, and with them the key)
+  await page.getByRole("button", { name: /^Switch to the/ }).waitFor();
   await page.keyboard.press("/");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("searchbox")).toBeFocused();

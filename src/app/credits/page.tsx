@@ -16,10 +16,10 @@ const SOURCES: { part: string; items: { name: string; href: string; what: string
   {
     part: "Words and dictionaries",
     items: [
-      { name: "GLAUx, by Alek Keersmaekers", href: "https://github.com/alekkeersmaekers/glaux", what: "Each word's dictionary form and grammar, the sentences' structure, and the works' genres.", licence: "CC BY-SA 4.0" },
+      { name: "GLAUx, by Alek Keersmaekers", href: "https://github.com/alekkeersmaekers/glaux", what: "Each word's dictionary form and grammar, the sentences' structure, and the works' genres, dialects, dates and lengths.", licence: "CC BY-SA 4.0" },
       { name: "Liddell–Scott–Jones Greek-English Lexicon, Perseus Digital Library", href: "https://github.com/PerseusDL/lexica/", what: "The dictionary entries. Text provided under a CC BY-SA license by Perseus Digital Library, with funding from The National Endowment for the Humanities.", licence: "CC BY-SA" },
-      { name: "English Wiktionary", href: "https://en.wiktionary.org/", what: "Meanings of forms and word families, fetched live when the dictionary has no entry. Only the word is sent.", licence: "CC BY-SA 4.0" },
-      { name: "Dickinson College Commentaries Greek Core Vocabulary, Christopher Francese and collaborators", href: "https://dcc.dickinson.edu/greek-core-list", what: "The short meanings of the commonest words.", licence: "CC BY-SA 3.0" },
+      { name: "English Wiktionary", href: "https://en.wiktionary.org/", what: "Meanings, where a word comes from, and the words built on it, fetched live in the look-up's second layer. Only the word is sent.", licence: "CC BY-SA 4.0" },
+      { name: "Dickinson College Commentaries Greek Core Vocabulary, Christopher Francese and collaborators", href: "https://dcc.dickinson.edu/greek-core-list", what: "The short meanings of the commonest words, and the library's measure of how familiar a work's words are.", licence: "CC BY-SA 3.0" },
       { name: "Wikidata", href: "https://www.wikidata.org/", what: "Authors' Greek names, other names, occupations and descriptions.", licence: "CC0" },
     ],
   },

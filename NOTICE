@@ -23,7 +23,8 @@ from these collections, each pinned to one commit:
 
 WORDS AND DICTIONARIES
 
-- GLAUx, by Alek Keersmaekers: word analyses, sentence structure, and each work's genre.
+- GLAUx, by Alek Keersmaekers: word analyses, sentence structure, and each work's genre, dialect,
+  dates and length.
   CC BY-SA 4.0; some source texts and hand annotations inside GLAUx carry other licences, listed in
   GLAUx's metadata. Keersmaekers, A. (2021), "The GLAUx corpus: methodological issues in designing a
   long-term, diverse, multi-layered corpus of Ancient Greek", Proceedings of the 2nd International
@@ -32,7 +33,9 @@ WORDS AND DICTIONARIES
   Digital Library, http://www.perseus.tufts.edu, with funding from The National Endowment for the
   Humanities. Data accessed from https://github.com/PerseusDL/lexica/.
 - Dickinson College Commentaries Greek Core Vocabulary, by Christopher Francese and collaborators.
-  CC BY-SA 3.0.
+  CC BY-SA 3.0. The library's measure of how familiar a work's words are counts them against it.
+- English Wiktionary (meanings, etymologies and word families, fetched live in the look-up's second
+  layer; only the word is sent). CC BY-SA 4.0.
 - Wikidata (authors' Greek names, other names, occupations and descriptions). CC0.
 
 
@@ -57,3 +60,5 @@ As CC BY-SA asks, the changes made to the material above:
   from each entry for the look-up (both done by the old site's pipeline).
 - Works are grouped by kind of writing, from GLAUx's genres and Wikidata's occupations.
 - Wikidata's descriptions are shown with BCE and CE written as BC and AD.
+- Wiktionary's etymologies keep a cognate in a script the site's typefaces cannot draw as its
+  transliteration only, and its Greek words are shown without the marks of long and short vowels.
