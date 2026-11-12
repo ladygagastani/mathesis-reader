@@ -4,7 +4,7 @@
 //   with "computer" or "phone", only that width.
 import { mkdirSync } from "node:fs";
 import { chromium } from "playwright";
-import { SCREENS, open, prepare } from "./screens.mjs";
+import { SCREENS, forWidth, open, prepare } from "./screens.mjs";
 
 const [base = "http://localhost:3300", out = "screenshots/new", which] = process.argv.slice(2);
 mkdirSync(out, { recursive: true });
@@ -34,7 +34,7 @@ if (which === "old") {
 } else {
   for (const [name, w, h] of sizes) {
     for (const theme of ["paper", "night"]) {
-      for (const s of SCREENS) {
+      for (const s of SCREENS.filter(forWidth(w))) {
         if (theme === "night" && !["reader", "look-up", "look-up, more", "library", "reader, Both"].includes(s.name)) continue;
         const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: w < 500, hasTouch: w < 500, reducedMotion: "reduce" });
         await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes });

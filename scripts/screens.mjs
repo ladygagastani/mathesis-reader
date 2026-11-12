@@ -24,7 +24,7 @@ export const SCREENS = [
   { name: "Aa", path: "/read?w=tlg0059.tlg002", act: "aa" },
   { name: "pages", path: "/read?w=tlg0059.tlg002", act: "pages" },
   { name: "go to, found", path: "/read?w=tlg0059.tlg002", act: "find" },
-  { name: "keys", path: "/read?w=tlg0059.tlg002", act: "keys" },
+  { name: "keys", path: "/read?w=tlg0059.tlg002", act: "keys", computer: true },
   { name: "credits", path: "/credits" },
   { name: "sync", path: "/sync" },
   { name: "sync, synced", path: "/sync", synced: true },
@@ -50,6 +50,9 @@ export async function prepare(ctx, { theme = "auto", columns = "greek", synced: 
   if (sync) await synced(ctx);
   if (notes) await withNotes(ctx, NOTES);
 }
+
+/** A screen to take at this width: some are a computer's only (the keys). */
+export const forWidth = (w) => (s) => !(s.computer && w < 500);
 
 /** Open a screen and bring it to its state, with the fonts in and nothing still inking in. */
 export async function open(page, base, s) {

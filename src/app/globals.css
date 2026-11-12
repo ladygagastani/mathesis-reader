@@ -74,7 +74,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* a row of choices, one of them chosen: a hairline frame, the chosen one in ink */
 .segmented { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: var(--radius); }
 .segmented > button {
-  border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-2); padding: var(--space-2) var(--space-3); min-height: var(--tap);
+  border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-2); padding: var(--space-2) var(--space-3); min-height: var(--tap); min-width: var(--tap);
   font: 400 var(--t-small) / 1.2 var(--f-body); white-space: nowrap; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 @media (hover: hover) { .segmented > button:hover:not([aria-checked="true"], :disabled) { color: var(--accent); } }

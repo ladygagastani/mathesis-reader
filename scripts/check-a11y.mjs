@@ -11,14 +11,14 @@
 // lists "Close the look-up 20×20" and "Close Page and text 20×20" under tap.
 import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
-import { SCREENS, open, prepare } from "./screens.mjs";
+import { SCREENS, forWidth, open, prepare } from "./screens.mjs";
 
 const [base = "http://localhost:3300"] = process.argv.slice(2);
 const browser = await chromium.launch();
 const found = [];
 
 for (const [w, h, phone, theme] of [[1440, 900, false, "paper"], [1440, 900, false, "night"], [390, 844, true, "paper"], [390, 844, true, "night"]]) {
-  for (const s of SCREENS) {
+  for (const s of SCREENS.filter(forWidth(w))) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: phone, isMobile: phone, reducedMotion: "reduce" });
     await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes });
     if (process.env.PROVE_CSS) await ctx.addInitScript((c) => addEventListener("load", () => document.head.append(Object.assign(document.createElement("style"), { textContent: c }))), process.env.PROVE_CSS);

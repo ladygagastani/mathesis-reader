@@ -13,7 +13,7 @@
 // Proved 2026-11-12: PROVE_CSS='.btn { background: #c8b428 !important }' lists the filled buttons (button: "Continue", Aa's "α−"
 // and "α+"), and PROVE_CSS='h1 span { font-family: Arial !important }' lists the one-line title's signs (face: "·" in Arial).
 import { chromium } from "playwright";
-import { SCREENS, open, prepare } from "./screens.mjs";
+import { SCREENS, forWidth, open, prepare } from "./screens.mjs";
 
 const [base = "http://localhost:3300"] = process.argv.slice(2);
 const THREE = ["EB Garamond", "GFS Didot", "Gentium Book Plus"];
@@ -144,7 +144,7 @@ function judge(measureType) {
 
 for (const theme of ["paper", "night"]) {
   for (const [w, h] of [[1440, 900], [390, 844]]) {
-    for (const s of SCREENS) {
+    for (const s of SCREENS.filter(forWidth(w))) {
       const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: "reduce", hasTouch: w < 500, isMobile: w < 500 });
       await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes });
       if (process.env.PROVE_CSS) await ctx.addInitScript((c) => addEventListener("load", () => document.head.append(Object.assign(document.createElement("style"), { textContent: c }))), process.env.PROVE_CSS);

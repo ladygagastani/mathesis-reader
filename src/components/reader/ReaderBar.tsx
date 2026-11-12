@@ -284,7 +284,7 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
             )}
           </div>
 
-          <div className={styles.slot}>
+          <div className={`${styles.slot} ${styles.keysSlot}`}>
             <button ref={keysBtn} type="button" data-menu-opener="" className={styles.quiet} aria-expanded={open === "keys"} aria-haspopup="dialog"
               onClick={() => toggle("keys")}><Icon name="keys" label="Keys" /></button>
             {open === "keys" && (
