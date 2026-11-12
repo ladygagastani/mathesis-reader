@@ -65,7 +65,7 @@ function ShelfRow({ s, names, who }: { s: Shelf; names: Record<string, AuthorNam
   );
 }
 
-export default function Library({ before }: { before?: React.ReactNode }) {
+export default function Library() {
   const params = useSearchParams();
   const router = useRouter();
   const [query, setQuery] = useState(params.get("q") ?? "");
@@ -110,8 +110,6 @@ export default function Library({ before }: { before?: React.ReactNode }) {
           Open one and read it in Greek, with every word explained on the line.
         </p>
       </header>
-
-      {before}
 
       <search className={styles.find}>
         <label className={styles.field}>

@@ -10,4 +10,9 @@
 @media (hover: hover) { .mark:hover .diamond { fill: var(--ink); } }
 /* a phone: the logo a little nearer the name, so that Search and Menu stand beside it */
 @media (max-width: 430px) { .mark { gap: var(--space-2); } }
-@media (max-width: 380px) { .words b { font-size: 1.05rem; } .words i { letter-spacing: 0.16em; } }
+/* a narrow phone: the name a size smaller, so Private texts, Saved and Sync stand beside it */
+@media (max-width: 420px) { .words b { font-size: 1.05rem; } .words i { letter-spacing: 0.16em; } }
+/* the narrowest phones: the name and its small capitals each break over two lines, so the links beside it keep their room */
+@media (max-width: 380px) { .words b, .words i { white-space: normal; } .words { max-width: 7.5em; } }
+/* the oldest, smallest phones (320 px): the logo alone; the name stays the link's name for a screen reader */
+@media (max-width: 340px) { .words { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }

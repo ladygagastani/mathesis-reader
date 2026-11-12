@@ -10,12 +10,14 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
 import { useEffect, useRef, useState } from "react";
-import { lookupForm } from "@/lib/greek";
+import { candidates, lookupForm } from "@/lib/greek";
 import { SOURCE_NAMES } from "@/lib/lookup/card";
 import { certaintyNote } from "@/lib/lookup/certainty";
 import { creditsFor } from "@/lib/lookup/credits";
 import { lookUp, type Looked, type WordAt } from "@/lib/lookup/lookup";
 import { citationHref, type LsjEntry, type Seg } from "@/lib/lookup/lsj";
+import { readTag } from "@/lib/lookup/postag";
+import { lookUpWiktionary, type WiktResult } from "@/lib/lookup/wiktionary";
 import { occursLine } from "@/lib/lookup/occurrences";
 import type { LookupPlace } from "@/lib/lookup/placement";
 import { otherDefinitions } from "@/lib/lookup/repeats";
@@ -82,6 +84,19 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
   }, [preview]);
 
   const l = got.key === key ? got.value : null;
+  // Wiktionary, live, beside LSJ
+  const [wikt, setWikt] = useState<{ key: string; value: WiktResult | null; error?: string }>({ key: "", value: null });
+  const needWikt = layer === 2 && !!l;
+  useEffect(() => {
+    if (!needWikt) return;
+    const ctl = new AbortController();
+    lookUpWiktionary(l!.card.lemma ? [l!.card.lemma, ...candidates(at.word)] : candidates(at.word), ctl.signal)
+      .then((value) => setWikt({ key, value }))
+      .catch((e: Error) => { if (!ctl.signal.aborted) setWikt({ key, value: null, error: e.message }); });
+    return () => ctl.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needWikt, key]);
+  const w = wikt.key === key ? wikt : null;
   const failed = got.key === key && !l;
   const card = l?.card ?? null;
   const head = layer === 2 && l ? card?.lemma ?? l.lsj?.head ?? lookupForm(at.word) : card ? card.lemma ?? lookupForm(at.word) : at.word;
@@ -137,6 +152,19 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
               <p className={styles.recapMeaning}>{meaning}</p>
             </div>
             <section className={styles.sec}>
+              <h3 className="label">In this passage</h3>
+              {!l!.analysis && <p className="muted">{certaintyNote(null, l!.analysisError)}</p>}
+              {l!.analysis && (() => {
+                const p = readTag(l!.analysis.tag);
+                return (
+                  <>
+                    <p><span lang="grc">{l!.analysis.lemma}</span> · <b>{p.pos}</b>{p.detail ? ` · ${p.detail}` : ""}</p>
+                    <p className={styles.fine}>{certaintyNote(l!.analysis)} Analysis: GLAUx (Keersmaekers 2021), CC BY-SA 4.0.</p>
+                  </>
+                );
+              })()}
+            </section>
+            <section className={styles.sec}>
               <h3 className="label">Dictionary · LSJ</h3>
               {!l!.lsj && <p className="muted">{l!.lsjError ? `The dictionary could not be loaded (${l!.lsjError}).` : "No LSJ entry found under this headword."}</p>}
               {l!.lsj && !full && lsjShort.map((e, i) => <p key={i}>{e.s}</p>)}
@@ -147,6 +175,21 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
               )}
               {l!.lsj && (full || lsjShort.length > 0 || clipped) && <button type="button" className={`text-btn ${styles.quietBtn}`} aria-expanded={full} onClick={() => setWhole(full ? "" : key)}><Icon name={full ? "chevron-up" : "chevron-down"} />{full ? "The short entry" : "The whole entry"}</button>}
             </section>
+            {needWikt && (
+              <section className={styles.sec}>
+                <h3 className="label">Wiktionary · live</h3>
+                {!w && <p className="muted">Looking it up…</p>}
+                {w && !w.value && <p className="muted">{w.error ? `Wiktionary could not be reached (${w.error}).` : "No Wiktionary entry for this form."}</p>}
+                {w?.value && (
+                  <>
+                    {[...w.value.senses, ...(w.value.lemmaSenses && w.value.senses.some((x) => x.lemma) ? w.value.lemmaSenses : [])].map((s, i) => (
+                      <div key={i}><span className="label">{s.pos}</span>{s.lines.map((t, j) => <p key={j}>{t}</p>)}</div>
+                    ))}
+                    <p className={styles.fine}>From <a href={w.value.url} target="_blank" rel="noopener noreferrer">Wiktionary</a>, CC BY-SA 4.0.</p>
+                  </>
+                )}
+              </section>
+            )}
             {occurs && (
               <section className={styles.sec}>
                 <h3 className="label">In this book</h3>

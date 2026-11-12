@@ -8,4 +8,5 @@
 .mast::after { bottom: 0; border-bottom: 1px solid var(--rule-2); }
 .in { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 68px; padding-block: var(--space-2); }
 .links { display: flex; align-items: center; gap: var(--space-3); }
-@media (max-width: 420px) { .links :global(svg) { display: none; } .links { gap: var(--space-1); } }
+/* a narrow phone: Saved and Sync as words only; the private texts keep their lock, which is all their button shows there */
+@media (max-width: 420px) { .links > a :global(svg) { display: none; } .links { gap: var(--space-1); } .in { gap: var(--space-2); } }

@@ -25,6 +25,7 @@ export const SCREENS = [
   { name: "sync", path: "/sync" },
   { name: "sync, synced", path: "/sync", synced: true },
   { name: "library, synced", path: "/", synced: true },
+  { name: "your private texts", path: "/", synced: true, act: "private" },
   { name: "private text", path: "/read?w=mine:placeholder-work", synced: true },
   { name: "sync, new code", path: "/sync", act: "make" },
   { name: "saved", path: "/saved", notes: true },
@@ -52,7 +53,7 @@ export async function open(page, base, s) {
   if (s.path.startsWith("/read")) await page.locator("[role=button]").first().waitFor({ timeout: 30_000 });
   else if (s.path.startsWith("/sync")) await page.locator("main form, main .btn").first().waitFor({ timeout: 30_000 });
   else if (s.path.startsWith("/credits") || s.path.startsWith("/saved")) await page.locator("main h1").waitFor({ timeout: 30_000 });
-  else await page.locator(s.synced ? "section[aria-labelledby=private-texts] ul" : "main h3").first().waitFor({ timeout: 30_000 });
+  else await page.locator("main h3").first().waitFor({ timeout: 30_000 });
   if (s.act === "author") await page.locator("main button[aria-expanded]").first().click();
   await page.evaluate(() => document.fonts.ready);
   if (s.act === "english") await page.getByRole("button", { name: "Show the English" }).first().click();
@@ -63,6 +64,7 @@ export async function open(page, base, s) {
   }
   if (s.act === "aa") await page.getByRole("button", { name: "Text", exact: true }).click();
   if (s.act === "pages") await page.getByRole("button", { name: /^Pages:/ }).click();
+  if (s.act === "private") await page.getByRole("button", { name: /^Private texts/ }).click();
   if (s.act === "make") await page.getByRole("button", { name: "Make a new code" }).click();
   if (s.act === "notes") await page.getByRole("button", { name: /^Notes/ }).click();
   if (s.act === "mark") await page.getByRole("navigation", { name: "Notes on this page" }).getByRole("button").first().click();

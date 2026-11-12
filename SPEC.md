@@ -23,8 +23,9 @@ the sentence.
 4. **Sync and private texts.** There is no sign-in, for privacy. Under Sync, "Make a new code" gets a code of 20
    random letters and digits from the database. Each code is its own and starts empty. The page offers to save it to
    your files, and its fields let 1Password and other password managers keep it and fill it in. Typing the same code on
-   another device brings your notes there. One code, marked once in the SQL editor as the owner's, also shows the
-   private texts (table `private_translations`) at the top of the library, and they open in the same reader. A device
+   another device brings your notes there. One code, marked once in the SQL editor as the owner's, also opens the
+   private texts (table `private_translations`): a "Private texts" button at the top right of every page opens a small
+   floating list of them, so the library itself opens on the works. They open in the same reader. A device
    without a code never contacts Supabase. The app asks for no email and no password, and the database keeps only a
    hash of each code.
 5. **Notes and Saved.** In the look-up, "Note" writes a note on the word, its line of verse, or its passage, in one of

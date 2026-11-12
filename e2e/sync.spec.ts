@@ -42,8 +42,16 @@ test("syncing: a malformed or unknown code is said plainly; the right one opens 
   await sync.click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("link", { name: "Synced" })).toBeVisible();
-  const shelf = page.getByRole("region", { name: "Your private texts" });
+  // the library opens on the works; the private texts wait behind a button at the top right
+  await expect(page.locator("main")).not.toContainText("Placeholder Title");
+  await page.getByRole("button", { name: /^Private texts/ }).click();
+  const shelf = page.getByRole("dialog", { name: "Your private texts" });
   await expect(shelf).toContainText("Placeholder Title");
+  await expect(shelf).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(shelf).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Private texts/ })).toBeFocused();
+  await page.getByRole("button", { name: /^Private texts/ }).click();
   expect(await page.evaluate((k) => localStorage.getItem(k), CODE_KEY)).toBe(CODE);
 
   await shelf.getByRole("link", { name: /Placeholder Title/ }).click();
@@ -97,6 +105,7 @@ test("making a new code: shown once, for a password manager and as a file; it op
   await page.locator("main h3").first().waitFor({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: "Synced" })).toBeVisible();
   await expect(page.getByText("Your private texts")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Private texts/ })).toHaveCount(0);
 });
 
 test("a code kept in a password manager is filled into a password field; the page says how sync works", async ({ page }) => {
