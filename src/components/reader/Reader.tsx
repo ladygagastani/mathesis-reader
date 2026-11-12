@@ -514,7 +514,7 @@ export default function Reader() {
   const pageNotes = notes.filter((n) => here.has(n.anchor.unit));
   const lookup = word && (
     <Lookup at={word.at} place={place} inDesk={deskOn} over={over} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
-      workTitle={book.work.title} takeFocus={word.keyboard} onNote={noteWord} />
+      workTitle={book.work.title} book={{ work: workId, name: bookName }} takeFocus={word.keyboard} onNote={noteWord} />
   );
   const editor = edit && (
     <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} inDesk={deskOn} over={over} onClose={closeNote} />

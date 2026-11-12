@@ -6,7 +6,7 @@
  * Layer one: the dictionary form, the kind of word (with the core list's class) and the word tapped, the core list's full heading
  * (genitive and article, or principal parts), one meaning with its source, the grammar one word to a part, what the word does in
  * the sentence (only where the treebank says), a plain warning when the analysis is not of this very word, and how common the word
- * is. "More about it" opens layer two in the same place: the analysis, LSJ, Wiktionary's senses and the word's family, how common
+ * is; "Save word" keeps the word for the Saved page (lib/notes/words.ts). "More about it" opens layer two in the same place: the analysis, LSJ, Wiktionary's senses and the word's family, how common
  * the word is, how sure the analysis is, and the credits for what was shown. Nothing here is composed: every line comes from a source or says plainly there is none.
  */
 import Link from "next/link";
@@ -25,6 +25,9 @@ import { wordFamily, type WordFamily } from "@/lib/lookup/wiktionary-family";
 import { occursLine } from "@/lib/lookup/occurrences";
 import type { LookupPlace } from "@/lib/lookup/placement";
 import { otherDefinitions } from "@/lib/lookup/repeats";
+import { newId } from "@/lib/notes/notes";
+import { removeWord, saveWord, useWords } from "@/lib/notes/store";
+import { savedOf } from "@/lib/notes/words";
 import styles from "./Lookup.module.css";
 
 function Segs({ segs }: { segs: Seg[] }) {
@@ -73,7 +76,7 @@ function unsure(l: Looked): string | null {
   return l.analysis.where === "passage" ? "Uncertain: matched to this passage, not to this exact word." : "Uncertain: this is how the form is read elsewhere in the book.";
 }
 
-export default function Lookup({ at, place, inDesk, over, layer, onLayer, onStep, onClose, workTitle, takeFocus, onNote }: {
+export default function Lookup({ at, place, inDesk, over, layer, onLayer, onStep, onClose, workTitle, book, takeFocus, onNote }: {
   at: WordAt; place: LookupPlace;
   /** in the desk beside the text (DESIGN.md, decision 1) */
   inDesk: boolean;
@@ -82,6 +85,8 @@ export default function Lookup({ at, place, inDesk, over, layer, onLayer, onStep
   layer: 1 | 2; onLayer: (l: 1 | 2) => void;
   onStep: (dir: 1 | -1) => void; onClose: () => void;
   workTitle: string;
+  /** the book the word is met in, for a saved word: the reader's work id and the book's name */
+  book: { work: string; name: string };
   /** opened from the keyboard: the look-up takes the focus, so it is announced and its buttons are next */
   takeFocus: boolean;
   /** write a note on this word, its line or its passage */
@@ -152,6 +157,17 @@ export default function Lookup({ at, place, inDesk, over, layer, onLayer, onStep
   const heading = card ? fullHeading(l!.core, card.lemma ?? head) : null;
   const parts = l?.analysis ? grammarParts(l.analysis.tag) : [];
   const facts = [occurs, l?.core ? rankLine(l.core.rank) : null].filter((x): x is string => !!x);
+  // the word saved for later: by its dictionary form
+  const words = useWords();
+  const saved = card ? savedOf(words, head) : null;
+  const toggleSaved = () => {
+    if (!card) return;
+    if (saved) { removeWord(saved.id); return; }
+    saveWord({
+      id: `w-${newId().slice(0, 16)}`, type: "word", lemma: head, form: at.word, kind: kindLine ?? "",
+      meaning: card.meaning.source ? card.meaning.text : "", work: book.work, book: book.name, unit: at.unitKey,
+    });
+  };
 
   const meaning = card && (
     <>
@@ -297,6 +313,8 @@ export default function Lookup({ at, place, inDesk, over, layer, onLayer, onStep
           <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(-1)} aria-label="Previous word"><Icon name="chevron-left" />Previous</button>
           <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(1)} aria-label="Next word">Next<Icon name="chevron-right" /></button>
           <button type="button" className={`text-btn ${styles.step}`} onClick={onNote}><Icon name="note" />Note</button>
+          <button type="button" className={`text-btn ${styles.step} ${styles.keep}`} aria-pressed={!!saved} onClick={toggleSaved} disabled={!card}
+            title={saved ? "Saved: on the Saved page. Press to take it off." : "Keep this word on the Saved page"}><Icon name="keep" />{saved ? "Saved" : "Save word"}</button>
           <button type="button" className={`text-btn ${styles.more}`} onClick={() => onLayer(2)} disabled={!card}><Icon name="info" />More about it</button>
         </div>
       )}

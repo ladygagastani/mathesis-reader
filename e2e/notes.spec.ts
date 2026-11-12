@@ -141,3 +141,40 @@ test("words selected in the text take a note, and each of them is underlined", a
   expect(note.anchor).toMatchObject({ kind: "words", n: 3 });
   await expect(page.locator("main [role=button][data-noted=word]")).toHaveCount(3);
 });
+
+test("Save word keeps a word for the Saved page, which opens where it was met and takes it off", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  await open(page);
+  await words(page).nth(14).click();
+  const save = page.locator("[data-lookup]").getByRole("button", { name: "Save word" });
+  await save.click();
+  await expect(page.locator("[data-lookup]").getByRole("button", { name: "Saved" })).toHaveAttribute("aria-pressed", "true");
+  const kept = await page.evaluate(() => JSON.parse(localStorage.getItem("mathesis-reader:words") ?? "[]"));
+  expect(kept).toEqual([expect.objectContaining({ type: "word", lemma: "οἶδα", work: "tlg0059.tlg002", book: "Plato, Apology" })]);
+
+  await page.goto("/saved");
+  const list = page.getByRole("region", { name: "Saved words" });
+  await expect(list).toContainText("οἶδα");
+  await expect(list).toContainText("to know");
+  await expect(list).toContainText("in Plato, Apology, 17");
+  await list.getByRole("link", { name: "Open where you met it" }).click();
+  await expect(page).toHaveURL(/w=tlg0059\.tlg002&at=17/);
+  await page.goto("/saved");
+  await page.getByRole("region", { name: "Saved words" }).getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByText("Nothing saved yet.")).toBeVisible();
+});
+
+test("with a sync code, a saved word goes to the database beside the notes, and comes back on another device", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  const notes: Record<string, Record<string, Record<string, unknown>>> = {
+    [CODE]: { "w-elsewhere": { id: "w-elsewhere", type: "word", lemma: "λόγος", form: "λόγον", kind: "noun", meaning: "word", work: "tlg0059.tlg002", book: "Plato, Apology", unit: "18", updated: 5 } },
+  };
+  await fakeSupabase(page, { notes: notes as never });
+  await synced(page.context());
+  await open(page);
+  await words(page).nth(14).click();
+  await page.locator("[data-lookup]").getByRole("button", { name: "Save word" }).click();
+  await expect.poll(() => Object.values(notes[CODE]).map((n) => n.lemma).sort(), { timeout: 10_000 }).toEqual(["λόγος", "οἶδα"]);
+  await page.goto("/saved");
+  await expect(page.getByRole("region", { name: "Saved words" })).toContainText("λόγος");
+});

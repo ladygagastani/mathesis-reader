@@ -135,3 +135,7 @@
 .dicts a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 2px; }
 @media (hover: hover) { .dicts a:hover { color: var(--accent); } }
 @media (pointer: coarse) { .dicts a { min-height: var(--tap); } }
+/* Save word: the sign filled once the word is saved */
+.keep[aria-pressed="true"]:global(.text-btn) { color: var(--ink); }
+.keep[aria-pressed="true"] :global(svg) { fill: currentColor; }
+.keep:global(.text-btn):disabled { opacity: 0.45; cursor: default; }

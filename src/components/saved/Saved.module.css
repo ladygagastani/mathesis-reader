@@ -37,3 +37,16 @@
   color: var(--ink); font: 400 var(--t-ui) / 1.5 var(--f-body);
 }
 .text:focus-visible { outline: none; box-shadow: inset 0 0 0 var(--hair) var(--ink); }
+/* the two groups at the left */
+.groupGap { margin-top: var(--space-4); }
+.books button:disabled { opacity: 0.45; cursor: default; }
+/* a saved word: its dictionary form in the Greek face at the left, what it is and where it was met beside it */
+.word { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: var(--space-1) var(--space-5); padding-block: var(--space-3); box-shadow: var(--rule-under); }
+.word:last-child { box-shadow: none; }
+.lemma { font: 400 var(--t-lead) / 1.25 var(--f-greek); }
+.wordAbout { display: grid; gap: 2px; min-width: 0; }
+.kind { font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.meaning { font-size: var(--t-body); line-height: 1.4; }
+.met { font-size: var(--t-small); color: var(--ink-2); }
+.word .actions { grid-column: 2; }
+@media (max-width: 760px) { .word { grid-template-columns: minmax(0, 1fr); } .word .actions { grid-column: 1; } }

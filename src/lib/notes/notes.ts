@@ -60,15 +60,15 @@ export function parseNotes(x: unknown): Note[] {
   return Array.isArray(x) ? x.map(parseNote).filter((n): n is Note => n !== null) : [];
 }
 
-/** Two copies of the notes made one: for each note, the copy changed last. */
-export function mergeNotes(a: Note[], b: Note[]): Note[] {
-  const all = new Map<string, Note>();
+/** Two copies of the notes (or of the saved words) made one: for each, the copy changed last. */
+export function mergeNotes<T extends { id: string; updated: number }>(a: T[], b: T[]): T[] {
+  const all = new Map<string, T>();
   for (const n of [...a, ...b]) { const was = all.get(n.id); if (!was || n.updated > was.updated) all.set(n.id, n); }
   return [...all.values()];
 }
 
-/** The notes in `mine` the other copy lacks or holds an older version of: what to send. */
-export function newerThan(mine: Note[], theirs: Note[]): Note[] {
+/** The notes (or saved words) in `mine` the other copy lacks or holds an older version of: what to send. */
+export function newerThan<T extends { id: string; updated: number }>(mine: T[], theirs: T[]): T[] {
   const at = new Map(theirs.map((n) => [n.id, n.updated]));
   return mine.filter((n) => n.updated > (at.get(n.id) ?? -1));
 }

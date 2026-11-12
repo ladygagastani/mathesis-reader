@@ -33,6 +33,7 @@ export const SCREENS = [
   { name: "private text", path: "/read?w=mine:placeholder-work", synced: true },
   { name: "sync, new code", path: "/sync", act: "make" },
   { name: "saved", path: "/saved", notes: true },
+  { name: "saved words", path: "/saved", words: true, act: "words" },
   { name: "reader, notes", path: "/read?w=tlg0059.tlg002", notes: true, act: "notes" },
   { name: "note", path: "/read?w=tlg0059.tlg002", notes: true, act: "mark" },
   { name: "new note", path: "/read?w=tlg0059.tlg002", act: "new-note" },
@@ -41,7 +42,14 @@ export const SCREENS = [
 
 /** Settings as the app keeps them (lib/settings.ts), set before the page loads; the Apology counts as opened before (no title page).
  *  Synced, Supabase is the stand-in of fake-supabase.mjs, with placeholder text only. */
-export async function prepare(ctx, { theme = "auto", columns = "greek", synced: sync = false, notes = false } = {}) {
+/** Words saved from the look-up, made up from the look-up's own data, for the Saved page's list of words. */
+const WORDS = [
+  { id: "w-1", type: "word", lemma: "οἶδα", form: "οἶδα", kind: "verb · irregular", meaning: "to know (pf. in pres. sense); to know how to (+infin.)", work: "tlg0059.tlg002", book: "Plato, Apology", unit: "17", updated: 3 },
+  { id: "w-2", type: "word", lemma: "ἀνήρ", form: "ἄνδρες", kind: "noun, masculine · 3rd declension", meaning: "man, husband", work: "tlg0059.tlg002", book: "Plato, Apology", unit: "17", updated: 2 },
+  { id: "w-3", type: "word", lemma: "μῆνις", form: "μῆνιν", kind: "noun, feminine · 3rd declension", meaning: "wrath", work: "tlg0012.tlg001", book: "Homer, Iliad", unit: "1.1", updated: 1 },
+];
+
+export async function prepare(ctx, { theme = "auto", columns = "greek", synced: sync = false, notes = false, words = false } = {}) {
   await ctx.addInitScript(([theme, columns]) => {
     localStorage.setItem("mathesis-reader:settings", JSON.stringify({ theme, columns, greekSize: "auto" }));
     localStorage.setItem("mathesis-reader:opened", JSON.stringify(["tlg0059.tlg002"]));
@@ -49,6 +57,7 @@ export async function prepare(ctx, { theme = "auto", columns = "greek", synced: 
   await fakeSupabase(ctx);
   if (sync) await synced(ctx);
   if (notes) await withNotes(ctx, NOTES);
+  if (words) await ctx.addInitScript((w) => localStorage.setItem("mathesis-reader:words", JSON.stringify(w)), WORDS);
 }
 
 /** A screen to take at this width: some are a computer's only (the keys). */
@@ -81,6 +90,7 @@ export async function open(page, base, s) {
   if (s.act === "private") await page.getByRole("button", { name: /^Private texts/ }).click();
   if (s.act === "make") await page.getByRole("button", { name: "Make a new code" }).click();
   if (s.act === "notes") await page.getByRole("button", { name: /^Notes/ }).click();
+  if (s.act === "words") await page.getByRole("button", { name: /^Saved words/ }).click();
   if (s.act === "mark") await page.getByRole("navigation", { name: "Notes on this page" }).getByRole("button").first().click();
   if (s.act === "new-note") {
     await page.locator("main [role=button]").nth(14).click();

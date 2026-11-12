@@ -35,10 +35,11 @@ the sentence.
    without a code never contacts Supabase. The app asks for no email and no password, and the database keeps only a
    hash of each code.
 5. **Notes and Saved.** In the look-up, "Note" writes a note on the word, its line of verse, or its passage, in one of
-   four colours; selecting words in the text offers a note on them. A note is kept as you write it. A noted word is underlined in its colour, and a noted line or passage has a bar of it at its left. At
+   four colours; selecting words in the text offers a note on them. A note is kept as you write it. "Save word" keeps
+   a word, with its meaning and where it was met. A noted word is underlined in its colour, and a noted line or passage has a bar of it at its left. At
    the right edge of the window, a mark for each note stands where the scrollbar's thumb stands when the note is in
    view, and clicking it jumps there and opens the note. The bar's Notes lists the book's notes. The Saved page
-   lists every note, book by book, to open, edit or remove. Notes stay on the device, and go with the sync code when
+   lists every note, book by book, to open, edit or remove, and the saved words. Notes stay on the device, and go with the sync code when
    there is one.
 
 Not in version 1, with no hooks left for them: forum, map, wiki, lyre, vase studio, census, manuscripts, metre, eras,
@@ -75,7 +76,7 @@ Every control has been clicked in a real browser. Keyboard use, screen-reader na
 ## Open questions for you
 
 1. **The Academy.** Leave it out of version 1, or bring back a part of it (which)?
-2. **The Treasury** (saved words, notes). Leave it out, or keep saved words only?
+2. **The Treasury** (saved words, notes). Answered 2026-11-12: notes and saved words are in; notebooks are not.
 3. **Offline reading.** Leave it out, or keep "download this book for reading offline"?
 4. **The texts come from GitHub, not from `/packs/`.** The old app works this way. Is reading them from GitHub fine?
 5. **Admin of private texts.** Do you add private texts through the old app's admin page, or another way? If the

@@ -22,7 +22,7 @@ Keep means version 1. Later means undecided until you answer in step 2. Drop mea
 | Settings: Follow device, Paper, Night | Keep | Part of the look (ADR 0008, decision 2). |
 | Admin of translations (`/admin/translations`) | Later | Only if you upload private texts through the app. I will ask. |
 | Academy (`/academy/*`, 15 pages) | Later | You have not decided. I will ask in step 2. |
-| Treasury: saved words, notes, notebooks (`/treasury/*`, Mine) | Later | Undecided. I will ask. |
+| Treasury: saved words, notes, notebooks (`/treasury/*`, Mine) | Notes and saved words kept (owner, 2026-11-12); notebooks not | Notes came in with SPEC's Notes and Saved. Saved words: "Save word" in the look-up, listed on the Saved page, synced with the notes. |
 | Offline reading and downloads (`/downloads`, `sw.js`, OPFS copies) | Later | Undecided. I will ask. |
 | Work and author pages (`/work/[id]`, `/author/[id]`) | Later | A book should open on its text. A short line in the library may be enough. |
 | Home page, About, Guide, Credits | Keep Credits only | Credits are a licence duty. The home page becomes the library. |
