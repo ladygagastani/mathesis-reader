@@ -7,19 +7,25 @@ the sentence.
 
 ## The five parts
 
-1. **The reader.** A book opens on its text under a one-line title. The Greek stands alone. Each passage has "Show the
-   English", which sets the translation under that passage only. Aa holds the Greek size, Paper or Night, and Greek,
-   Both or English for the whole book. The reader has its own bar at the foot: Library, where you are, Notes and Aa.
+1. **The reader.** A book opens on its text, the first time under its title page. The Greek stands alone. Each passage
+   has "Show the English", which sets the translation under that passage only. The reader has its own bar along the
+   top: Library, the book's title, where you are (Go to: a passage by its reference, Find in this book, the pages),
+   Notes, Text and the keys. Text holds Paper or Night, the Greek size, the line spacing, Greek, Both or English, and
+   the edition and translation where a work has more than one. A book opens again where you stopped. The keys: left
+   and right turn the page (or step from word to word with a word looked up), g opens Go to, ? lists the keys, and /
+   searches the library from any page.
 2. **The look-up.** Clicking or tapping a Greek word, or pressing Enter on it, opens the look-up. At 1100 px and
-   wider it is a window about 300 px wide over the right margin, fixed while the text scrolls. Below 1100 px it is a
+   wider it stands in a desk column 360 px wide beside the text, fixed while the text scrolls. Below 1100 px it is a
    low sheet over about a quarter of the screen, and the text scrolls so the word stays above it. Layer one shows the
    dictionary form, the kind of word, one meaning line with its source, what the word does in the sentence (only
    where the treebank says) and the grammar in plain words. "More about it" opens layer two: the full LSJ entry and
-   every analysis the data gives. An uncertain parsing says so. Escape or the close button shuts it and puts the
-   focus back on the word.
-3. **The library.** A search field first: an author, a title, or a Greek word in a title. Under it the catalogue,
-   always opening as one list of authors A to Z, each with their works; "By kind" groups them by kind of writing. A work
-   opens straight into the reader.
+   every analysis the data gives, Wiktionary's senses and word family, and links to Logeion and Perseus. An uncertain
+   parsing says so. Escape or the close button shuts it and puts the focus back on the word.
+3. **The library.** A search field first: an author, a title, or a Greek word in a title. Then the books you are
+   reading, and, folded, where to begin. Under them the catalogue, always opening as one list of authors A to Z, each
+   with their works beside them; it can also list titles A to Z, or group by kind of writing or by period, and filter by
+   period, dialect and vocabulary. Each work shows its Greek title, kind, dates, length and how familiar its words are.
+   A work opens straight into the reader.
 4. **Sync and private texts.** There is no sign-in, for privacy. Under Sync, "Make a new code" gets a code of 20
    random letters and digits from the database. Each code is its own and starts empty. The page offers to save it to
    your files, and its fields let 1Password and other password managers keep it and fill it in. Typing the same code on
@@ -29,22 +35,22 @@ the sentence.
    without a code never contacts Supabase. The app asks for no email and no password, and the database keeps only a
    hash of each code.
 5. **Notes and Saved.** In the look-up, "Note" writes a note on the word, its line of verse, or its passage, in one of
-   four colours. A noted word is underlined in its colour, and a noted line or passage has a bar of it at its left. At
+   four colours; selecting words in the text offers a note on them. A note is kept as you write it. A noted word is underlined in its colour, and a noted line or passage has a bar of it at its left. At
    the right edge of the window, a mark for each note stands where the scrollbar's thumb stands when the note is in
-   view, and clicking it jumps there and opens the note. The foot bar's Notes lists the book's notes. The Saved page
+   view, and clicking it jumps there and opens the note. The bar's Notes lists the book's notes. The Saved page
    lists every note, book by book, to open, edit or remove. Notes stay on the device, and go with the sync code when
    there is one.
 
 Not in version 1, with no hooks left for them: forum, map, wiki, lyre, vase studio, census, manuscripts, metre, eras,
-the Android app, photographs, Listen, Echoes, Compare, Find, Share, the Wiktionary look-up.
+the Android app, photographs, Listen, Echoes, Compare, Share.
 
 ## The look
 
-The old design, unchanged in spirit: `DESIGN.md` and ADRs 0008 and 0009 of the old app. Paper and Night follow the
-device unless Aa sets one. Black ink, red for headings and the chosen thing, hairline rules, square corners, no
-shadows. EB Garamond for English, GFS Didot for titles, Gentium Book Plus for Greek, and no other typeface. The old
-colour tokens, type scale and spacing scale are copied as they are. One movement, the ink-in, off with reduced
-motion. Everything a finger presses is at least 44 px tall.
+In [DESIGN.md](DESIGN.md) (12 Nov 2026), which keeps the old design's spirit (ADRs 0008 and 0009 of the old app) with
+its own type scale, colours, spacing and layouts. Paper and Night follow the device unless the site bar or Text sets
+one. Black ink, red for the chosen thing, hairline rules, square corners, no shadows. EB Garamond for English, GFS
+Didot for the title page, Gentium Book Plus for Greek, and no other typeface. One movement, the ink-in, off with reduced
+motion. Everything a finger presses is at least 44 px tall on a touch screen, 40 px with a mouse.
 
 ## Where the data comes from
 

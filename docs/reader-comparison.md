@@ -1,7 +1,8 @@
 # The reader, new against old
 
 Compared on 12 Nov 2026: the new reader (this folder, built and served locally) against the old one on the live site, on Plato's
-Apology, at 1440 px and 390 px, in Paper and Night. The screenshots are in `screenshots/new` and `screenshots/old`. They were
+Apology, at 1440 px and 390 px, in Paper and Night. The screenshots are in `_archive/screenshots-before-redesign/new` and
+`screenshots/old`. This comparison predates the redesign: what changed after it is in `docs/review-2026-11-12.md`. They were
 made with `node scripts/shots.mjs`.
 
 ## ADR 0009, decision by decision
