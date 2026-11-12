@@ -94,18 +94,16 @@ export default function Sync() {
 
   return (
     <main id="main" className={`wrap ${styles.page}`}>
-      <header className={`${styles.head} enter`}>
-        <h1 className={styles.title}>Sync</h1>
-        <p className={styles.purpose}>
-          Sync keeps your notes the same on your phone, your computer and any other device. There is no account, no email and no
-          password. A sync code of 20 letters and digits is the key, and whoever has it can read your notes.
-        </p>
-      </header>
-
-      {code === undefined && <p className="muted" aria-busy="true">Checking this device…</p>}
-
-      {code === null && (
-        <>
+      {/* what sync is, at the left; what to do, at the right (DESIGN.md, "Sync") */}
+      <div className={styles.about}>
+        <header className={`${styles.head} enter`}>
+          <h1 className={styles.title}>Sync</h1>
+          <p className={styles.purpose}>
+            Sync keeps your notes the same on your phone, your computer and any other device. There is no account, no email and no
+            password. A sync code of 20 letters and digits is the key, and whoever has it can read your notes.
+          </p>
+        </header>
+        {code === null && (
           <section className={styles.box} aria-labelledby="how">
             <h2 id="how" className={styles.part}>How it works</h2>
             <ol className={styles.steps}>
@@ -114,12 +112,14 @@ export default function Sync() {
               <li>On each other device, type the code under &ldquo;I have a code&rdquo;. Your notes appear there too.</li>
             </ol>
           </section>
-          <section className={styles.box} aria-labelledby="new-code">
-            <h2 id="new-code" className={styles.part}>New here</h2>
-            <Action what="Gets a new, empty code from the database and syncs this device with it. Notes you already made here go with it.">
-              <button type="button" className="btn" onClick={make} disabled={busy}><Icon name="sync" />{busy ? "Making it…" : "Make a new code"}</button>
-            </Action>
-          </section>
+        )}
+      </div>
+
+      <div className={styles.doing}>
+      {code === undefined && <p className="muted" aria-busy="true">Checking this device…</p>}
+
+      {code === null && (
+        <>
           <form className={styles.box} onSubmit={submit} noValidate aria-labelledby="have-code">
             <h2 id="have-code" className={styles.part}>I have a code</h2>
             <User />
@@ -136,6 +136,12 @@ export default function Sync() {
               <button type="button" className="text-btn" aria-pressed={see} onClick={() => setSee(!see)}>{see ? "Hide the letters" : "Show the letters"}</button>
             </Action>
           </form>
+          <section className={styles.box} aria-labelledby="new-code">
+            <h2 id="new-code" className={styles.part}>New here</h2>
+            <Action what="Gets a new, empty code from the database and syncs this device with it. Notes you already made here go with it.">
+              <button type="button" className="btn" onClick={make} disabled={busy}><Icon name="sync" />{busy ? "Making it…" : "Make a new code"}</button>
+            </Action>
+          </section>
         </>
       )}
 
@@ -179,6 +185,7 @@ export default function Sync() {
       )}
 
       <p className={styles.error} role="alert">{error}</p>
+      </div>
     </main>
   );
 }
