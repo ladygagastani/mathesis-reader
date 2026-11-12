@@ -231,6 +231,14 @@ export default function Lookup({ at, place, inDesk, over, layer, onLayer, onStep
               )}
               {l!.lsj && (full || lsjShort.length > 0 || clipped) && <button type="button" className={`text-btn ${styles.quietBtn}`} aria-expanded={full} onClick={() => setWhole(full ? "" : key)}><Icon name={full ? "chevron-up" : "chevron-down"} />{full ? "The short entry" : "The whole entry"}</button>}
             </section>
+            <section className={styles.sec}>
+              <h3 className="label">Other dictionaries</h3>
+              <ul className={styles.dicts}>
+                <li><a href={`https://logeion.uchicago.edu/${encodeURIComponent(head)}`} target="_blank" rel="noopener noreferrer">Logeion<Icon name="outside" /></a> <span className={styles.fine}>LSJ, Middle Liddell, Autenrieth and more</span></li>
+                <li><a href={`https://www.perseus.tufts.edu/hopper/morph?l=${encodeURIComponent(lookupForm(at.word))}&la=greek`} target="_blank" rel="noopener noreferrer">Perseus<Icon name="outside" /></a> <span className={styles.fine}>every way the form can be parsed</span></li>
+              </ul>
+              <p className={styles.fine}>These open on other sites, which then see the word.</p>
+            </section>
             {needWikt && (
               <section className={styles.sec}>
                 <h3 className="label">Wiktionary · live</h3>

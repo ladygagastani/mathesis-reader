@@ -63,7 +63,7 @@ export async function open(page, base, s) {
     if (s.act === "more") { await page.getByRole("button", { name: "More about it" }).click(); await page.getByText("Dictionary · LSJ").waitFor(); }
   }
   if (s.act === "aa") await page.getByRole("button", { name: "Text", exact: true }).click();
-  if (s.act === "pages") await page.getByRole("button", { name: /^Pages:/ }).click();
+  if (s.act === "pages") await page.getByRole("button", { name: /^Go to:/ }).click();
   if (s.act === "private") await page.getByRole("button", { name: /^Private texts/ }).click();
   if (s.act === "make") await page.getByRole("button", { name: "Make a new code" }).click();
   if (s.act === "notes") await page.getByRole("button", { name: /^Notes/ }).click();

@@ -1,18 +1,85 @@
 "use client";
 /**
- * The reader's bar along the top (DESIGN.md, decision 4): Library at the left, the book's title, where you are (which opens the
- * pages), Notes and Text at the right. It stays at the top of the window while the text scrolls. A menu drops from its button as a
- * leaf of paper; it takes the focus when it opens, Escape or × closes it, and the focus goes back to the button that opened it.
+ * The reader's bar along the top (DESIGN.md, decision 4): Library at the left, the book's title (which takes you to the top of the
+ * page), where you are (which opens Go to: a passage by its reference, a word anywhere in the book, the pages), Notes, Text and the
+ * keys at the right. It stays at the top of the window while the text scrolls. A menu drops from its button as a leaf of paper; it
+ * takes the focus when it opens, Escape or × closes it, and the focus goes back to the button that opened it. The reader can open
+ * a menu from the keyboard (`ask`: g for Go to, ? for the keys).
  */
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import type { Found } from "@/lib/reader/find";
 import Icon from "@/components/Icon";
-import { GREEK_SIZES, setSettings, stepSize, type Columns, type Theme } from "@/lib/settings";
+import { GREEK_SIZES, LEADINGS, setSettings, stepLeading, stepSize, type Columns, type Theme } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
 import { placeName, type Note } from "@/lib/notes/notes";
 import styles from "./ReaderBar.module.css";
 
-type Open = "" | "aa" | "pages" | "notes";
+export type Open = "" | "aa" | "pages" | "notes" | "keys";
+
+/** A text to choose in Text: its version ("perseus-grc2", or "none") and how it is named ("Burnet, 1905"). */
+export interface TextOption { value: string; label: string }
+
+/** The keys, as the Keys menu lists them. */
+const KEYS: [keys: string[], what: string][] = [
+  [["←", "→"], "The page before, the page after. With a word looked up: the word before, the word after."],
+  [["g"], "Go to a passage, or find a word anywhere in the book."],
+  [["Tab"], "Into the text, then ← → from word to word, ↑ ↓ from line to line, Home and End to the first and last word."],
+  [["Enter"], "Look up the word."],
+  [["Esc"], "Close the look-up or a menu."],
+  [["/"], "Search the library, from any page."],
+  [["?"], "These keys."],
+];
+
+/** Go to: a passage by its reference, and a word anywhere in the book. */
+function GoTo({ example, goTo, find, onFound, onDone }: {
+  example: string; goTo: (ref: string) => string | null; find: (q: string) => Found[]; onFound: (f: Found, q: string) => void; onDone: () => void;
+}) {
+  const [ref, setRef] = useState("");
+  const [wrong, setWrong] = useState("");
+  const [q, setQ] = useState("");
+  const [found, setFound] = useState<{ q: string; list: Found[] } | null>(null);
+  const count = (f: { q: string; list: Found[] }) => !f.list.length ? `No passage has "${f.q.trim()}".`
+    : f.list.length >= 100 ? "The first 100 passages:" : `${f.list.length} ${f.list.length === 1 ? "passage" : "passages"}:`;
+  return (
+    <>
+      <form className={styles.field} onSubmit={(e) => { e.preventDefault(); const bad = goTo(ref); setWrong(bad ?? ""); if (!bad) onDone(); }}>
+        <label className="label" htmlFor="goto-ref">Passage</label>
+        <div className={styles.inline}>
+          <input id="goto-ref" className={styles.input} value={ref} onChange={(e) => { setRef(e.target.value); setWrong(""); }} placeholder={`a reference, as ${example}`}
+            autoComplete="off" spellCheck={false} aria-describedby="goto-wrong" />
+          <button type="submit" className="btn ghost">Go<Icon name="next" /></button>
+        </div>
+        <p id="goto-wrong" className={styles.wrong} role="alert">{wrong}</p>
+      </form>
+      <form className={styles.field} role="search" onSubmit={(e) => { e.preventDefault(); setFound({ q, list: find(q) }); }}>
+        <label className="label" htmlFor="goto-find">Find in this book</label>
+        <div className={styles.inline}>
+          <input id="goto-find" type="search" className={styles.input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="a word, in Greek letters"
+            autoComplete="off" spellCheck={false} />
+          <button type="submit" className="btn ghost">Find</button>
+        </div>
+        {found && (
+          <div className={styles.found} aria-live="polite">
+            <p className={styles.foundCount}>{count(found)}</p>
+            {found.list.length > 0 && (
+              <ol className={styles.pages}>
+                {found.list.map((f) => (
+                  <li key={f.unit}>
+                    <button type="button" className={`${styles.pageBtn} ${styles.foundBtn}`} onClick={() => { onFound(f, found.q); onDone(); }}>
+                      <span className={styles.foundRef}>{f.ref}</span>
+                      <span lang="grc" className={styles.foundText}>{f.before}<mark>{f.match}</mark>{f.after}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )}
+      </form>
+    </>
+  );
+}
 
 function Menu({ title, onClose, className, children }: { title: string; onClose: (refocus: boolean) => void; className: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -63,9 +130,12 @@ function shownRem(): number {
   return probe ? parseFloat(getComputedStyle(probe).fontSize) / root : 1.5;
 }
 
-export default function ReaderBar({ title, showTitle, where, at, pages, page, onPage, hasEnglish, notes, onNote }: {
+export default function ReaderBar({ title, showTitle, onTop, where, at, pages, page, onPage, hasEnglish, notes, onNote, ask,
+  example, goTo, find, onFound, editions, edition, onEdition, englishes, english, onEnglish }: {
   /** the book: its Greek title, author and English title, and the lock of a private text */
   title: React.ReactNode;
+  /** to the top of the page */
+  onTop: () => void;
   /** false while the title page stands under the bar (the title page is the page's heading then) */
   showTitle: boolean;
   /** the page's name ("Sections 17–22") */
@@ -76,27 +146,39 @@ export default function ReaderBar({ title, showTitle, where, at, pages, page, on
   hasEnglish: boolean;
   /** this book's notes, in the order of the book */
   notes: Note[]; onNote: (n: Note) => void;
+  /** a menu the keyboard asks for; n changes with every asking */
+  ask: { menu: Open; n: number } | null;
+  /** Go to: a reference to show as an example, the way to a passage (a message when there is none), the search of the book */
+  example: string; goTo: (ref: string) => string | null; find: (q: string) => Found[]; onFound: (f: Found, q: string) => void;
+  /** the Greek editions and the translations to choose from (Text shows a choice only where there is one) */
+  editions: TextOption[]; edition: string; onEdition: (v: string) => void;
+  englishes: TextOption[]; english: string; onEnglish: (v: string) => void;
 }) {
   const s = useSettings();
   const [open, setOpen] = useState<Open>("");
   const aaBtn = useRef<HTMLButtonElement>(null);
   const pagesBtn = useRef<HTMLButtonElement>(null);
   const notesBtn = useRef<HTMLButtonElement>(null);
+  const keysBtn = useRef<HTMLButtonElement>(null);
   // closed with ×, Escape or a choice: the focus goes back to the button that opened it (a click elsewhere keeps its own focus)
   const onClose = useCallback((refocus: boolean) => {
     setOpen((was) => {
-      if (refocus) (was === "aa" ? aaBtn : was === "notes" ? notesBtn : pagesBtn).current?.focus();
+      if (refocus) (was === "aa" ? aaBtn : was === "notes" ? notesBtn : was === "keys" ? keysBtn : pagesBtn).current?.focus();
       return "";
     });
   }, []);
+  // a menu asked for from the keyboard (opened as the asking is seen, once each)
+  const [asked, setAsked] = useState(0);
+  if (ask && ask.n !== asked) { setAsked(ask.n); setOpen(ask.menu); }
   const toggle = (m: Open) => setOpen((o) => (o === m ? "" : m));
   const size = typeof s.greekSize === "number" ? `${Math.round(s.greekSize * 16)} px` : "the device's size";
+  const leading = String(typeof s.leading === "number" ? s.leading : LEADINGS.auto);
 
   return (
     <header className={styles.bar} data-reader-bar="">
       <div className={styles.in}>
         <Link href="/" className={`${styles.quiet} ${styles.back}`}><Icon name="back" />Library</Link>
-        {showTitle ? <h1 className={styles.title}>{title}</h1> : <span />}
+        {showTitle ? <h1 className={styles.title}><button type="button" className={styles.top} onClick={onTop} title="To the top of the page">{title}</button></h1> : <span />}
 
         <nav className={styles.end} aria-label="The reader">
           {/* where you are: the page's name, a thin rule with a short red mark at the place in the book, "page 1 of 5" */}
@@ -104,13 +186,15 @@ export default function ReaderBar({ title, showTitle, where, at, pages, page, on
             <button ref={pagesBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.where}`} aria-expanded={open === "pages"} aria-haspopup="dialog"
               onClick={() => toggle("pages")}>
               <Icon name="goto" />
-              <span className="visually-hidden">Pages: </span><span className={styles.part}>{where}</span><span className="visually-hidden">, </span>
+              <span className="visually-hidden">Go to: </span><span className={styles.part}>{where}</span><span className="visually-hidden">, </span>
               <span className={styles.rule} aria-hidden="true"><span className={styles.mark} style={{ "--p": pages.length > 1 ? page / (pages.length - 1) : 0 } as React.CSSProperties} /></span>
               <span className={styles.at}>{at}</span>
             </button>
             {open === "pages" && (
-              <Menu title="Pages" onClose={onClose} className={styles.pagesMenu}>
-                <ol className={styles.pages}>
+              <Menu title="Go to" onClose={onClose} className={styles.pagesMenu}>
+                <GoTo example={example} goTo={goTo} find={find} onFound={onFound} onDone={() => onClose(false)} />
+                <span className="label" id="pages-label">Pages</span>
+                <ol className={styles.pages} aria-labelledby="pages-label">
                   {pages.map((name, i) => (
                     <li key={i}>
                       <button type="button" className={styles.pageBtn} aria-current={i === page ? "page" : undefined}
@@ -162,8 +246,57 @@ export default function ReaderBar({ title, showTitle, where, at, pages, page, on
                     {s.greekSize !== "auto" && <button type="button" className="text-btn" onClick={() => setSettings({ greekSize: "auto" })}>Device size</button>}
                   </div>
                 </div>
+                <div className={styles.field}>
+                  <span className="label" id="leading-label">Line spacing</span>
+                  <div className={styles.sizeRow} role="group" aria-labelledby="leading-label">
+                    <button type="button" className="btn ghost" disabled={s.leading === LEADINGS.min}
+                      onClick={() => setSettings({ leading: stepLeading(s.leading, -1) })}>Closer</button>
+                    <button type="button" className="btn ghost" disabled={s.leading === LEADINGS.max}
+                      onClick={() => setSettings({ leading: stepLeading(s.leading, 1) })}>Wider</button>
+                    <span className={styles.sizeNow} aria-live="polite">{leading}</span>
+                    {s.leading !== "auto" && <button type="button" className="text-btn" onClick={() => setSettings({ leading: "auto" })}>As designed</button>}
+                  </div>
+                </div>
                 <Choice label="Columns" value={s.columns} options={COLUMNS} onChange={(columns) => setSettings({ columns })}
                   unavailable={(c) => c !== "greek" && !hasEnglish} />
+                {(editions.length > 1 || englishes.length > 1) && (
+                  <div className={styles.field}>
+                    <span className="label">Edition</span>
+                    <div className={styles.texts}>
+                      {editions.length > 1 ? (
+                        <label className={styles.pick}>Greek
+                          <select value={edition} onChange={(e) => { onEdition(e.target.value); onClose(false); }}>
+                            {editions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                        </label>
+                      ) : editions[0] && <span className={styles.pick}>Greek <span className={styles.only}>{editions[0].label}</span></span>}
+                      {englishes.length > 1 && (
+                        <label className={styles.pick}>English
+                          <select value={english} onChange={(e) => { onEnglish(e.target.value); onClose(false); }}>
+                            {englishes.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </Menu>
+            )}
+          </div>
+
+          <div className={styles.slot}>
+            <button ref={keysBtn} type="button" data-menu-opener="" className={styles.quiet} aria-expanded={open === "keys"} aria-haspopup="dialog"
+              onClick={() => toggle("keys")}><Icon name="keys" label="Keys" /></button>
+            {open === "keys" && (
+              <Menu title="Keys" onClose={onClose} className={styles.keysMenu}>
+                <dl className={styles.keys}>
+                  {KEYS.map(([keys, what]) => (
+                    <div key={what} className={styles.keyRow}>
+                      <dt>{keys.map((k) => <kbd key={k}>{k}</kbd>)}</dt>
+                      <dd>{what}</dd>
+                    </div>
+                  ))}
+                </dl>
               </Menu>
             )}
           </div>

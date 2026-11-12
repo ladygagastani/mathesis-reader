@@ -1,5 +1,6 @@
 /**
- * Opening a book: the work in the catalogue, its first Greek edition and its first English translation, both read from GitHub at the
+ * Opening a book: the work in the catalogue, its Greek edition and its English translation (the first of each, or the ones chosen in
+ * Text: `ed` and `tr` in the address, by their version, "perseus-grc2"; tr=none for the Greek alone), both read from GitHub at the
  * catalogue's pinned version and parsed off the main thread, with the English placed beside the Greek passage by passage. The word
  * analyses for the work start loading with the texts, so the first look-up seldom waits for them. (Starting them after the texts
  * was measured on a slow phone, scripts/weigh.mjs: the Greek showed no sooner, and the first look-up was slower.)
@@ -7,7 +8,7 @@
  * A private text (w=mine:<id>) comes from the database instead, only on a device that holds a sync code, and becomes a book the same way the
  * old app made one (lib/mine/mine.ts). Its words are looked up in the analyses of the work it names (its urn), if it names one.
  */
-import { greekEditions, loadCatalog, translations, type CatAuthor, type CatText, type CatWork } from "@/lib/catalog";
+import { greekEditions, loadCatalog, translations, versionOf, type CatAuthor, type CatText, type CatWork } from "@/lib/catalog";
 import { getXml } from "@/lib/texts/source";
 import { parseInWorker } from "@/lib/tei/client";
 import { schemeFor } from "@/lib/tei/versification";
@@ -31,7 +32,13 @@ export interface Book {
   lookupWork: string;
   /** a private text: only a synced device can see it */
   private: boolean;
+  /** the Greek editions and the English translations the work has, to choose from */
+  editions: CatText[];
+  translations: CatText[];
 }
+
+/** The edition and translation asked for, by version; undefined for the first. */
+export interface Choice { ed?: string | null; tr?: string | null }
 
 export class NoSuchBook extends Error {}
 /** A private text, asked for on a device that holds no sync code. */
@@ -42,18 +49,20 @@ function prefetch(work: string) {
   loadSyntax(work).catch(() => null);
 }
 
-export async function openBook(workId: string): Promise<Book> {
+export async function openBook(workId: string, choice: Choice = {}): Promise<Book> {
   if (isMine(workId)) return openPrivate(workId);
   const idx = await loadCatalog();
   const work = idx.work.get(workId);
   const author = idx.authorOf.get(workId);
-  const grc = work ? greekEditions(work)[0] : undefined;
+  const editions = work ? greekEditions(work) : [];
+  const englishes = work ? translations(work) : [];
+  const grc = editions.find((t) => versionOf(t.urn) === choice.ed) ?? editions[0];
   if (!work || !author || !grc) throw new NoSuchBook(`The library has no Greek text for "${workId}".`);
   prefetch(work.id);
-  const tr = translations(work)[0] ?? null;
+  const tr = choice.tr === "none" ? null : englishes.find((t) => versionOf(t.urn) === choice.tr) ?? englishes[0] ?? null;
   const [grcXml, trXml] = await Promise.all([getXml(idx, grc), tr ? getXml(idx, tr).catch(() => null) : null]);
   const { doc, placed } = await parseInWorker(grcXml, trXml, tr ? schemeFor(work.id, tr) : undefined, tr?.urn);
-  return { work, author, grc, tr: trXml ? tr : null, doc, placed, lookupWork: work.id, private: false };
+  return { work, author, grc, tr: trXml ? tr : null, doc, placed, lookupWork: work.id, private: false, editions, translations: englishes };
 }
 
 async function openPrivate(workId: string): Promise<Book> {
@@ -70,5 +79,5 @@ async function openPrivate(workId: string): Promise<Book> {
   const version = stored.passages.some((p) => p.rows.some((r) => r.english)) ? "ours" : hasPublished(stored) ? "published" : null;
   const { doc, placed } = mineParsed(stored, version);
   const tr = version ? work.texts.find((t) => t.urn.endsWith(`.${version}`)) ?? null : null;
-  return { work, author, grc: work.texts[0], tr, doc, placed, lookupWork, private: true };
+  return { work, author, grc: work.texts[0], tr, doc, placed, lookupWork, private: true, editions: [], translations: [] };
 }

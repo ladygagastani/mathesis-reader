@@ -4,7 +4,7 @@
   --greek-size: var(--greek-chosen, var(--greek-auto));
   /* the text column: the rail and 28 em of Greek (about 60 letters a line); English alone, 34 em of English; Both, the two side by side */
   --col: calc(var(--rail) + 28 * var(--greek-size));
-  min-height: 100svh;
+  position: relative; min-height: 100svh;
   padding-bottom: var(--space-7);
 }
 .reader[data-cols="trans"] { --col: calc(var(--rail) + 34 * var(--t-body)); }
@@ -165,3 +165,11 @@
 
 /* the English's heading takes the Greek heading's size and leading, so the two columns start level */
 .tr .head { font-size: calc(1.4 * var(--greek-size)); line-height: var(--reading-leading); }
+
+/* the passage you stopped at last time, said once in the rail when the book opens there */
+.resumed { display: block; margin-top: var(--space-2); font: 400 var(--t-label) / 1.25 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
+/* a search's words on the page (Go to, Find in this book) */
+.w[data-found] { background: var(--word-on); }
+.idleHint kbd { display: inline-block; min-width: 1.6em; padding: 0 var(--space-1); box-shadow: var(--rule-box); font: inherit; text-align: center; color: var(--ink); }
+/* "Note on these words", under words selected in the text */
+.pick { position: absolute; z-index: var(--z-panel); background: var(--bg); }

@@ -129,3 +129,9 @@
 .words { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); line-height: 1.4; }
 .words > [lang="grc"], .words[lang="grc"] > span { font-family: var(--f-greek); }
 .moreN { font-family: var(--f-body); font-style: italic; color: var(--ink-2); }
+
+/* other dictionaries: a link each, and what it holds */
+.dicts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.dicts a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 2px; }
+@media (hover: hover) { .dicts a:hover { color: var(--accent); } }
+@media (pointer: coarse) { .dicts a { min-height: var(--tap); } }
