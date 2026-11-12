@@ -13,6 +13,8 @@ const cache = new Map<string, Promise<WiktSense[] | null>>();
 function clean(html: string): { text: string; lemma: string | null } {
   const lemma = /\bof\s*(?:<[^>]+>\s*)*<a[^>]*title="([^"]+)"/.exec(html)?.[1] ?? null;
   const text = html
+    // Wiktionary inlines its own stylesheets in some definitions: drop them with their contents, not only their tags
+    .replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"')
     .replace(/[ \t]+/g, " ").trim();

@@ -62,12 +62,30 @@
 
 /* layer one */
 .card { display: grid; gap: var(--space-2); align-content: start; }
-.kind { font-size: var(--step--1); line-height: 1.4; color: var(--ink-2); }
+/* the kind of word in the rubric's small capitals, then the form tapped in the Greek face */
+.kind { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-2); font-size: var(--step--1); line-height: 1.4; color: var(--ink-2); }
+.kindName { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.14em; text-transform: uppercase; color: var(--rubric); }
+.tapped { color: var(--ink); }
+/* the core list's full heading: the genitive and article, or the principal parts */
+.heading { font-family: var(--f-greek); font-size: var(--step-0); line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; }
 /* the meaning is never smaller than the Greek it explains */
 .meaning { font: 400 var(--step-2) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; font-size: max(var(--step-2), var(--greek-size)); }
-.role { font-size: var(--step-0); line-height: 1.4; color: var(--ink); }
-.grammar { color: var(--ink-2); }
+/* the grammar, one word to a part, each in a hairline frame */
+.parts { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: var(--space-1) 0 0; padding: 0; list-style: none; }
+.parts li {
+  font-family: var(--f-label); font-size: var(--step--2); line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);
+  padding: 0.45em 0.7em 0.4em; border: 1px solid var(--rule); border-radius: 999px; background: var(--bg-2);
+}
+.role { font-size: var(--step-0); line-height: 1.4; color: var(--ink-2); }
+.gov { font-family: var(--f-greek); color: var(--ink); }
 .unsure { font-size: var(--step--1); font-style: italic; color: var(--ink-2); }
+/* how common the word is: a quiet line under a short rule */
+.facts {
+  display: flex; flex-wrap: wrap; gap: 0.15em var(--space-4); margin-top: var(--space-1); padding-top: var(--space-2);
+  border-top: 1px solid var(--rule); font-size: var(--step--1); line-height: 1.4; color: var(--ink-2);
+}
+.facts span { display: inline-flex; align-items: baseline; gap: 0.5em; }
+.facts span::before { content: ""; flex: none; width: 0.35em; height: 0.35em; border-radius: 50%; background: var(--rubric); translate: 0 -0.15em; }
 
 /* Previous, Next and More about it */
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4); }
@@ -94,3 +112,15 @@
 .quietBtn:global(.text-btn) { justify-self: start; }
 @media (pointer: coarse) { .quietBtn:global(.text-btn) { min-height: var(--tap); } }
 .fine { font-size: var(--step--2); color: var(--ink-2); }
+/* Wiktionary: each part of speech under its name, the senses numbered in the rubric, an example indented under its sense */
+.wsense { display: grid; gap: var(--space-1); }
+.wpos { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.wlist { display: grid; gap: var(--space-1); margin: 0; padding-left: 1.6em; }
+.wlist li::marker { font-family: var(--f-label); font-size: 0.85em; color: var(--rubric); }
+.wnote { display: block; margin-top: 0.15em; padding-left: var(--space-2); border-left: 1px solid var(--rule); font-size: var(--step--1); font-style: italic; color: var(--ink-2); }
+/* the word's family: where it comes from, then the words built on it as a run of words */
+.etym { line-height: 1.5; color: var(--ink); }
+.kin { display: grid; gap: var(--space-1); }
+.words { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); line-height: 1.4; }
+.words > [lang="grc"], .words[lang="grc"] > span { font-family: var(--f-greek); }
+.moreN { font-family: var(--f-body); font-style: italic; color: var(--ink-2); }

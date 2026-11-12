@@ -57,17 +57,30 @@ export function kindOf(tag: string): string {
  * 2nd person singular". A word with nothing to say (a particle, a preposition) gives "".
  */
 export function plainGrammar(tag: string): string {
+  return capital(grammarGroups(tag).map((g) => g.join(" ")).join(", "));
+}
+
+/**
+ * The same grammar as plainGrammar, one word to a part, for the look-up card to set each apart:
+ * "v1sria---" → ["perfect", "active", "indicative", "1st person", "singular"]. A word with nothing to say gives [].
+ */
+export function grammarParts(tag: string): string[] {
+  return grammarGroups(tag).flat();
+}
+
+/** plainGrammar's phrases, each a list of its words: [["perfect", "active", "indicative"], ["1st person", "singular"]] */
+function grammarGroups(tag: string): string[][] {
   const [p, per, num, ten, moo, voi, gen, cas, deg] = tag.padEnd(9, "-").split("");
-  const join = (...x: (string | undefined)[]) => x.filter(Boolean).join(" ");
+  const join = (...x: (string | undefined)[]) => x.filter((y): y is string => !!y);
   // a gender is named where it belongs to the form; "common" says only that the form does not tell
   const gender = p === "n" || gen === "c" ? undefined : GENDER[gen];
   const ofNoun = join(CASE[cas], NUMBER[num], gender);
-  let parts: string[];
+  let groups: string[][];
   if (p === "v") {
     const verb = join(TENSE[ten], VOICE[voi]);
-    if (moo === "p") parts = [join(verb, "participle"), ofNoun];
-    else if (moo === "n") parts = [join(verb, "infinitive")];
-    else parts = [join(verb, MOOD[moo]), join(PERSON[per], NUMBER[num])];
-  } else parts = [join(ofNoun, DEGREE[deg]), PERSON[per] ?? ""];
-  return capital(parts.filter(Boolean).join(", "));
+    if (moo === "p") groups = [[...verb, "participle"], ofNoun];
+    else if (moo === "n") groups = [[...verb, "infinitive"]];
+    else groups = [join(...verb, MOOD[moo]), join(PERSON[per], NUMBER[num])];
+  } else groups = [join(...ofNoun, DEGREE[deg]), join(PERSON[per])];
+  return groups.filter((g) => g.length);
 }

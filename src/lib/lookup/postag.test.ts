@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { kindOf, plainGrammar, readTag } from "./postag";
+import { grammarParts, kindOf, plainGrammar, readTag } from "./postag";
 import fixture from "./fixtures/iliad-1-1.json";
 
 describe("reading grammar tags", () => {
@@ -70,5 +70,17 @@ describe("the look-up card's wording of real tags", () => {
       expect(plainGrammar(tag)).not.toMatch(/\b(nom|gen|dat|acc|voc|sg|pl|pres|aor|fut|perf|impf|ind|subj|opt|imp|inf|ptc|act|mid|pass|masc|fem|neut)\b\.?/i);
     }
     expect(kindOf("a-p---fa-")).toBe("adjective");
+  });
+});
+
+describe("the grammar one word to a part", () => {
+  it("gives the same words as the plain grammar, in the same order", () => {
+    expect(grammarParts("v1sria---")).toEqual(["perfect", "active", "indicative", "1st person", "singular"]);
+    expect(grammarParts("v-sapmmn-")).toEqual(["aorist", "middle", "participle", "nominative", "singular", "masculine"]);
+    expect(grammarParts("n-s---fa-")).toEqual(["accusative", "singular"]);
+    expect(grammarParts("g--------")).toEqual([]);
+    for (const tag of ["v1sria---", "v-sapmmn-", "n-s---fa-", "a-p---fac", "v--pna---"]) {
+      expect(grammarParts(tag).join(" ").toLowerCase()).toBe(plainGrammar(tag).replace(/,/g, "").toLowerCase());
+    }
   });
 });

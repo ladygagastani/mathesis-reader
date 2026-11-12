@@ -7,7 +7,7 @@ import { candidates, lookupForm } from "@/lib/greek";
 import { loadSyntax } from "@/lib/syntax";
 import type { TeiDoc } from "@/lib/tei/types";
 import { lookupCard, treeAt, type Card, type InSentence } from "./card";
-import { coreEntry } from "./core";
+import { coreEntry, type CoreEntry } from "./core";
 import { lsjEntries, type LsjEntry } from "./lsj";
 import { countLemma } from "./occurrences";
 import { analyse, loadWordPack, type Analysis } from "./words";
@@ -35,6 +35,8 @@ export interface Looked {
   occurs: number | null;
   lsj: { head: string; entries: LsjEntry[] } | null;
   lsjError?: string;
+  /** the core vocabulary's entry for the dictionary form: its full heading, its class, its group and how common it is */
+  core: CoreEntry | null;
 }
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -60,5 +62,5 @@ export async function lookUp(at: WordAt): Promise<Looked> {
   const core = await coreEntry(analysis?.lemma ?? lookupForm(at.word)).catch(() => null);
 
   const card = lookupCard({ analysis, tree, core, lsj });
-  return { card, analysis, analysisError, tree, occurs, lsj, lsjError };
+  return { card, analysis, analysisError, tree, occurs, lsj, lsjError, core };
 }
