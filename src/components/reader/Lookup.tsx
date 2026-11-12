@@ -85,7 +85,12 @@ function ShowAll({ open, rest, onToggle }: { open: boolean; rest: number; onTogg
 /** A plain line when the analysis shown is not of this very word (lookup/words.ts, Analysis.where). */
 function unsure(l: Looked): string | null {
   if (!l.analysis || l.analysis.where === "here") return null;
-  return l.analysis.where === "passage" ? "Uncertain: matched to this passage, not to this exact word." : "Uncertain: this is how the form is read elsewhere in the book.";
+  switch (l.analysis.where) {
+    case "passage": return "Uncertain: matched to this passage, not to this exact word.";
+    case "corpus": return "Uncertain: this is how the form is usually read in other texts.";
+    case "parser": return "Uncertain: a parser's reading of the form alone, not of this sentence.";
+    default: return "Uncertain: this is how the form is read elsewhere in the book.";
+  }
 }
 
 export default function Lookup({ at, anchor, place, layer, onLayer, onStep, onClose, workTitle, book, takeFocus, onNote }: {
@@ -186,7 +191,7 @@ export default function Lookup({ at, anchor, place, layer, onLayer, onStep, onCl
   const shownMeaning = card?.meaning.source ? card.meaning.text : null;
   const lsjShort = l?.lsj ? otherDefinitions(l.lsj.entries, shownMeaning) : [];
   const full = whole === lkey;
-  const credits = l ? creditsFor({ glaux: !!l.analysis || !!l.tree, lsj: !!l.lsj, core: !!l.core }) : [];
+  const credits = l ? creditsFor({ glaux: (!!l.analysis && l.analysis.where !== "parser") || !!l.tree, parser: l.analysis?.where === "parser", lsj: !!l.lsj, core: !!l.core }) : [];
   const occurs = l ? occursLine(l.occurs, workTitle) : null;
   // the kind of word with the core list's class ("noun, masculine · 2nd declension"); the form tapped, where it is not the
   // dictionary form; the list's full heading; the grammar one word to a part; and how common the word is

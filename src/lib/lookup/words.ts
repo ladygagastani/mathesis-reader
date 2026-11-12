@@ -13,8 +13,13 @@ export interface WordPack {
 }
 export interface Analysis {
   lemma: string; tag: string; manual: boolean;
-  where: "here" | "passage" | "work";   // exact word here / same form in this passage / elsewhere in the work
-  others: { lemma: string; tag: string; n: number }[];   // for "work": all analyses of this form, most frequent first
+  /**
+   * exact word here / same form in this passage / elsewhere in the work / elsewhere in GLAUx (the form index, forms.ts) /
+   * the Morpheus parser (morpheus.ts), for a form no text in GLAUx has
+   */
+  where: "here" | "passage" | "work" | "corpus" | "parser";
+  /** for "work" and "corpus": all analyses of this form, most frequent first; for "parser": its readings, its first first (n is 0) */
+  others: { lemma: string; tag: string; n: number }[];
 }
 
 const packs = new Map<string, Promise<WordPack | null>>();
