@@ -5,11 +5,11 @@
 The moment it must win: you click a word and see its meaning, its form and its LSJ entry in place, without leaving
 the sentence.
 
-## The four parts
+## The five parts
 
 1. **The reader.** A book opens on its text under a one-line title. The Greek stands alone. Each passage has "Show the
    English", which sets the translation under that passage only. Aa holds the Greek size, Paper or Night, and Greek,
-   Both or English for the whole book. The reader has its own bar at the foot: Library, where you are, and Aa.
+   Both or English for the whole book. The reader has its own bar at the foot: Library, where you are, Notes and Aa.
 2. **The look-up.** Clicking or tapping a Greek word, or pressing Enter on it, opens the look-up. At 1100 px and
    wider it is a window about 300 px wide over the right margin, fixed while the text scrolls. Below 1100 px it is a
    low sheet over about a quarter of the screen, and the text scrolls so the word stays above it. Layer one shows the
@@ -20,11 +20,19 @@ the sentence.
 3. **The library.** A search field first: an author, a title, or a Greek word in a title. Under it the catalogue,
    always opening as one list of authors A to Z, each with their works; "By kind" groups them by kind of writing. A work
    opens straight into the reader.
-4. **Sync and private texts.** There is no sign-in, for privacy. A sync code of 20 random letters and digits, made once
-   in the Supabase SQL editor (`supabase/migrations/20261112120000_sync_codes.sql`), is typed on each device under
-   Sync. A synced device shows the private texts (table `private_translations`) at the top of the library, and they open
-   in the same reader. A device without a code sees none of them and never contacts Supabase. The app asks for no email
-   and no password, and the database keeps only a hash of each code.
+4. **Sync and private texts.** There is no sign-in, for privacy. Under Sync, "Make a new code" gets a code of 20
+   random letters and digits from the database. Each code is its own and starts empty. The page offers to save it to
+   your files, and its fields let 1Password and other password managers keep it and fill it in. Typing the same code on
+   another device brings your notes there. One code, marked once in the SQL editor as the owner's, also shows the
+   private texts (table `private_translations`) at the top of the library, and they open in the same reader. A device
+   without a code never contacts Supabase. The app asks for no email and no password, and the database keeps only a
+   hash of each code.
+5. **Notes and Saved.** In the look-up, "Note" writes a note on the word, its line of verse, or its passage, in one of
+   four colours. A noted word is underlined in its colour, and a noted line or passage has a bar of it at its left. At
+   the right edge of the window, a mark for each note stands where the scrollbar's thumb stands when the note is in
+   view, and clicking it jumps there and opens the note. The foot bar's Notes lists the book's notes. The Saved page
+   lists every note, book by book, to open, edit or remove. Notes stay on the device, and go with the sync code when
+   there is one.
 
 Not in version 1, with no hooks left for them: forum, map, wiki, lyre, vase studio, census, manuscripts, metre, eras,
 the Android app, photographs, Listen, Echoes, Compare, Find, Share, the Wiktionary look-up.

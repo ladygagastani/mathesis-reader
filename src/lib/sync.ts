@@ -1,7 +1,8 @@
 "use client";
 /**
  * Syncing a device, and reading the private texts (SPEC.md, "Sync and private texts"). There is no account: the device keeps a
- * sync code, and the database's two functions read nothing for a code they do not know (supabase/migrations/…_sync_codes.sql).
+ * sync code, its own: a new one starts empty, and only the owner's opens the private texts. The database's functions read nothing
+ * for a code they do not know (supabase/migrations/…_sync_codes.sql and …_own_codes_and_notes.sql).
  * A device with no code never contacts Supabase. The private texts are asked for with cache "no-store", so the browser keeps none
  * of their words in its cache, and the page keeps them only in memory.
  */
@@ -33,7 +34,7 @@ export function useSyncCode(): SyncCode | null | undefined {
 /** A code the database does not know (removed, or mistyped). */
 export class UnknownCode extends Error {}
 
-async function call<T>(fn: string, args: Record<string, string>): Promise<T> {
+async function call<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   if (!SYNC_ON) throw new Error("This copy of the app was built without the Supabase settings (.env.local).");
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method: "POST", cache: "no-store",
@@ -56,7 +57,17 @@ export async function syncDevice(code: SyncCode): Promise<void> {
   await listPrivate(code);
   keep(code);
 }
+/** A new code from the database, kept on this device at once. It starts empty. */
+export async function makeCode(): Promise<SyncCode> {
+  const code = parseSyncCode(await call<string>("make_sync_code", {}));
+  if (!code) throw new Error("The database gave a code this app cannot read.");
+  keep(code);
+  return code;
+}
 export const forgetCode = () => keep(null);
+
+export const notesList = (code: SyncCode) => call<unknown>("notes_list", { code });
+export const notesSave = (code: SyncCode, notes: unknown[]) => call<null>("notes_save", { code, notes });
 
 export type PrivateText =
   | { state: "ready"; doc: TranslationDoc }

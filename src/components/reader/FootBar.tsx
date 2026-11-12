@@ -1,6 +1,6 @@
 "use client";
 /**
- * The reader's own bar along the foot (ADR 0009, decision 5, without Study): Library, where you are, and Aa. On a computer a menu is
+ * The reader's own bar along the foot (ADR 0009, decision 5, without Study): Library, where you are, Notes and Aa. On a computer a menu is
  * a leaf of paper rising from the bar; on a phone it is a sheet from the foot of the screen. A menu takes the focus when it opens,
  * Escape or × closes it, and the focus goes back to the button that opened it.
  */
@@ -9,9 +9,10 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Icon from "@/components/Icon";
 import { GREEK_SIZES, setSettings, stepSize, type Columns, type Theme } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
+import { placeName, type Note } from "@/lib/notes/notes";
 import styles from "./FootBar.module.css";
 
-type Open = "" | "aa" | "pages";
+type Open = "" | "aa" | "pages" | "notes";
 
 function Menu({ title, onClose, className, children }: { title: string; onClose: (refocus: boolean) => void; className: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -62,7 +63,7 @@ function shownRem(): number {
   return probe ? parseFloat(getComputedStyle(probe).fontSize) / root : 1.25;
 }
 
-export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hidden }: {
+export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hidden, notes, onNote }: {
   /** the page's name ("Sections 17–22") */
   where: string;
   /** "1 of 5" */
@@ -71,15 +72,18 @@ export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hi
   hasEnglish: boolean;
   /** the look-up's sheet stands where the bar was */
   hidden: boolean;
+  /** this book's notes, in the order of the book */
+  notes: Note[]; onNote: (n: Note) => void;
 }) {
   const s = useSettings();
   const [open, setOpen] = useState<Open>("");
   const aaBtn = useRef<HTMLButtonElement>(null);
   const pagesBtn = useRef<HTMLButtonElement>(null);
+  const notesBtn = useRef<HTMLButtonElement>(null);
   // closed with ×, Escape or a choice: the focus goes back to the button that opened it (a click elsewhere keeps its own focus)
   const onClose = useCallback((refocus: boolean) => {
     setOpen((was) => {
-      if (refocus) (was === "aa" ? aaBtn : pagesBtn).current?.focus();
+      if (refocus) (was === "aa" ? aaBtn : was === "notes" ? notesBtn : pagesBtn).current?.focus();
       return "";
     });
   }, []);
@@ -98,8 +102,12 @@ export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hi
           <span className={styles.rule} aria-hidden="true"><span className={styles.mark} style={{ "--p": pages.length > 1 ? page / (pages.length - 1) : 0 } as React.CSSProperties} /></span>
           <span className={styles.at}>{at}</span>
         </button>
-        <button ref={aaBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.aa}`} aria-expanded={open === "aa"} aria-haspopup="dialog"
-          onClick={() => toggle("aa")}><Icon name="text-size" />Text</button>
+        <div className={styles.end}>
+          <button ref={notesBtn} type="button" data-menu-opener="" className={styles.quiet} aria-expanded={open === "notes"} aria-haspopup="dialog"
+            onClick={() => toggle("notes")}><Icon name="note" />Notes{notes.length > 0 && <span className={styles.count}>{notes.length}</span>}</button>
+          <button ref={aaBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.aa}`} aria-expanded={open === "aa"} aria-haspopup="dialog"
+            onClick={() => toggle("aa")}><Icon name="text-size" />Text</button>
+        </div>
       </div>
 
       {open === "pages" && (
@@ -112,6 +120,25 @@ export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hi
               </li>
             ))}
           </ol>
+        </Menu>
+      )}
+
+      {open === "notes" && (
+        <Menu title="Notes in this book" onClose={onClose} className={styles.notesMenu}>
+          {notes.length === 0 && <p className={styles.empty}>No notes in this book yet. Tap a word, then Note, to write one on the word, its line or its passage.</p>}
+          {notes.length > 0 && (
+            <ol className={styles.pages}>
+              {notes.map((n) => (
+                <li key={n.id}>
+                  <button type="button" className={`${styles.pageBtn} ${styles.noteBtn}`} onClick={() => { onClose(false); onNote(n); }}>
+                    <span className={styles.swatch} data-colour={n.colour} aria-hidden="true" />
+                    <span className={styles.noteText}><span className={styles.notePlace}>{placeName(n.anchor)}</span>{n.text}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+          <Link className={styles.allLink} href="/saved">All your notes, in every book<Icon name="next" /></Link>
         </Menu>
       )}
 

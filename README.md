@@ -31,13 +31,13 @@ The app opens at http://localhost:3000. It reads its texts and data from the old
 | `node scripts/weigh.mjs` | Page weight and load time on a slow phone, against the old reader |
 
 The browser tests and the look checks never contact the real database. `scripts/fake-supabase.mjs` answers in its place, with
-a made-up sync code and placeholder text only.
+made-up sync codes and placeholder text only. Each check's first lines say how it was shown to catch the kind of bug it is for.
 
 ## Sync codes
 
-The private texts need no sign-in. Run `supabase/migrations/20261112120000_sync_codes.sql` once in the Supabase SQL editor.
-Then `select public.new_sync_code('phone');` prints a new code, once. Type it under Sync on each device. Deleting its row
-from `public.sync_codes` stops it working everywhere. Each check's first lines say how it was shown to catch the kind of bug it is for.
+Run the two files in `supabase/migrations` once each, in date order, in the Supabase SQL editor. Then make a code under Sync in
+the app. To let your code open the private texts, run `select public.make_owner('XXXX-XXXX-XXXX-XXXX-XXXX');` with it in the
+SQL editor. Deleting a code's row from `public.sync_codes` stops it working everywhere and removes its notes.
 
 ## Folders
 

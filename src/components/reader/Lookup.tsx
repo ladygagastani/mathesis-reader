@@ -47,7 +47,7 @@ function unsure(l: Looked): string | null {
   return l.analysis.where === "passage" ? "Uncertain: matched to this passage, not to this exact word." : "Uncertain: this is how the form is read elsewhere in the book.";
 }
 
-export default function Lookup({ at, place, note, layer, onLayer, onStep, onClose, workTitle, takeFocus }: {
+export default function Lookup({ at, place, note, layer, onLayer, onStep, onClose, workTitle, takeFocus, onNote }: {
   at: WordAt; place: LookupPlace;
   /** the window's left edge and width, over the margin (place "note") */
   note: { left: number; width: number } | null;
@@ -56,6 +56,8 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
   workTitle: string;
   /** opened from the keyboard: the look-up takes the focus, so it is announced and its buttons are next */
   takeFocus: boolean;
+  /** write a note on this word, its line or its passage */
+  onNote: () => void;
 }) {
   const ref = useRef<HTMLElement>(null);
   const key = `${at.work}|${at.unitKey}|${at.i}`;
@@ -164,6 +166,7 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
         <div className={styles.row}>
           <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(-1)} aria-label="Previous word"><Icon name="chevron-left" />Previous</button>
           <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(1)} aria-label="Next word">Next<Icon name="chevron-right" /></button>
+          <button type="button" className={`text-btn ${styles.step}`} onClick={onNote}><Icon name="note" />Note</button>
           <button type="button" className={`text-btn ${styles.more}`} onClick={() => onLayer(2)} disabled={!card}><Icon name="info" />More about it</button>
         </div>
       )}

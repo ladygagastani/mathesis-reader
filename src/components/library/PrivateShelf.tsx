@@ -1,7 +1,7 @@
 "use client";
 /**
  * The owner's private texts, at the top of the library on a synced device (SPEC.md, "Sync and private texts"). Nothing shows for
- * a device without a sync code, and the database gives nothing for a code it does not know.
+ * a device without a sync code, and the database gives them only to the code marked as the owner's.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -19,17 +19,17 @@ export default function PrivateShelf() {
     listPrivate(code).then((list) => { if (live) setGot({ list }); }, (e) => { if (live) setGot({ error: trouble(e) }); });
     return () => { live = false; };
   }, [code]);
-  if (!code) return null;
+  // (a code that is not the owner's gets an empty list: nothing to show)
+  if (!code || got.list?.length === 0) return null;
 
   return (
     <section className={styles.private} aria-labelledby="private-texts">
       <div className={styles.partHead}>
         <h2 id="private-texts" className={styles.partName}>Your private texts</h2>
-        <span className={styles.partCount}><Icon name="lock" /> Only synced devices see these</span>
+        <span className={styles.partCount}><Icon name="lock" /> Only your code opens these</span>
       </div>
       {!got.list && !got.error && <p className="muted" aria-busy="true">Opening your texts…</p>}
       {got.error && <p className={styles.status}>{got.error}</p>}
-      {got.list && !got.list.length && <p className={styles.status}>There are no private texts yet.</p>}
       {got.list && got.list.length > 0 && (
         <ul className={styles.shelves}>
           {got.list.map((t) => (

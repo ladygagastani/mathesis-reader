@@ -4,10 +4,12 @@
  * opened on this device); the Greek stands alone, each passage with "Show the English"; Aa offers Both and English for the whole book.
  * A click, a tap, or Enter on a Greek word opens the look-up; the arrow keys go from word to word. The address says the book and
  * the page (/read?w=tlg0059.tlg002&p=2), and "at" opens the page holding a passage (&at=17).
+ * Notes (SPEC.md, "Notes and Saved"): "Note" in the look-up writes one on the word, its line or its passage; the foot bar's Notes
+ * lists the book's notes; marks at the right edge jump to them. "&note=<id>" opens a note (the Saved page links that way).
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { loadAuthorNames, titleCaps } from "@/lib/authors";
 import { describe } from "@/lib/catalog";
 import { lookupPlace, type LookupPlace } from "@/lib/lookup/placement";
@@ -15,12 +17,16 @@ import type { WordAt } from "@/lib/lookup/lookup";
 import { openBook, SyncFirst, type Book } from "@/lib/reader/book";
 import type { Columns } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
+import { shown, type Anchor, type Note } from "@/lib/notes/notes";
+import { useNotes } from "@/lib/notes/store";
 import { alignChunk, type Row } from "@/lib/tei/align";
 import { chunkOf, findRef } from "@/lib/tei/refs";
 import Icon from "@/components/Icon";
 import { Blocks } from "./Blocks";
 import FootBar from "./FootBar";
 import Lookup from "./Lookup";
+import NoteEditor, { type Editing } from "./NoteEditor";
+import NoteMarks, { locate } from "./NoteMarks";
 import styles from "./Reader.module.css";
 
 const OPENED = "mathesis-reader:opened";
@@ -50,6 +56,19 @@ function wordAt(el: HTMLElement, work: string, doc: Book["doc"]): WordAt | null 
   const word = el.textContent ?? "";
   const same = (x: HTMLElement) => (x.textContent ?? "").normalize("NFC") === word.normalize("NFC");
   return { work, word, unitKey: unit.dataset.u!, i, occurrence: all.slice(0, i).filter(same).length, doc };
+}
+
+/** What a note on the word looked up can stand on: the word, its line of verse if it is in one, and its passage. */
+function anchorsAt(el: HTMLElement, at: WordAt): Anchor[] {
+  const out: Anchor[] = [{ kind: "word", unit: at.unitKey, i: at.i, word: at.word }];
+  const unit = el.closest<HTMLElement>("[data-u]");
+  const line = el.closest<HTMLElement>(`.${styles.line}`);
+  if (unit && line) {
+    const lines = [...unit.querySelectorAll<HTMLElement>(`.${styles.line}`)];
+    out.push({ kind: "line", unit: at.unitKey, line: lines.indexOf(line), lines: lines.length });
+  }
+  out.push({ kind: "passage", unit: at.unitKey });
+  return out;
 }
 
 /** The title page's author: the Greek name in capitals where Wikidata gives one (the old title page's), the English name otherwise. */
@@ -115,6 +134,8 @@ export default function Reader() {
   const [layer, setLayer] = useState<1 | 2>(1);
   const [place, setPlace] = useState<LookupPlace>("note");
   const [note, setNote] = useState<{ left: number; width: number } | null>(null);
+  const [editing, setEditing] = useState<{ e: Editing; page: string; back: HTMLElement | null } | null>(null);
+  const allNotes = useNotes();
 
   useEffect(() => {
     if (!workId) return;
@@ -143,6 +164,13 @@ export default function Reader() {
   }), [pageKey]);
   // the word looked up, on this page only: a new page lets it go
   const word = chosen?.page === pageKey ? chosen : null;
+  const edit = editing?.page === pageKey ? editing : null;
+  // this book's notes, in the order of the book
+  const notes = useMemo(() => {
+    if (!doc) return [];
+    const at = (n: Note) => findRef(doc, n.anchor.unit) * 1e4 + (n.anchor.kind === "word" ? n.anchor.i : n.anchor.kind === "line" ? n.anchor.line : -1);
+    return shown(allNotes).filter((n) => n.work === workId).sort((a, b) => at(a) - at(b));
+  }, [allNotes, doc, workId]);
 
   const close = useCallback((refocus = false) => {
     setWord((w) => { if (w) { w.el.removeAttribute("aria-current"); if (refocus) w.el.focus(); } return null; });
@@ -152,10 +180,27 @@ export default function Reader() {
     if (!book) return;
     const at = wordAt(el, book.lookupWork, book.doc);
     if (!at) return;
+    setEditing(null);
     setWord((w) => { w?.el.removeAttribute("aria-current"); return { el, at, keyboard, page: pageKey }; });
     el.setAttribute("aria-current", "true");
     setLayer(1);
   }, [book, pageKey]);
+  const closeNote = useCallback((refocus: boolean) => {
+    setEditing((e) => { if (refocus) e?.back?.focus({ preventScroll: true }); return null; });
+  }, []);
+  const openNote = useCallback((n: Note, el: HTMLElement) => {
+    close();
+    el.scrollIntoView({ block: lookupPlace(innerWidth) === "sheet" ? "start" : "center" });
+    const back = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+    setEditing({ e: { note: n }, page: pageKey, back });
+  }, [close, pageKey]);
+  const noteWord = () => {
+    if (!word) return;
+    const anchors = anchorsAt(word.el, word.at);
+    const back = word.el;
+    close();
+    setEditing({ e: { anchors }, page: pageKey, back });
+  };
   const words = () => [...document.querySelectorAll<HTMLElement>(`main .${styles.w}`)];
   const step = (dir: 1 | -1) => {
     if (!word) return;
@@ -170,6 +215,17 @@ export default function Reader() {
     const target = atRef ? document.getElementById(`p-${doc.units[findRef(doc, atRef)]?.ref.join(".")}`) : null;
     if (target) target.scrollIntoView(); else window.scrollTo(0, 0);
   }, [doc, page, atRef]);
+
+  // "&note=<id>": the note opened, once, when its page is shown
+  const noteParam = params.get("note");
+  const opened = useRef("");
+  useEffect(() => {
+    if (!noteParam || opened.current === `${pageKey}|${noteParam}`) return;
+    const n = notes.find((x) => x.id === noteParam);
+    const el = n && locate(n.anchor);
+    // (it needs the page drawn, to find the note's place in it: so after this render, not during it)
+    if (n && el) { opened.current = `${pageKey}|${noteParam}`; queueMicrotask(() => openNote(n, el)); }
+  }, [noteParam, notes, pageKey, openNote]);
 
   // the look-up's place: the window over the margin (its left edge and width from the margin's own column), or the sheet
   useLayoutEffect(() => {
@@ -236,7 +292,13 @@ export default function Reader() {
   const greekTitle = book.grc.label && /[Ͱ-Ͽἀ-῿]/.test(book.grc.label) ? book.grc.label : null;
   // (a private text's English is the owner's own, or the published one it carries: no Perseus credit)
   const credit = book.tr && !book.private ? `English: ${describe(book.tr, book.work.texts)}, Perseus Digital Library, CC BY-SA 4.0.` : null;
-  const sheetOpen = !!word && place === "sheet";
+  const sheetOpen = (!!word || !!edit) && place === "sheet";
+  const bookName = `${book.author.name}, ${book.work.title}`;
+  const fromMenu = (n: Note) => {
+    const el = locate(n.anchor);
+    if (el) openNote(n, el);
+    else router.push(`/read?w=${encodeURIComponent(workId)}&at=${encodeURIComponent(n.anchor.unit)}&note=${n.id}`);
+  };
 
   const onText = (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>(`.${styles.w}`);
@@ -296,12 +358,15 @@ export default function Reader() {
       </nav>
 
       <FootBar where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`} pages={doc.chunks.map((c) => c.label)} page={page} onPage={go}
-        hasEnglish={!!book.tr} hidden={sheetOpen} />
+        hasEnglish={!!book.tr} hidden={sheetOpen} notes={notes} onNote={fromMenu} />
+
+      <NoteMarks notes={notes} layout={[rows, columns, openEnglish]} onOpen={openNote} />
 
       {word && (
         <Lookup at={word.at} place={place} note={note} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
-          workTitle={book.work.title} takeFocus={word.keyboard} />
+          workTitle={book.work.title} takeFocus={word.keyboard} onNote={noteWord} />
       )}
+      {edit && <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} margin={note} onClose={closeNote} />}
     </main>
   );
 }

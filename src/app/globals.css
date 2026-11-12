@@ -104,3 +104,9 @@ input { text-overflow: ellipsis; }
 @media (prefers-reduced-motion: reduce) {
   html, html *, html *::before, html *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* a note's colour (lib/notes): --c, for whatever draws it (a swatch, a marker at the right edge, the line under a noted word) */
+[data-colour="red"] { --c: var(--note-red); }
+[data-colour="ochre"] { --c: var(--note-ochre); }
+[data-colour="green"] { --c: var(--note-green); }
+[data-colour="blue"] { --c: var(--note-blue); }

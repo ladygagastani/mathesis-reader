@@ -18,6 +18,11 @@
   --paper-ink-3: #4f4336;  /* small print and credits: 8.2 : 1 on the paper */
   --paper-rubric: #a3301a; /* red: headings' numbers, links, the chosen thing */
   --paper-word-on: #e4d8c2;  /* the word looked up: a soft tone of the paper behind it */
+  /* the colours of notes (Notes and Saved): earth pigments, each at least 4.5 : 1 on the paper */
+  --paper-note-red: #a3301a;
+  --paper-note-ochre: #855a0c;
+  --paper-note-green: #3d6635;
+  --paper-note-blue: #2d5585;
   /* the night page */
   --night: #1b1814;
   --night-2: #24201a;
@@ -26,6 +31,10 @@
   --night-ink-3: #bdad93;  /* 8 : 1 */
   --night-rubric: #e0805f;
   --night-word-on: #3a3127;
+  --night-note-red: #e0805f;
+  --night-note-ochre: #d9ad55;
+  --night-note-green: #93c283;
+  --night-note-blue: #93b5e3;
 
   /* spacing: 4, 8, 12, 16, 24, 36, 56 and 80 px */
   --space-1: 4px;
@@ -78,6 +87,7 @@
 
   /* layers */
   --z-foot: 46;
+  --z-marks: 47;
   --z-panel: 40;
   --shadow-sheet: 0 -8px 24px -16px var(--shadow);
 
@@ -104,6 +114,7 @@
   --ink-2: var(--paper-ink-2);
   --ink-3: var(--paper-ink-3);
   --rubric: var(--paper-rubric);
+  --note-red: var(--paper-note-red); --note-ochre: var(--paper-note-ochre); --note-green: var(--paper-note-green); --note-blue: var(--paper-note-blue);
   --rule: rgba(30, 26, 21, 0.2);
   --rule-2: rgba(30, 26, 21, 0.1);
   --shadow: rgba(40, 28, 14, 0.18);
@@ -116,6 +127,7 @@
     --bg: var(--night); --bg-2: var(--night-2); --word-on: var(--night-word-on);
     --ink: var(--night-ink); --ink-2: var(--night-ink-2); --ink-3: var(--night-ink-3);
     --rubric: var(--night-rubric);
+    --note-red: var(--night-note-red); --note-ochre: var(--night-note-ochre); --note-green: var(--night-note-green); --note-blue: var(--night-note-blue);
     --rule: rgba(235, 225, 207, 0.2); --rule-2: rgba(235, 225, 207, 0.1); --shadow: rgba(0, 0, 0, 0.5);
     color-scheme: dark;
   }
@@ -124,6 +136,7 @@
   --bg: var(--night); --bg-2: var(--night-2); --word-on: var(--night-word-on);
   --ink: var(--night-ink); --ink-2: var(--night-ink-2); --ink-3: var(--night-ink-3);
   --rubric: var(--night-rubric);
+  --note-red: var(--night-note-red); --note-ochre: var(--night-note-ochre); --note-green: var(--night-note-green); --note-blue: var(--night-note-blue);
   --rule: rgba(235, 225, 207, 0.2); --rule-2: rgba(235, 225, 207, 0.1); --shadow: rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }

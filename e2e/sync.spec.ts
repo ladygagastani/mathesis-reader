@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { CODE, CODE_KEY, fakeSupabase } from "../scripts/fake-supabase.mjs";
+import { CODE, CODE_KEY, NEW, fakeSupabase } from "../scripts/fake-supabase.mjs";
 
 // Sync and the private texts (SPEC.md), clicked in a real browser. Supabase is never contacted: every call to it is answered by
 // scripts/fake-supabase.mjs, with a made-up code and placeholder text only.
@@ -24,7 +24,7 @@ test("a private text asks to sync first", async ({ page }) => {
 test("syncing: a malformed or unknown code is said plainly; the right one opens the private shelf and the text; forgetting it", async ({ page }) => {
   const asked = await fakeSupabase(page);
   await page.goto("/sync?next=%2F");
-  const field = page.getByRole("textbox", { name: "Sync code" });
+  const field = page.getByLabel("Sync code");
   const sync = page.getByRole("button", { name: "Sync this device" });
   const alert = page.locator("main [role=alert]");
 
@@ -59,10 +59,42 @@ test("syncing: a malformed or unknown code is said plainly; the right one opens 
 
   await page.goto("/sync");
   await expect(page.getByText("This device is synced.")).toBeVisible();
-  await page.getByText("Show the code, to type on another device").click();
+  await page.getByText("Show the code").click();
   await expect(page.getByText("7K3Q-9XWD-M2RT-0HVB-PZ4N")).toBeVisible();
   await page.getByRole("button", { name: "Forget the code on this device" }).click();
   await expect(field).toBeVisible();
   await expect(page.getByRole("link", { name: "Sync", exact: true })).toBeVisible();
   expect(await page.evaluate((k) => localStorage.getItem(k), CODE_KEY)).toBeNull();
+});
+
+test("making a new code: shown once, for a password manager and as a file; it opens no private texts", async ({ page }) => {
+  await fakeSupabase(page);
+  await page.goto("/sync");
+  await page.getByRole("button", { name: "Make a new code" }).click();
+  const shown = NEW.match(/.{4}/g)!.join("-");
+  await expect(page.getByText(shown, { exact: true })).toBeVisible();
+  // the fields a password manager reads: a fixed user name and the code as a new password
+  await expect(page.locator("input[autocomplete=username]")).toHaveValue("Mathesis Reader sync code");
+  await expect(page.locator("input[autocomplete=new-password]")).toHaveValue(shown);
+  expect(await page.evaluate((k) => localStorage.getItem(k), CODE_KEY)).toBe(NEW);
+
+  const [file] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save to your files" }).click()]);
+  expect(file.suggestedFilename()).toBe("mathesis-sync-code.txt");
+  const text = await (await file.createReadStream()).toArray().then((c) => Buffer.concat(c).toString("utf8"));
+  expect(text).toContain(shown);
+
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.locator("main h3").first().waitFor({ timeout: 30_000 });
+  await expect(page.getByRole("link", { name: "Synced" })).toBeVisible();
+  await expect(page.getByText("Your private texts")).toHaveCount(0);
+});
+
+test("a code kept in a password manager is filled into a password field", async ({ page }) => {
+  await page.goto("/sync");
+  await expect(page.locator("input[autocomplete=username]")).toHaveValue("Mathesis Reader sync code");
+  await expect(page.getByLabel("Sync code")).toHaveAttribute("type", "password");
+  await expect(page.getByLabel("Sync code")).toHaveAttribute("autocomplete", "current-password");
+  await page.getByRole("button", { name: "Show the letters" }).click();
+  await expect(page.getByLabel("Sync code")).toHaveAttribute("type", "text");
 });
