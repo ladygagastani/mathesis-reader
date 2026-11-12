@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { EB_Garamond, GFS_Didot, Gentium_Book_Plus } from "next/font/google";
 import localFont from "next/font/local";
 import { BOOT_SCRIPT, THEME_COLOURS } from "@/lib/settings";
+import SlashSearch from "@/components/site/SlashSearch";
 import "./globals.css";
 
 // The three typefaces of the printed page, downloaded at build time and served from this app: EB Garamond for English,
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a className="skip" href="#main">Skip to the text</a>
         {children}
+        <SlashSearch />
       </body>
     </html>
   );

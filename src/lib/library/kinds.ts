@@ -10,9 +10,10 @@
  */
 import { DATA_SITE } from "@/config/packs";
 import type { CatAuthor } from "@/lib/catalog";
+import type { WorkFacts } from "./facts";
 
-/** GLAUx's metadata for a work (only its genre is used here) */
-export interface WorkMeta { genre: string | null }
+/** GLAUx's metadata for a work (its genre is used here; the library's rows show the rest, facts.ts) */
+export type WorkMeta = WorkFacts;
 /** Wikidata's facts about an author: what they were, and the description the library shows under the name */
 export interface AuthorMeta { occ?: string[]; desc?: string }
 
