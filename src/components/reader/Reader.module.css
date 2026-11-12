@@ -1,5 +1,5 @@
 /* The reader (DESIGN.md, "Reader"): the bar along the top; under it the text column, centred, with the passage numbers in red in
-   a rail at its left; beside it the desk, where the look-up stands. The Greek alone by default, a hairline between the passages. */
+   a rail at its left. The look-up floats by the word (Lookup.module.css). The Greek alone by default, a hairline between the passages. */
 .reader {
   --greek-size: var(--greek-chosen, var(--greek-auto));
   /* the text column: the rail and 28 em of Greek (about 60 letters a line); English alone, 34 em of English; Both, the two side by side */
@@ -34,40 +34,12 @@
 .barGr { font-family: var(--f-greek); color: var(--ink); }
 .lock { display: inline-flex; margin-left: var(--space-2); color: var(--accent); vertical-align: -0.15em; }
 
-/* ------------------------------------------------------------ the text column and the desk, centred as one group */
+/* ------------------------------------------------------------ the text column, centred (the look-up floats by the word) */
 .layout {
-  display: grid; grid-template-columns: minmax(0, var(--col)) var(--desk); column-gap: var(--space-7); justify-content: center;
+  display: grid; grid-template-columns: minmax(0, var(--col)); justify-content: center;
   padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)) max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 .column { min-width: 0; padding-top: var(--space-5); }
-/* the desk: as tall as the window under the bar, and it stays there while the text scrolls */
-.desk {
-  position: sticky; top: var(--bar-h); align-self: start; height: calc(100dvh - var(--bar-h));
-  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-block: var(--space-5) var(--space-6);
-}
-/* Both on a window too narrow for the desk as well: the text takes the room, and the look-up stands over the English */
-@media (max-width: 1809px) {
-  .reader[data-cols="both"] .layout { grid-template-columns: minmax(0, var(--col)); }
-  .reader[data-cols="both"] .desk { display: none; }
-}
-/* narrower windows (phones and tablets come later): no desk, the look-up is a sheet */
-@media (max-width: 1099px) {
-  .layout { grid-template-columns: minmax(0, var(--col)); }
-  .desk { display: none; }
-}
-/* the desk with no word chosen: how to look up, and this page's notes */
-.idle { display: grid; gap: var(--space-5); padding-top: var(--space-2); }
-.idleHint { font-size: var(--t-small); line-height: 1.5; color: var(--ink-3); }
-.idleNotes { display: grid; gap: var(--space-2); }
-.idleNotes ol { list-style: none; margin: 0; padding: 0; display: grid; }
-.idleNote {
-  display: grid; gap: 2px; width: 100%; padding: var(--space-2) 0 var(--space-2) var(--space-3); border: 0; background: none; text-align: left;
-  box-shadow: inset 3px 0 0 var(--c); color: var(--ink); font: 400 var(--t-small) / 1.45 var(--f-body); cursor: pointer;
-}
-.idleNote + .idleNote, .idleNotes li + li .idleNote { margin-top: var(--space-2); }
-@media (hover: hover) { .idleNote:hover .idleText { color: var(--accent); } }
-.idlePlace { font-size: var(--t-label); color: var(--ink-3); }
-.idleText { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; transition: color var(--dur-quick) var(--ease); }
 
 /* ------------------------------------------------------------ the passages (the sample's .sec) */
 .text { padding-bottom: var(--space-5); }
@@ -171,6 +143,5 @@
 .resumed { display: block; margin-top: var(--space-2); font: 400 var(--t-label) / 1.25 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
 /* a search's words on the page (Go to, Find in this book) */
 .w[data-found] { background: var(--word-on); }
-.idleHint kbd { display: inline-block; min-width: 1.6em; padding: 0 var(--space-1); box-shadow: var(--rule-box); font: inherit; text-align: center; color: var(--ink); }
 /* "Note on these words", under words selected in the text */
 .pick { position: absolute; z-index: var(--z-panel); background: var(--bg); }

@@ -65,6 +65,9 @@ test("the look-up gives the meaning and the form, and never covers the word", as
     await lookUp(page, w);
     await expect(w).toHaveAttribute("aria-current", "true");
     await clear(page, w);
+    // the floating card may lie over the next word: put it away first, as a reader would
+    await page.keyboard.press("Escape");
+    await expect(lookup(page)).toHaveCount(0);
   }
   await lookUp(page, ws.nth(14));
   await expect(lookup(page)).toContainText("Here it is");

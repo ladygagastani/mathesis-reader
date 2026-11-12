@@ -1,7 +1,7 @@
 "use client";
 /**
- * Writing or editing a note (SPEC.md, "Notes and Saved"), in the look-up's place: the desk beside the text on a computer, a
- * sheet on a phone (Lookup.module.css). A new note offers what it can stand on (the word, or the words selected; its line of verse
+ * Writing or editing a note (SPEC.md, "Notes and Saved"), in the look-up's place: a card floating by the note's first word on a
+ * tablet or a computer (useFloat.ts), a sheet on a phone (Lookup.module.css). A new note offers what it can stand on (the word, or the words selected; its line of verse
  * if it is in one; its passage); every note has a colour and words. What you write is kept as you write it (half a second after
  * the last key), and when the note is closed by Save, Escape or ×; Remove takes it away.
  */
@@ -10,15 +10,15 @@ import Icon from "@/components/Icon";
 import type { LookupPlace } from "@/lib/lookup/placement";
 import { COLOUR_NAMES, COLOURS, KIND_NAMES, newId, placeName, type Anchor, type Colour, type Note } from "@/lib/notes/notes";
 import { removeNote, saveNote } from "@/lib/notes/store";
+import { firstWord } from "./NoteMarks";
+import { useFloat } from "./useFloat";
 import look from "./Lookup.module.css";
 import styles from "./NoteEditor.module.css";
 
 export type Editing = { note: Note } | { anchors: Anchor[] };
 
-export default function NoteEditor({ editing, work, book, place, inDesk, over, onClose }: {
+export default function NoteEditor({ editing, work, book, place, onClose }: {
   editing: Editing; work: string; book: string; place: LookupPlace;
-  /** in the desk beside the text; or, with no desk, over the English column */
-  inDesk: boolean; over: { left: number; width: number } | null;
   onClose: (refocus: boolean) => void;
 }) {
   const old = "note" in editing ? editing.note : null;
@@ -26,6 +26,10 @@ export default function NoteEditor({ editing, work, book, place, inDesk, over, o
   const [kind, setKind] = useState(0);
   const [colour, setColour] = useState<Colour>(old?.colour ?? "red");
   const text = useRef<HTMLTextAreaElement>(null);
+  // floats by the note's first word, which stays put while the note's place is changed between word, line and passage
+  const ref = useRef<HTMLElement>(null);
+  const [by] = useState(() => (anchors[0] ? firstWord(anchors[0]) : null));
+  useFloat(ref, by, place === "float");
   useEffect(() => { text.current?.focus({ preventScroll: true }); }, []);
   // the note's id from the first keystroke, so every keeping is the same note
   const [id] = useState(() => old?.id ?? newId());
@@ -53,9 +57,8 @@ export default function NoteEditor({ editing, work, book, place, inDesk, over, o
   };
 
   return (
-    <aside data-lookup={place} aria-label={old ? `Your note on ${placeName(anchor)}` : "A new note"}
-      className={`${look.lookup} ${place === "sheet" ? look.sheet : inDesk ? look.desk : look.note} ${styles.editor}`}
-      style={place === "note" && !inDesk && over ? { left: over.left, width: over.width } : undefined}
+    <aside ref={ref} data-lookup={place} aria-label={old ? `Your note on ${placeName(anchor)}` : "A new note"}
+      className={`${look.lookup} ${place === "sheet" ? look.sheet : look.float} ${styles.editor}`}
       onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); close(true); } }}>
       <form className={styles.form} onSubmit={save}>
         <div className={`${look.head} ${styles.head}`}>

@@ -32,7 +32,6 @@ import ReaderBar, { type Open } from "./ReaderBar";
 import Lookup from "./Lookup";
 import NoteEditor, { type Editing } from "./NoteEditor";
 import NoteMarks, { locate } from "./NoteMarks";
-import { placeName } from "@/lib/notes/notes";
 import styles from "./Reader.module.css";
 
 const OPENED = "mathesis-reader:opened";
@@ -146,10 +145,8 @@ export default function Reader() {
   const [english, setEnglish] = useState<{ page: string; open: Set<string> }>({ page: "", open: new Set() });
   const [chosen, setWord] = useState<{ el: HTMLElement; at: WordAt; keyboard: boolean; page: string } | null>(null);
   const [layer, setLayer] = useState<1 | 2>(1);
-  const [place, setPlace] = useState<LookupPlace>("note");
-  // the look-up in the desk beside the text, or (Both on a window too narrow for the desk) over the English column
-  const [deskOn, setDeskOn] = useState(true);
-  const [over, setOver] = useState<{ left: number; width: number } | null>(null);
+  // the look-up's place: a card floating by the word, or a sheet on a phone
+  const [place, setPlace] = useState<LookupPlace>("float");
   const [editing, setEditing] = useState<{ e: Editing; page: string; back: HTMLElement | null } | null>(null);
   const allNotes = useNotes();
   // words selected in the text: a note can stand on them (the button under the selection)
@@ -340,34 +337,36 @@ export default function Reader() {
     if (n && el) { opened.current = `${pageKey}|${noteParam}`; queueMicrotask(() => openNote(n, el)); }
   }, [noteParam, notes, pageKey, openNote]);
 
-  // the look-up's place: the desk beside the text; over the English column when Both leaves no room for the desk; or the sheet
   useLayoutEffect(() => {
-    const measure = () => {
-      const p = lookupPlace(window.innerWidth);
-      setPlace(p);
-      const desk = document.querySelector<HTMLElement>("[data-desk]");
-      const on = p === "note" && !!desk && getComputedStyle(desk).display !== "none";
-      setDeskOn(on);
-      const tr = p === "note" && !on ? document.querySelector<HTMLElement>(`main .${styles.tr}`) : null;
-      const r = tr?.getBoundingClientRect();
-      setOver(r && r.width > 0 ? { left: r.left, width: r.width } : null);
-    };
+    const measure = () => setPlace(lookupPlace(window.innerWidth));
     measure();
     addEventListener("resize", measure);
     return () => removeEventListener("resize", measure);
-  }, [rows, columns]);
+  }, []);
 
-  // the word stays in sight, never under the look-up: above the sheet (as the sheet grows when its words arrive, too), or, with the
-  // desk, inside the screen below the bar
+  // a click anywhere but on the floating look-up or on another word puts the look-up away (another word is looked up instead)
+  useEffect(() => {
+    if (!word || place !== "float") return;
+    const away = (e: PointerEvent) => {
+      const t = e.target as Element | null;
+      if (!t || t.closest(`[data-lookup], .${styles.w}`)) return;
+      close();
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [word, place, close]);
+
+  // on a phone the word stays in sight, above the sheet (as the sheet grows when its words arrive, too); the floating card keeps
+  // clear of the word by itself (useFloat.ts)
   useLayoutEffect(() => {
     const panel = document.querySelector<HTMLElement>("[data-lookup]");
-    if (!word || !panel) return;
+    if (!word || !panel || place !== "sheet") return;
     const keepClear = () => {
       const r = word.el.getBoundingClientRect();
       const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
-      const bottom = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight;
+      const bottom = panel.getBoundingClientRect().top;
       const room = 16;
-      if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + (place === "sheet" ? r.height : 0) });
+      if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + r.height });
       else if (r.top < bar + room) window.scrollBy({ top: r.top - bar - room * 4 });
     };
     keepClear();
@@ -509,15 +508,12 @@ export default function Reader() {
       {book.private && <span className={styles.lock}><Icon name="lock" label="Only you can see this" /></span>}
     </>
   );
-  // the units of this page, for the notes the desk lists
-  const here = new Set(rows.flatMap((r) => r.greek.map((u) => u.ref.join("."))));
-  const pageNotes = notes.filter((n) => here.has(n.anchor.unit));
   const lookup = word && (
-    <Lookup at={word.at} place={place} inDesk={deskOn} over={over} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
+    <Lookup at={word.at} anchor={word.el} place={place} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
       workTitle={book.work.title} book={{ work: workId, name: bookName }} takeFocus={word.keyboard} onNote={noteWord} />
   );
   const editor = edit && (
-    <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} inDesk={deskOn} over={over} onClose={closeNote} />
+    <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} onClose={closeNote} />
   );
 
   return (
@@ -561,30 +557,6 @@ export default function Reader() {
           </nav>
         </div>
 
-        {/* the desk (DESIGN.md, decision 1): the look-up, a note being written, or, with neither, this page's notes and how to look up */}
-        <aside className={styles.desk} data-desk="" aria-label="The desk">
-          {deskOn && (lookup || editor)}
-          {deskOn && !lookup && !editor && (
-            <div className={styles.idle}>
-              <p className={styles.idleHint}>Click a Greek word to see its meaning here. With the keyboard: Tab into the text, the arrow keys to move, Enter to look up. <kbd>?</kbd> lists every key.</p>
-              {pageNotes.length > 0 && (
-                <section className={styles.idleNotes} aria-labelledby="desk-notes">
-                  <h2 id="desk-notes" className="label">Notes on this page</h2>
-                  <ol>
-                    {pageNotes.map((n) => (
-                      <li key={n.id}>
-                        <button type="button" className={styles.idleNote} data-colour={n.colour} onClick={() => fromMenu(n)}>
-                          <span className={styles.idlePlace}>{placeName(n.anchor)}</span>
-                          <span className={styles.idleText}>{n.text}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-              )}
-            </div>
-          )}
-        </aside>
       </div>
 
       <NoteMarks notes={notes} layout={[rows, columns, openEnglish]} onOpen={openNote} />
@@ -594,8 +566,8 @@ export default function Reader() {
           onMouseDown={(e) => e.preventDefault()} onClick={notePicked}><Icon name="note" />Note on these words</button>
       )}
 
-      {!deskOn && lookup}
-      {!deskOn && editor}
+      {lookup}
+      {editor}
     </main>
   );
 }

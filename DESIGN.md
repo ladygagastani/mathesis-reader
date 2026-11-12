@@ -10,12 +10,14 @@ the layout, the type scale, and where the look-up stands.
 
 ## Five decisions
 
-1. **The look-up has a fixed place beside the text.** A desk column stands to the right of the Greek, 360 px wide,
-   from the top bar to the foot of the window. A clicked word's entry appears there, level with the top of the screen,
-   about 56 px from the end of the line. Today the box floats at the window's right edge, about 700 px from the word.
-   With no word chosen, the desk shows the page's notes and a one-line hint ("Click a word, or press Tab then Enter").
-   The eye learns one place to look.
-2. **The text column is centred in the space left of the desk,** at a measure of 30 em of Greek (about 60 letters a
+1. **The look-up floats by the word.** On a window 760 px or wider, a clicked word's entry opens as a card 400 px
+   wide, 10 px under the word, centred on it and kept 16 px inside the window. When there is less than 300 px of room
+   under the word and more above it, the card opens above. It never covers the word, and it scrolls with the text.
+   A card taller than its room scrolls inside itself, and when neither side has room the page first scrolls the word
+   up under the bar. A click outside the card, or Escape, closes it. The note editor opens the same way, by the note's
+   first word. The eye stays on the line it was reading. (Until 2026-11-12 the look-up stood in a desk column 360 px
+   wide to the right of the text; the owner found it awkward to use.) On a phone the look-up stays a low sheet from the foot of the screen.
+2. **The text column is centred in the window,** at a measure of 30 em of Greek (about 60 letters a
    line, 680 px at 24 px). Passage numbers hang in a 56 px rail to its left.
 3. **Greek is set at 24 px with a line height of 1.65.** A line now takes 40 px instead of 46 px, so a 900 px window
    holds 21 lines of Greek instead of 18, and Gentium's accents and breathings still clear the line above. Both stay adjustable in Text.
@@ -53,7 +55,7 @@ chooses one. Components use only the role names. Every ink is at least 4.5 : 1 o
 ```css
 :root, :root[data-theme="paper"] {
   --bg: #f4eee3;         /* the page */
-  --surface: #ece4d5;    /* the desk, menus, the bar */
+  --surface: #ece4d5;    /* the look-up card, menus, the bar */
   --ink: #1f1b16;        /* text: 14.8 : 1 */
   --ink-2: #4a4036;      /* second lines, labels: 8.8 : 1 */
   --ink-3: #6b5d4d;      /* small print: 5.5 : 1 (5 : 1 on --surface) */
@@ -85,7 +87,7 @@ thing at a time: the passage numbers in the text, links, and the chosen item in 
 
 Spacing steps of 4, 8, 12, 16, 24, 32, 48 and 64 px (`--space-1` to `--space-8`). Hairline rules (1 px `--rule`), a strong
 rule (`--rule-strong`) above each part of a page, square corners everywhere, the grammar tags included. No shadows: the
-desk and menus sit on `--surface` with a hairline edge. Controls are at least 40 px tall on a computer (44 px with a
+look-up card and menus sit on `--surface` with a hairline edge. Controls are at least 40 px tall on a computer (44 px with a
 touch screen). Focus is a 2 px `--accent` outline 2 px out.
 
 One movement, the ink-in, as before, and none with reduced motion.
@@ -136,12 +138,11 @@ and "All 37 works". The search marks the letters it matched. The first author is
 |                   ← Sections 1–16     Continue to 23–28 →      |                           |
 ```
 
-- Rail 56 px, text 680 px, gap 56 px, desk 360 px, centred as a group. At 1280 px the text keeps 640 px.
-- **Both:** Greek and English side by side, each 30 em, their passages aligned at the top of each row. Below 1600 px
-  there is no room for the desk as well, so it lays over the English column when a word is chosen, never over the Greek.
-- **English:** one column at `--t-body`, the desk as in Greek.
+- Rail 56 px and text 680 px, centred. The look-up card floats over the text by the chosen word (decision 1).
+- **Both:** Greek and English side by side, each 30 em, their passages aligned at the top of each row.
+- **English:** one column at `--t-body`.
 - The look-up's two layers stay. Layer two drops the meaning and grammar it repeated and opens on LSJ.
-- Notes show in the desk when no word is chosen. A note opened from a mark or from Notes opens there too.
+- The bar's Notes menu lists the book's notes. A note opened from a mark or from Notes opens in a card by its first word.
 
 ### Saved
 
