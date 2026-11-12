@@ -14,9 +14,9 @@ the sentence.
    the edition and translation where a work has more than one. A book opens again where you stopped. The keys: left
    and right turn the page (or step from word to word with a word looked up), g opens Go to, ? lists the keys, and /
    searches the library from any page.
-2. **The look-up.** Clicking or tapping a Greek word, or pressing Enter on it, opens the look-up. At 760 px and
-   wider it is a card floating by the word, under it or over it, never on it. Below 760 px it is a
-   low sheet over about a quarter of the screen, and the text scrolls so the word stays above it. Layer one shows the
+2. **The look-up.** Clicking or tapping a Greek word, or pressing Enter on it, opens the look-up. On a wide
+   window it is a panel that slides in from the right, and the text moves aside so the panel never covers the Greek.
+   Where there is no room for that, it is a low sheet over about a quarter of the screen, and the text scrolls so the word stays above it. Layer one shows the
    dictionary form, the kind of word, one meaning line with its source, what the word does in the sentence (only
    where the treebank says) and the grammar in plain words. "More about it" opens layer two: the full LSJ entry and
    every analysis the data gives, Wiktionary's senses and word family, and links to Logeion and Perseus. An uncertain

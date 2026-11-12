@@ -94,8 +94,9 @@
   --root-grow: clamp(100%, calc(100% + (100vw - 1600px) / 160), 112.5%);
   /* a control's least height: 40 px with a mouse, 44 px under a finger */
   --tap: 40px;
-  /* the reader: the passage numbers' rail */
+  /* the reader: the passage numbers' rail, and the panel the look-up slides in (lib/lookup/placement.ts, DRAWER) */
   --rail: 56px;
+  --drawer: 400px;
   --tap-pad: calc((var(--tap) - 1lh) / 2 + 0.5px);
 }
 @media (pointer: coarse) { :root { --tap: 44px; } }

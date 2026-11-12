@@ -42,12 +42,6 @@ export function locate(a: Anchor): HTMLElement | null {
   return ws[wordIndex(ws, a.i, a.kind === "word" ? a.word : a.words.split(" ")[0])] ?? null;
 }
 
-/** The word a note's editor floats by: the note's first word, or the first word of its line or passage. */
-export function firstWord(a: Anchor): HTMLElement | null {
-  const el = locate(a);
-  return el && !el.classList.contains(styles.w) ? el.querySelector<HTMLElement>(`.${styles.w}`) ?? el : el;
-}
-
 interface Mark { top: number; notes: Note[] }
 
 export default function NoteMarks({ notes, layout, onOpen }: {

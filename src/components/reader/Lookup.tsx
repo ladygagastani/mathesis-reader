@@ -1,7 +1,7 @@
 "use client";
 /**
- * The word look-up (DESIGN.md, decision 1). On a tablet or a computer it is a card floating by the word, under it or over it and
- * never on it (useFloat.ts); on a phone, a low sheet from the foot of the screen, and the reader keeps the word above it (Reader.tsx).
+ * The word look-up (DESIGN.md, decision 1). On a wide enough window it is a panel that slides in from the right, clear of the Greek
+ * (lib/lookup/placement.ts); otherwise a low sheet from the foot of the screen. The reader keeps the word in sight (Reader.tsx).
  * Layer one: the dictionary form, the kind of word (with the core list's class) and the word tapped, the core list's full heading
  * (genitive and article, or principal parts), one meaning with its source, the grammar one word to a part, what the word does in
  * the sentence (only where the treebank says), a plain warning when the analysis is not of this very word, and how common the word
@@ -27,7 +27,6 @@ import { otherDefinitions } from "@/lib/lookup/repeats";
 import { newId } from "@/lib/notes/notes";
 import { removeWord, saveWord, useWords } from "@/lib/notes/store";
 import { savedOf } from "@/lib/notes/words";
-import { useFloat } from "./useFloat";
 import styles from "./Lookup.module.css";
 
 function Segs({ segs }: { segs: Seg[] }) {
@@ -93,10 +92,8 @@ function unsure(l: Looked): string | null {
   }
 }
 
-export default function Lookup({ at, anchor, place, layer, onLayer, onStep, onClose, workTitle, book, takeFocus, onNote }: {
+export default function Lookup({ at, place, layer, onLayer, onStep, onClose, workTitle, book, takeFocus, onNote }: {
   at: WordAt;
-  /** the word on the page, which the card floats by */
-  anchor: HTMLElement;
   place: LookupPlace;
   layer: 1 | 2; onLayer: (l: 1 | 2) => void;
   onStep: (dir: 1 | -1) => void; onClose: () => void;
@@ -109,7 +106,6 @@ export default function Lookup({ at, anchor, place, layer, onLayer, onStep, onCl
   onNote: () => void;
 }) {
   const ref = useRef<HTMLElement>(null);
-  useFloat(ref, anchor, place === "float");
   const key = `${at.work}|${at.unitKey}|${at.i}`;
   const [got, setGot] = useState<{ key: string; value: Looked | null; error?: string }>({ key: "", value: null });
   const [whole, setWhole] = useState("");
@@ -223,7 +219,7 @@ export default function Lookup({ at, anchor, place, layer, onLayer, onStep, onCl
   return (
     <aside
       ref={ref} tabIndex={-1} data-lookup={place} data-layer={layer} aria-label={`Look-up: ${at.word}`}
-      className={`${styles.lookup} ${place === "sheet" ? styles.sheet : styles.float}`}
+      className={`${styles.lookup} ${place === "sheet" ? styles.sheet : styles.drawer}`}
       onKeyDown={(e) => {
         if (e.key !== "Escape") return;
         e.stopPropagation();
