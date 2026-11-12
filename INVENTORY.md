@@ -29,7 +29,7 @@ Keep means version 1. Later means undecided until you answer in step 2. Drop mea
 | Listen (audio of a passage) | Drop | Not in the four items. |
 | Echoes, Compare editions, Find in text, Places, Vocabulary panel, Sentence panel, Share, Talk | Drop | The "60 controls" ADR 0009 complained of. The look-up's second layer keeps the sentence's grammar. |
 | Floating reader | Drop | Not needed with one reader. |
-| Wiktionary look-up (sends the word to Wiktionary) | Drop | LSJ and the word packs cover it, and no word leaves the site. |
+| Wiktionary look-up (sends the word to Wiktionary) | Keep (owner, 2026-11-12) | First dropped because no word should leave the site. The owner chose to keep it: the look-up's second layer fetches Wiktionary's senses and word family live, sending only the word. |
 | Forum: Town Hall, Pnyx, members, moderation | Drop | Cut. |
 | Map (Periplus) | Drop | Cut. |
 | Painted Stoa (wiki), eras, editions, variants, authors | Drop | Cut. |
