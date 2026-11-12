@@ -85,3 +85,28 @@ test("the credits name every source with its licence", async ({ page }) => {
   for (const name of ["Perseus Digital Library, canonical-greekLit", "GLAUx, by Alek Keersmaekers", "Liddell–Scott–Jones", "Dickinson College Commentaries", "Wikidata", "Lucide"])
     await expect(page.getByRole("link", { name: new RegExp(name) })).toBeVisible();
 });
+
+test("the site bar: the way to the library from every page, and Paper or Night", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/credits");
+  const bar = page.getByRole("navigation", { name: "The site" });
+  await bar.getByRole("link", { name: "Library" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(bar.getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
+  await page.getByRole("button", { name: "Switch to the night page" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  await page.goto("/saved");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  await page.getByRole("button", { name: "Switch to the paper page" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "paper");
+});
+
+test("an address that leads nowhere says so, and its search goes to the library", async ({ page }) => {
+  const res = await page.goto("/no-such-page");
+  expect(res?.status()).toBe(404);
+  await expect(page.locator("main h1")).toHaveText("This page is not here");
+  await page.getByRole("searchbox").fill("plato");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/\?q=plato$/);
+  await expect(page.getByRole("searchbox")).toHaveValue("plato");
+});
