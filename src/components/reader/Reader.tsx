@@ -152,6 +152,13 @@ export default function Reader() {
   const [over, setOver] = useState<{ left: number; width: number } | null>(null);
   const [editing, setEditing] = useState<{ e: Editing; page: string; back: HTMLElement | null } | null>(null);
   const allNotes = useNotes();
+  // words selected in the text: a note can stand on them (the button under the selection)
+  const [picked, setPicked] = useState<{ anchors: Anchor[]; top: number; left: number; page: string } | null>(null);
+  useEffect(() => {
+    const gone = () => { const s = getSelection(); if (!s || s.isCollapsed) setPicked(null); };
+    document.addEventListener("selectionchange", gone);
+    return () => document.removeEventListener("selectionchange", gone);
+  }, []);
 
   // a book opened with no page, passage or note asked for opens where you stopped last time, in the edition you chose then
   const resumeFor = useRef("");
@@ -202,7 +209,7 @@ export default function Reader() {
   // this book's notes, in the order of the book
   const notes = useMemo(() => {
     if (!doc) return [];
-    const at = (n: Note) => findRef(doc, n.anchor.unit) * 1e4 + (n.anchor.kind === "word" ? n.anchor.i : n.anchor.kind === "line" ? n.anchor.line : -1);
+    const at = (n: Note) => findRef(doc, n.anchor.unit) * 1e4 + (n.anchor.kind === "word" || n.anchor.kind === "words" ? n.anchor.i : n.anchor.kind === "line" ? n.anchor.line : -1);
     return shown(allNotes).filter((n) => n.work === workId).sort((a, b) => at(a) - at(b));
   }, [allNotes, doc, workId]);
 
@@ -409,6 +416,33 @@ export default function Reader() {
     else router.push(`/read?w=${encodeURIComponent(workId)}&at=${encodeURIComponent(n.anchor.unit)}&note=${n.id}`);
   };
 
+  // words selected in one passage (two or more): offer a note on them
+  const onPick = () => {
+    const sel = getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const hit = [...document.querySelectorAll<HTMLElement>(`main .${styles.w}`)].filter((w) => range.intersectsNode(w));
+    const unit = hit[0]?.closest<HTMLElement>("[data-u]");
+    const run = unit ? hit.filter((w) => w.closest("[data-u]") === unit) : [];
+    if (!unit || run.length < 2) { setPicked(null); return; }
+    const all = [...unit.querySelectorAll<HTMLElement>(`.${styles.w}`)];
+    const box = range.getBoundingClientRect();
+    setPicked({
+      anchors: [
+        { kind: "words", unit: unit.dataset.u!, i: all.indexOf(run[0]), n: run.length, words: run.map((w) => w.textContent ?? "").join(" ") },
+        { kind: "passage", unit: unit.dataset.u! },
+      ],
+      top: box.bottom + scrollY + 8, left: Math.max(0, box.left + scrollX), page: pageKey,
+    });
+  };
+  const notePicked = () => {
+    if (!picked) return;
+    close();
+    getSelection()?.removeAllRanges();
+    setEditing({ e: { anchors: picked.anchors }, page: pageKey, back: null });
+    setPicked(null);
+  };
+
   const onText = (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>(`.${styles.w}`);
     if (el) choose(el, false);
@@ -510,7 +544,7 @@ export default function Reader() {
 
       <div className={styles.layout}>
         <div className={styles.column}>
-          <div className={`${styles.text} enter`} onClick={onText} onKeyDown={onKey}>
+          <div className={`${styles.text} enter`} onClick={onText} onKeyDown={onKey} onMouseUp={onPick}>
             <span data-greek-probe="" lang="grc" className={styles.grc} hidden />
             {rows.map((r) => (
               <RowView key={r.key} row={r} cols={book.tr ? columns : "greek"} open={!!openEnglish?.has(r.key)} onToggle={toggleEnglish} credit={credit}
@@ -554,6 +588,11 @@ export default function Reader() {
       </div>
 
       <NoteMarks notes={notes} layout={[rows, columns, openEnglish]} onOpen={openNote} />
+
+      {picked?.page === pageKey && (
+        <button type="button" className={`btn ghost ${styles.pick}`} style={{ top: picked.top, left: picked.left }}
+          onMouseDown={(e) => e.preventDefault()} onClick={notePicked}><Icon name="note" />Note on these words</button>
+      )}
 
       {!deskOn && lookup}
       {!deskOn && editor}

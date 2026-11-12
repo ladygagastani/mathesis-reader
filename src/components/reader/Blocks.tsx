@@ -1,6 +1,8 @@
 /**
  * TEI blocks drawn exactly as the file gives them (lib/tei/pieces.ts decides what shows). In Greek every word is a span the reader
  * can click; the first word of each passage is in the keyboard's Tab order, and the arrow keys go from word to word (Reader.tsx).
+ * The other words take no tab stop at all (not even -1): Chrome starts no selection on an element that can take the focus, and
+ * selecting words is how a note on a phrase begins.
  */
 import { Fragment, memo } from "react";
 import { lineNo, pieces, repeatsMargin } from "@/lib/tei/pieces";
@@ -13,7 +15,7 @@ function Run({ c, greek, margin, first }: { c: Inline[]; greek: boolean; margin?
       case "t": return <Fragment key={i}>{p.text}</Fragment>;
       case "g": return <span key={i} lang="grc">{p.text}</span>;
       case "w": {
-        const tab = first && !first.done ? 0 : -1;
+        const tab = first && !first.done ? 0 : undefined;
         if (first) first.done = true;
         return <span key={i} className={styles.w} role="button" tabIndex={tab}>{p.text}</span>;
       }

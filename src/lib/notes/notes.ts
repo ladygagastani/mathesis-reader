@@ -3,11 +3,15 @@
  * Nothing here touches the page, the browser's storage or the database, so it is tested on its own (notes.test.ts).
  */
 
-/** Where a note stands: a word, a line of verse, or a whole passage, inside the passage (unit) the reader cites as `unit`. */
+/**
+ * Where a note stands: a word, a run of words (selected in the text: `n` words from the `i`th, quoted in `words`), a line of verse,
+ * or a whole passage, inside the passage (unit) the reader cites as `unit`.
+ */
 export type Anchor =
   | { kind: "passage"; unit: string }
   | { kind: "line"; unit: string; line: number; lines: number }
-  | { kind: "word"; unit: string; i: number; word: string };
+  | { kind: "word"; unit: string; i: number; word: string }
+  | { kind: "words"; unit: string; i: number; n: number; words: string };
 export type AnchorKind = Anchor["kind"];
 
 export const COLOURS = ["red", "ochre", "green", "blue"] as const;
@@ -39,6 +43,7 @@ function parseAnchor(x: unknown): Anchor | null {
   if (x.kind === "passage") return { kind: "passage", unit: x.unit };
   if (x.kind === "line" && isInt(x.line) && isInt(x.lines)) return { kind: "line", unit: x.unit, line: x.line, lines: x.lines };
   if (x.kind === "word" && isInt(x.i) && isStr(x.word)) return { kind: "word", unit: x.unit, i: x.i, word: x.word };
+  if (x.kind === "words" && isInt(x.i) && isInt(x.n) && x.n >= 2 && isStr(x.words, 2000)) return { kind: "words", unit: x.unit, i: x.i, n: x.n, words: x.words };
   return null;
 }
 
@@ -70,14 +75,21 @@ export function newerThan(mine: Note[], theirs: Note[]): Note[] {
 
 export const shown = (notes: Note[]) => notes.filter((n) => !n.deleted);
 
-/** Where the note stands, in words: "17a", "line 1.5" (a passage that is one line), "3, line 2", "λόγος in 17a". */
+/** Where the note stands, in words: "17a", "line 1.5" (a passage that is one line), "3, line 2", "λόγος in 17a", "ὦ ἄνδρες in 17". */
 export function placeName(a: Anchor): string {
   if (a.kind === "passage") return a.unit;
   if (a.kind === "line") return a.lines > 1 ? `${a.unit}, line ${a.line + 1}` : `line ${a.unit}`;
+  if (a.kind === "words") return `${shortQuote(a.words)} in ${a.unit}`;
   return `${a.word} in ${a.unit}`;
 }
 
-export const KIND_NAMES: Record<AnchorKind, string> = { word: "The word", line: "The line", passage: "The passage" };
+/** A quotation of a few words whole; a longer one by its first and last two words. */
+export function shortQuote(words: string): string {
+  const w = words.trim().split(/\s+/);
+  return w.length <= 5 ? w.join(" ") : `${w.slice(0, 2).join(" ")} … ${w.slice(-2).join(" ")}`;
+}
+
+export const KIND_NAMES: Record<AnchorKind, string> = { word: "The word", words: "The words", line: "The line", passage: "The passage" };
 
 /** A new note's id: random, short, and allowed by the database's check. */
 export function newId(): string {

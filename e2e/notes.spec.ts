@@ -110,3 +110,34 @@ test("with a sync code, notes come from the database and new ones go to it", asy
   await expect.poll(() => Object.values(notes[CODE]).map((n) => n.text).sort(), { timeout: 10_000 })
     .toEqual(["From another device.", "Made on this device."]);
 });
+
+test("a note is kept as you write it: closed with ×, its words are there", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  await open(page);
+  await words(page).nth(30).click();
+  await page.locator("[data-lookup]").getByRole("button", { name: "Note", exact: true }).click();
+  const editor = page.getByRole("complementary", { name: "A new note" });
+  await editor.getByLabel("Your note").fill("Written, then closed.");
+  await expect(editor).toContainText("Kept as you write.");
+  await editor.getByRole("button", { name: "Close the note" }).click();
+  await expect(editor).toHaveCount(0);
+  expect((await stored(page)).map((n: { text: string }) => n.text)).toEqual(["Written, then closed."]);
+});
+
+test("words selected in the text take a note, and each of them is underlined", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  await open(page);
+  const from = (await words(page).nth(3).boundingBox())!, to = (await words(page).nth(5).boundingBox())!;
+  await page.mouse.move(from.x + 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width - 2, to.y + to.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await page.getByRole("button", { name: "Note on these words" }).click();
+  const editor = page.getByRole("complementary", { name: "A new note" });
+  await expect(editor.getByRole("radio", { name: "The words" })).toHaveAttribute("aria-checked", "true");
+  await editor.getByLabel("Your note").fill("Three words.");
+  await editor.getByRole("button", { name: "Save the note" }).click();
+  const [note] = await stored(page);
+  expect(note.anchor).toMatchObject({ kind: "words", n: 3 });
+  await expect(page.locator("main [role=button][data-noted=word]")).toHaveCount(3);
+});
