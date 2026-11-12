@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { candidates, lookupForm, GREEK_WORD, greekKey } from "./greek";
+import { candidates, drawableGreek, lookupForm, GREEK_WORD, greekKey } from "./greek";
 
 describe("dictionary forms to try for a printed word", () => {
   it("makes a grave acute and lowers a sentence's capital", () => {
@@ -30,4 +30,19 @@ describe("Greek helpers", () => {
     expect(greekKey("ταῖϲ")).toBe("ταισ");   // lunate sigma, as some First1K texts print it
   });
 
+});
+
+describe("a catalogue title the site can draw", () => {
+  it("writes the numeral sign as an apostrophe and leaves out editors' brackets", () => {
+    expect(drawableGreek("Ἀλκιβιάδης αʹ")).toBe("Ἀλκιβιάδης α\u2019");
+    expect(drawableGreek("⟨Ἑρμοῦ⟩ ⎡περὶ νοῦ⎤")).toBe("Ἑρμοῦ περὶ νοῦ");
+  });
+  it("makes an inverted breve the circumflex, and leaves out marks that belong to no letter", () => {
+    expect(drawableGreek("Δει\u0311πνον")).toBe("Δεῖπνον");
+    expect(drawableGreek("Προτρεπτικὸς Β\u0304")).toBe("Προτρεπτικὸς Β");
+    expect(drawableGreek("θεομν\u0301ηστου")).toBe("θεομνηστου");
+  });
+  it("keeps a title the typefaces draw as it is", () => {
+    expect(drawableGreek("Ἀπολογία Σωκράτους")).toBe("Ἀπολογία Σωκράτους");
+  });
 });

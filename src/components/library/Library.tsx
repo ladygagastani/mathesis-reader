@@ -20,6 +20,7 @@ import { beginnings, bestShelf, byKind, byLetter, byPeriod, byTitle, shelves, ty
 import { centuries, commonShare, dialects, length, loadDifficulty, passes, PERIODS, UNDATED, VOCAB, vocabOf, type Filters, type WorkFacts } from "@/lib/library/facts";
 import { loadAuthorsMeta, loadWorksMeta, workKinds, type AuthorMeta } from "@/lib/library/kinds";
 import { PLACES_KEY, type Place } from "@/lib/reader/place";
+import { drawableGreek } from "@/lib/greek";
 import { splitMatches } from "@/lib/text-match";
 import styles from "./Library.module.css";
 
@@ -65,7 +66,7 @@ function Vocab({ pct }: { pct: number }) {
 /** A work: its title and Greek title (the search's letters marked), then what it is, when, how long, and its words. */
 function WorkLine({ w, d, q, by }: { w: CatWork; d: Loaded; q: string; by?: CatAuthor }) {
   const grc = greekEditions(w)[0]?.label;
-  const greek = grc && GREEK.test(grc) && grc !== w.title ? grc : null;
+  const greek = grc && GREEK.test(grc) && grc !== w.title ? drawableGreek(grc) : null;
   const m = d.meta[w.id];
   const pct = commonShare(d.diff[w.id]);
   const facts = [d.kinds.get(w.id), centuries(m?.from, m?.to), length(m?.tokens)].filter(Boolean).join(" · ");
