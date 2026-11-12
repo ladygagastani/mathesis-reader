@@ -8,6 +8,7 @@
  * and the credits for what was shown. Nothing here is composed: every line comes from a source or says plainly there is none.
  */
 import Link from "next/link";
+import Icon from "@/components/Icon";
 import { useEffect, useRef, useState } from "react";
 import { lookupForm } from "@/lib/greek";
 import { SOURCE_NAMES } from "@/lib/lookup/card";
@@ -67,6 +68,16 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
   }, [key, at]);
   useEffect(() => { if (takeFocus) ref.current?.focus({ preventScroll: true }); }, [takeFocus, key, layer]);
   useEffect(() => { if (ref.current) ref.current.scrollTop = 0; }, [layer, key]);
+  // the start of LSJ's entry is clipped to a few lines: is there more under the clip? (only then the fade, and "The whole entry")
+  const [preview, setPreview] = useState<HTMLDivElement | null>(null);
+  const [clipped, setClipped] = useState(false);
+  useEffect(() => {
+    if (!preview) return;
+    const measure = () => setClipped(preview.hasAttribute("data-clip") && preview.scrollHeight > preview.clientHeight + 1);
+    const watch = new ResizeObserver(measure);
+    watch.observe(preview);
+    return () => watch.disconnect();
+  }, [preview]);
 
   const l = got.key === key ? got.value : null;
   const failed = got.key === key && !l;
@@ -97,9 +108,9 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
       }}
     >
       <div className={styles.head}>
-        {layer === 2 && <button type="button" className={`text-btn ${styles.back}`} onClick={() => onLayer(1)}><span aria-hidden="true">‹</span> Back</button>}
+        {layer === 2 && <button type="button" className={`text-btn ${styles.back}`} onClick={() => onLayer(1)}><Icon name="back" />Back</button>}
         <p className={styles.pw} lang="grc" style={{ "--chars": head.normalize("NFC").length } as React.CSSProperties}>{head}</p>
-        <button type="button" className={`icon-btn ${styles.x}`} onClick={onClose} aria-label="Close the look-up">×</button>
+        <button type="button" className={`icon-btn ${styles.x}`} onClick={onClose}><Icon name="close" label="Close the look-up" /></button>
       </div>
 
       {/* (the sheet's body scrolls by itself: it is in the Tab order, so a keyboard can scroll it) */}
@@ -128,9 +139,11 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
               {!l!.lsj && <p className="muted">{l!.lsjError ? `The dictionary could not be loaded (${l!.lsjError}).` : "No LSJ entry found under this headword."}</p>}
               {l!.lsj && !full && lsjShort.map((e, i) => <p key={i}>{e.s}</p>)}
               {l!.lsj && (full || lsjShort.length === 0) && (
-                <div className={styles.lsj} data-clip={full ? undefined : ""}>{l!.lsj.entries.map((e, i) => <Entry key={i} e={e} />)}</div>
+                <div ref={setPreview} className={styles.lsj} data-clip={full ? undefined : ""} data-clipped={!full && clipped ? "" : undefined}>
+                  {l!.lsj.entries.map((e, i) => <Entry key={i} e={e} />)}
+                </div>
               )}
-              {l!.lsj && <button type="button" className={`text-btn ${styles.quietBtn}`} aria-expanded={full} onClick={() => setWhole(full ? "" : key)}>{full ? "The short entry" : "The whole entry"}</button>}
+              {l!.lsj && (full || lsjShort.length > 0 || clipped) && <button type="button" className={`text-btn ${styles.quietBtn}`} aria-expanded={full} onClick={() => setWhole(full ? "" : key)}><Icon name={full ? "chevron-up" : "chevron-down"} />{full ? "The short entry" : "The whole entry"}</button>}
             </section>
             {occurs && (
               <section className={styles.sec}>
@@ -149,9 +162,9 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
 
       {layer === 1 && (
         <div className={styles.row}>
-          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(-1)} aria-label="Previous word"><span aria-hidden="true">‹</span> Previous</button>
-          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(1)} aria-label="Next word">Next <span aria-hidden="true">›</span></button>
-          <button type="button" className={`text-btn ${styles.more}`} onClick={() => onLayer(2)} disabled={!card}>More about it</button>
+          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(-1)} aria-label="Previous word"><Icon name="chevron-left" />Previous</button>
+          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(1)} aria-label="Next word">Next<Icon name="chevron-right" /></button>
+          <button type="button" className={`text-btn ${styles.more}`} onClick={() => onLayer(2)} disabled={!card}><Icon name="info" />More about it</button>
         </div>
       )}
     </aside>

@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { loadAuthorNames, titleCaps } from "@/lib/authors";
 import { describe } from "@/lib/catalog";
 import { lookupPlace, type LookupPlace } from "@/lib/lookup/placement";
 import type { WordAt } from "@/lib/lookup/lookup";
@@ -16,6 +17,7 @@ import type { Columns } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
 import { alignChunk, type Row } from "@/lib/tei/align";
 import { chunkOf, findRef } from "@/lib/tei/refs";
+import Icon from "@/components/Icon";
 import { Blocks } from "./Blocks";
 import FootBar from "./FootBar";
 import Lookup from "./Lookup";
@@ -50,6 +52,22 @@ function wordAt(el: HTMLElement, work: string, doc: Book["doc"]): WordAt | null 
   return { work, word, unitKey: unit.dataset.u!, i, occurrence: all.slice(0, i).filter(same).length, doc };
 }
 
+/** The title page's author: the Greek name in capitals where Wikidata gives one (the old title page's), the English name otherwise. */
+function AuthorCaps({ id, name }: { id: string; name: string }) {
+  const [grc, setGrc] = useState<{ id: string; name: string | null }>({ id: "", name: null });
+  useEffect(() => {
+    let live = true;
+    loadAuthorNames().then((n) => { if (live) setGrc({ id, name: n[id]?.grc ?? null }); });
+    return () => { live = false; };
+  }, [id]);
+  const greek = grc.id === id ? grc.name : null;
+  return (
+    <p className={styles.tpAu}>
+      {greek ? <><span lang="grc" aria-hidden="true">{titleCaps(greek)}</span><span className="visually-hidden">{name}</span></> : name}
+    </p>
+  );
+}
+
 const RowView = memo(function RowView({ row, cols, open, onToggle, credit }: {
   row: Row; cols: Columns; open: boolean; onToggle: (key: string) => void; credit: string | null;
 }) {
@@ -78,7 +96,7 @@ const RowView = memo(function RowView({ row, cols, open, onToggle, credit }: {
       </div>
       {cols !== "greek" && (
         <div className={styles.tr} lang="en" data-reading="">
-          {english ? <Blocks blocks={row.trans} greek={false} /> : !row.cont && <span className={styles.untr}>This translation has no English for this passage.</span>}
+          {english ? <Blocks blocks={row.trans} greek={false} margin={row.greek.length ? row.key : undefined} /> :!row.cont && <span className={styles.untr}>This translation has no English for this passage.</span>}
         </div>
       )}
       <div className={styles.margin} aria-hidden="true" data-margin="" />
@@ -158,23 +176,32 @@ export default function Reader() {
     const measure = () => {
       const p = lookupPlace(window.innerWidth);
       setPlace(p);
-      const m = document.querySelector<HTMLElement>("[data-margin]")?.getBoundingClientRect();
-      setNote(p === "note" && m && m.width > 0 ? { left: m.left, width: m.width } : null);
+      // (the window stands at the right edge of the type area, as wide as the margin's column)
+      const cell = document.querySelector<HTMLElement>("[data-margin]");
+      const m = cell?.getBoundingClientRect(), row = cell?.parentElement?.getBoundingClientRect();
+      setNote(p === "note" && m && row && m.width > 0 ? { left: row.right - m.width, width: m.width } : null);
     };
     measure();
     addEventListener("resize", measure);
     return () => removeEventListener("resize", measure);
   }, [rows, columns]);
 
-  // the word stays in sight, never under the look-up: above the sheet, or (with the window) inside the screen
+  // the word stays in sight, never under the look-up: above the sheet (as the sheet grows when its words arrive, too), or, with the
+  // window, inside the screen above the foot bar
   useLayoutEffect(() => {
-    if (!word) return;
     const panel = document.querySelector<HTMLElement>("[data-lookup]");
-    const r = word.el.getBoundingClientRect();
-    const top = place === "sheet" && panel ? innerHeight - panel.offsetHeight : innerHeight - 72;
-    const room = 16;
-    if (r.bottom > top - room) window.scrollBy({ top: r.bottom - top + room + (place === "sheet" ? r.height : 0) });
-    else if (r.top < room) window.scrollBy({ top: r.top - room * 4 });
+    if (!word || !panel) return;
+    const keepClear = () => {
+      const r = word.el.getBoundingClientRect();
+      const top = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight - 72;
+      const room = 16;
+      if (r.bottom > top - room) window.scrollBy({ top: r.bottom - top + room + (place === "sheet" ? r.height : 0) });
+      else if (r.top < room) window.scrollBy({ top: r.top - room * 4 });
+    };
+    keepClear();
+    const watch = new ResizeObserver(keepClear);
+    watch.observe(panel);
+    return () => watch.disconnect();
   }, [word, layer, place]);
 
   if (!workId) {
@@ -224,7 +251,7 @@ export default function Reader() {
     <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined}>
       {page === 0 && firstOpening(workId) ? (
         <header className={`${styles.tp} enter`}>
-          <p className={styles.tpAu}>{book.author.name}</p>
+          <AuthorCaps id={book.author.id} name={book.author.name} />
           <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
           {greekTitle && <p className={styles.tpEn}>{book.work.title}</p>}
           <p className={styles.orn} aria-hidden="true">❦</p>
@@ -252,12 +279,12 @@ export default function Reader() {
       <nav className={`wrap ${styles.bottom}`} aria-label="Pages">
         <span className={styles.hint}>{chunk.label}</span>
         <div className={styles.bottomGo}>
-          {page > 0 && <button type="button" className="btn ghost" onClick={() => go(page - 1)}><span aria-hidden="true">‹</span> {doc.chunks[page - 1].label}</button>}
-          {page < doc.chunks.length - 1 && <button type="button" className="btn" onClick={() => go(page + 1)}>Continue to {doc.chunks[page + 1].label} <span aria-hidden="true">›</span></button>}
+          {page > 0 && <button type="button" className="btn ghost" onClick={() => go(page - 1)}><Icon name="back" />{doc.chunks[page - 1].label}</button>}
+          {page < doc.chunks.length - 1 && <button type="button" className="btn" onClick={() => go(page + 1)}>Continue to {doc.chunks[page + 1].label}<Icon name="next" /></button>}
         </div>
       </nav>
 
-      <FootBar where={chunk.label} at={`${page + 1} of ${doc.chunks.length}`} pages={doc.chunks.map((c) => c.label)} page={page} onPage={go}
+      <FootBar where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`} pages={doc.chunks.map((c) => c.label)} page={page} onPage={go}
         hasEnglish={!!book.tr} hidden={sheetOpen} />
 
       {word && (

@@ -77,8 +77,9 @@ test("More about it, Back, Previous, Next and Escape", async ({ page }) => {
   await expect(lookup(page)).toContainText("Dictionary · LSJ");
   await expect(lookup(page)).toContainText("How sure");
   await clear(page, ws.nth(14));
-  await page.getByRole("button", { name: "The whole entry" }).click();
-  await expect(page.getByRole("button", { name: "The short entry" })).toBeVisible();
+  // οἶδα's LSJ entry is two short lines: all of it shows, with nothing more to open
+  await expect(lookup(page)).toContainText("v. Εἴδω B.");
+  await expect(page.getByRole("button", { name: "The whole entry" })).toHaveCount(0);
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.getByRole("button", { name: "More about it" })).toBeVisible();
   await page.getByRole("button", { name: "Next word" }).click();
@@ -88,6 +89,14 @@ test("More about it, Back, Previous, Next and Escape", async ({ page }) => {
   await page.getByRole("button", { name: "Close the look-up" }).click();
   await expect(lookup(page)).toHaveCount(0);
   await expect(ws.nth(14)).not.toHaveAttribute("aria-current", "true");
+
+  // ἄνδρες: LSJ's long entry for ἀνήρ starts clipped, and opens whole
+  await lookUp(page, ws.nth(6));
+  await page.getByRole("button", { name: "More about it" }).click();
+  await page.getByRole("button", { name: "The whole entry" }).click();
+  await expect(page.getByRole("button", { name: "The short entry" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "More about it" })).toBeVisible();
 });
 
 test("the keyboard: Tab to a passage, arrows from word to word, Enter looks up, Escape closes", async ({ page }) => {
@@ -107,7 +116,7 @@ test("the keyboard: Tab to a passage, arrows from word to word, Enter looks up, 
 
 test("Aa: Paper or Night, the Greek's size, and the columns", async ({ page }) => {
   await openBook(page);
-  await page.getByRole("button", { name: "Page and text" }).click();
+  await page.getByRole("button", { name: "Text", exact: true }).click();
   await page.getByRole("radio", { name: "Night" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
   await page.getByRole("radio", { name: "Paper" }).click();
@@ -137,7 +146,7 @@ test("Aa: Paper or Night, the Greek's size, and the columns", async ({ page }) =
   await page.getByRole("radio", { name: "Night" }).click();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
-  await page.getByRole("button", { name: "Page and text" }).click();
+  await page.getByRole("button", { name: "Text", exact: true }).click();
   await page.getByRole("button", { name: "Close Page and text" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

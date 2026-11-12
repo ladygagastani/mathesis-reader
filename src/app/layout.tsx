@@ -9,7 +9,8 @@ import "./globals.css";
 // come from the old app's copies in src/fonts (OFL), fetched only where such a sign is drawn.
 const garamond = EB_Garamond({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-garamond", display: "swap" });
 const didot = GFS_Didot({ weight: "400", subsets: ["greek"], variable: "--font-didot", display: "swap" });
-const gentium = Gentium_Book_Plus({ weight: ["400", "700"], style: ["normal", "italic"], subsets: ["greek-ext"], variable: "--font-gentium", display: "swap" });
+// (Gentium in its regular weight only: the reader sets no Greek in bold or italic, and each style is a file a phone downloads)
+const gentium = Gentium_Book_Plus({ weight: "400", style: "normal", subsets: ["greek-ext"], variable: "--font-gentium", display: "swap" });
 const garamondSigns = localFont({
   src: [
     { path: "../fonts/eb-garamond-signs-normal-400-800.woff2", weight: "400 800", style: "normal" },
@@ -20,9 +21,6 @@ const garamondSigns = localFont({
 const gentiumSigns = localFont({
   src: [
     { path: "../fonts/gentium-book-plus-signs-normal-400.woff2", weight: "400", style: "normal" },
-    { path: "../fonts/gentium-book-plus-signs-normal-700.woff2", weight: "700", style: "normal" },
-    { path: "../fonts/gentium-book-plus-signs-italic-400.woff2", weight: "400", style: "italic" },
-    { path: "../fonts/gentium-book-plus-signs-italic-700.woff2", weight: "700", style: "italic" },
   ],
   variable: "--font-gentium-signs", display: "swap", preload: false, adjustFontFallback: false,
 });

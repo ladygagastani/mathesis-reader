@@ -1,7 +1,8 @@
 /**
  * Opening a book: the work in the catalogue, its first Greek edition and its first English translation, both read from GitHub at the
  * catalogue's pinned version and parsed off the main thread, with the English placed beside the Greek passage by passage. The word
- * analyses for the work start loading at the same time, so the first look-up does not wait for them.
+ * analyses for the work start loading with the texts, so the first look-up seldom waits for them. (Starting them after the texts
+ * was measured on a slow phone, scripts/weigh.mjs: the Greek showed no sooner, and the first look-up was slower.)
  */
 import { greekEditions, loadCatalog, translations, type CatAuthor, type CatText, type CatWork } from "@/lib/catalog";
 import { getXml } from "@/lib/texts/source";

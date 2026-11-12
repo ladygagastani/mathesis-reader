@@ -6,6 +6,7 @@
  */
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import Icon from "@/components/Icon";
 import { GREEK_SIZES, setSettings, stepSize, type Columns, type Theme } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
 import styles from "./FootBar.module.css";
@@ -29,7 +30,7 @@ function Menu({ title, onClose, className, children }: { title: string; onClose:
       onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(true); } }}>
       <div className={styles.head}>
         <h2 id={id} className={styles.title}>{title}</h2>
-        <button type="button" className={`icon-btn ${styles.close}`} onClick={() => onClose(true)} aria-label={`Close ${title}`}>×</button>
+        <button type="button" className={`icon-btn ${styles.close}`} onClick={() => onClose(true)}><Icon name="close" label={`Close ${title}`} /></button>
       </div>
       <div className={styles.body}>{children}</div>
     </div>
@@ -88,13 +89,17 @@ export default function FootBar({ where, at, pages, page, onPage, hasEnglish, hi
   return (
     <nav className={styles.foot} aria-label="The reader" data-hidden={hidden || undefined}>
       <div className={`wrap ${styles.barIn}`}>
-        <Link href="/" className={`${styles.quiet} ${styles.back}`}><span aria-hidden="true">‹</span> Library</Link>
+        <Link href="/" className={`${styles.quiet} ${styles.back}`}><Icon name="back" />Library</Link>
+        {/* where you are: the page's name, a thin rule with a short red mark at the place in the book, "page 1 of 5" (the old bar's) */}
         <button ref={pagesBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.where}`} aria-expanded={open === "pages"} aria-haspopup="dialog"
           onClick={() => toggle("pages")}>
-          <span className="visually-hidden">Pages: </span><span className={styles.part}>{where}</span><span className="visually-hidden">, </span><span className={styles.at}>{at}</span>
+          <Icon name="goto" />
+          <span className="visually-hidden">Pages: </span><span className={styles.part}>{where}</span><span className="visually-hidden">, </span>
+          <span className={styles.rule} aria-hidden="true"><span className={styles.mark} style={{ "--p": pages.length > 1 ? page / (pages.length - 1) : 0 } as React.CSSProperties} /></span>
+          <span className={styles.at}>{at}</span>
         </button>
         <button ref={aaBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.aa}`} aria-expanded={open === "aa"} aria-haspopup="dialog"
-          onClick={() => toggle("aa")} aria-label="Page and text"><span aria-hidden="true" className={styles.aaSign}>Aa</span></button>
+          onClick={() => toggle("aa")}><Icon name="text-size" />Text</button>
       </div>
 
       {open === "pages" && (

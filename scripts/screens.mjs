@@ -31,7 +31,7 @@ export async function open(page, base, s) {
     await page.locator("[data-lookup] [aria-busy=false]").waitFor({ timeout: 30_000 });
     if (s.act === "more") { await page.getByRole("button", { name: "More about it" }).click(); await page.getByText("Dictionary · LSJ").waitFor(); }
   }
-  if (s.act === "aa") await page.getByRole("button", { name: "Page and text" }).click();
+  if (s.act === "aa") await page.getByRole("button", { name: "Text", exact: true }).click();
   if (s.act === "pages") await page.getByRole("button", { name: /^Pages:/ }).click();
   await page.waitForTimeout(400);
 }

@@ -3,7 +3,7 @@
    links and "More about it". */
 .lookup {
   position: fixed; z-index: var(--z-panel); display: flex; flex-direction: column;
-  background: var(--bg); color: var(--ink); font-size: var(--step--1); line-height: 1.5; outline: none;
+  background: var(--bg); color: var(--ink); line-height: 1.5; outline: none;
 }
 .lookup:focus-visible { box-shadow: inset 0 0 0 2px var(--rubric); }
 
@@ -12,7 +12,7 @@
   top: calc(env(safe-area-inset-top, 0px) + var(--space-4)); width: var(--margin-note);
   max-height: calc(100dvh - env(safe-area-inset-top, 0px) - var(--space-7) - 2 * var(--space-4));
   overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
-  padding: 0 var(--space-5) var(--space-5);
+  padding: 0 var(--space-5) var(--space-5); font-size: var(--step--1);
   box-shadow: var(--rule-box), -24px 0 48px -40px var(--shadow);
   animation: from-right var(--dur-slow) var(--ease) backwards;
 }
@@ -20,15 +20,17 @@
 .note .head { position: sticky; top: 0; z-index: 1; padding-top: var(--space-4); background: var(--bg); }
 .note .row { padding-top: var(--space-2); }
 
-/* a phone or a narrower window: a low sheet over about a quarter of the screen, a hairline along its top; "More about it" makes it tall */
+/* a phone or a narrower window: a low sheet, about a quarter of the screen and as tall as its first layer needs (at most 45%), so
+   the meaning and the form both show without scrolling; a hairline along its top; "More about it" makes it tall */
 .sheet {
-  left: 0; right: 0; bottom: 0; height: clamp(180px, 25dvh, 400px);
+  left: 0; right: 0; bottom: 0; min-height: clamp(180px, 25dvh, 400px); max-height: 45dvh;
   box-shadow: 0 -1px 0 var(--rule), var(--shadow-sheet);
   animation: sheet-up 0.5s var(--ease) backwards;
 }
-.sheet[data-layer="2"] { height: 70dvh; }
+.sheet[data-layer="2"] { height: 70dvh; max-height: none; }
 @keyframes sheet-up { from { transform: translateY(30px); opacity: 0; } }
-.sheet .head { padding: var(--space-3) var(--space-3) 0 var(--space-4); }
+.sheet .head { padding: var(--space-2) var(--space-3) 0 var(--space-4); }
+.sheet .card { gap: var(--space-1); }
 .sheet .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-1) var(--space-4) var(--space-3); }
 .sheet .row { flex: none; padding: 0 var(--space-4) calc(var(--space-1) + env(safe-area-inset-bottom, 0px)); box-shadow: var(--rule-over); }
 .sheet[data-layer="2"] .body { padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); }
@@ -44,7 +46,9 @@
   /* one line: a long word is set smaller to fit, never broken (--chars: its letters) */
   font-size: max(var(--step-1), calc(var(--step-3) * min(1, 9.5 / var(--chars, 1)))); line-height: calc(1.1 * var(--step-3));
 }
-.lookup[data-layer="2"] .pw { font-size: max(var(--step-1), calc(var(--step-2) * min(1, 9 / var(--chars, 1)))); line-height: calc(1.1 * var(--step-2)); }
+/* in the sheet the word is a size smaller, so the card's lines have the room (the old sheet's) */
+.sheet .pw { font-size: var(--step-2); line-height: 1.2; }
+.note[data-layer="2"] .pw { font-size: max(var(--step-1), calc(var(--step-2) * min(1, 9 / var(--chars, 1)))); line-height: calc(1.1 * var(--step-2)); }
 .x:global(.icon-btn) { min-width: var(--space-6); width: var(--space-6); height: var(--space-6); font-size: var(--step-1); }
 @media (pointer: coarse) { .x:global(.icon-btn) { width: var(--tap); height: var(--tap); } }
 .back:global(.text-btn) {
@@ -82,7 +86,8 @@
 .sec { display: grid; gap: var(--space-2); }
 .sec :global(h3.label) { font-size: var(--step--2); letter-spacing: 0.16em; color: var(--ink-3); }
 .lsj { display: grid; gap: var(--space-2); line-height: 1.55; }
-.lsj[data-clip] { max-height: calc(6 * 1.55em + var(--space-2)); overflow: hidden; mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 2.5em), transparent); }
+.lsj[data-clip] { max-height: calc(6 * 1.55em + var(--space-2)); overflow: hidden; }
+.lsj[data-clipped] { mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 2.5em), transparent); }
 .senseN { font-family: var(--f-label); color: var(--rubric); }
 .cite { color: var(--ink-2); text-decoration-color: var(--rubric); text-underline-offset: 2px; }
 @media (hover: hover) { .cite:hover { color: var(--rubric); } }
