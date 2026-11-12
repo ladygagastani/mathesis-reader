@@ -5,8 +5,10 @@
  * is: a line of verse, a section of prose, a verse of the New Testament… When a file has no
  * pattern, nested numbered `div`s (and numbered lines inside them) are used instead.
  *
- * Nothing in the text is changed: every character of running text is kept, only whitespace
- * runs are collapsed, as any XML renderer does.
+ * Nothing in the text is changed but two things: whitespace runs are collapsed, as any XML renderer does, and a Greek word the
+ * printed edition broke at the end of a line ("Ἀριστο-" then "τέλους" on the next line, the First1KGreek editions' way) is one word
+ * again. The break is a Greek letter, a hyphen and the line's end (a newline, or an <lb/>), then a Greek letter; a note or a page
+ * marker between the two halves moves after the word.
  */
 import { SaxesParser } from "saxes";
 import type { Block, Inline, TeiDoc, Unit } from "./types";
@@ -99,6 +101,18 @@ function matches(el: El, s: Step): boolean {
 const holds = (el: El, s: Step): boolean => el.kids.some((k) => isEl(k) && (matches(k, s) || holds(k, s)));
 
 // ------------------------------------------------------------------ 3. content → blocks
+const GREEK = "\u0370-\u03FF\u1F00-\u1FFF";
+/** a word broken at a line end, both halves in one run of text */
+const BROKEN = new RegExp(String.raw`([${GREEK}])-[ \t]*\r?\n\s*(?=[${GREEK}])`, "gu");
+/** a run of text that ends on the first half of a broken word */
+const BROKEN_END = new RegExp(String.raw`([${GREEK}])-[ \t]*\r?\n\s*$`, "u");
+/** the first half, before an <lb/> */
+const BEFORE_LB = new RegExp(String.raw`([${GREEK}])-\s*$`, "u");
+/** the second half, at the start of the next run of text */
+const SECOND_HALF = new RegExp(String.raw`^\s*([${GREEK}]+)`, "u");
+/** marks the end of a first half while the second half is still to come (a character no text uses) */
+const JOIN = "\uE000";
+
 class Emitter {
   units: Unit[] = [];
   private pending: Block[] = [];         // content met before the first passage
@@ -139,6 +153,8 @@ class Emitter {
     if (b) {
       // trim the edges of the block, keep inner spacing
       const c = b.c;
+      // a first half with no second half in its block keeps its hyphen
+      c.forEach((x, i) => { if (typeof x === "string" && x.includes(JOIN)) c[i] = x.replaceAll(JOIN, "-"); });
       while (typeof c[0] === "string" && !(c[0] as string).trim()) c.shift();
       while (typeof c[c.length - 1] === "string" && !(c[c.length - 1] as string).trim()) c.pop();
       // trim the first and last runs of text, even when markers come before or after them
@@ -162,7 +178,16 @@ class Emitter {
     }
     const c = this.block!.c;
     if (typeof x === "string") {
-      const s = x.replace(/\s+/g, " ");
+      let s = x.replace(BROKEN, "$1").replace(BROKEN_END, `$1${JOIN}`).replace(/\s+/g, " ");
+      // the second half of a word broken at the end of the last run of text (with a note or a marker between, maybe)
+      const at = c.findLastIndex((y) => typeof y === "string");
+      if (at >= 0 && (c[at] as string).endsWith(JOIN)) {
+        if (!s.trim()) return;
+        const half = SECOND_HALF.exec(s);
+        c[at] = (c[at] as string).slice(0, -1) + (half ? half[1] : "-");
+        if (half) s = s.slice(half[0].length);
+        if (!s) return;
+      }
       const last = c[c.length - 1];
       if (typeof last === "string") {
         // where two pieces of text meet at a markup boundary, markup whitespace must not
@@ -173,6 +198,17 @@ class Emitter {
         c[c.length - 1] = prev + next;
       } else c.push(s);
     } else c.push(x);
+  }
+  /** An <lb/>: a space, or, after the first half of a broken word, the place where its second half joins it. */
+  lineBreak() {
+    const c = this.block?.c;
+    const at = c ? c.findLastIndex((y) => typeof y === "string") : -1;
+    if (c && at === c.length - 1 && at >= 0) {
+      const last = c[at] as string;
+      if (last.endsWith(JOIN)) return;
+      if (BEFORE_LB.test(last)) { c[at] = last.replace(BEFORE_LB, `$1${JOIN}`); return; }
+    }
+    this.inline(" ");
   }
   finish() {
     this.endBlock();
@@ -203,7 +239,7 @@ function emitElement(k: El, out: Emitter, inner: () => void) {
     case "milestone": if (k.attrs.unit) out.inline({ m: k.attrs.unit.toLowerCase(), n: k.attrs.n }); break;
     case "pb": if (k.attrs.n) out.inline({ m: "page", n: k.attrs.n }); break;
     case "gap": out.inline({ gap: true }); break;
-    case "lb": out.inline(" "); break;
+    case "lb": out.lineBreak(); break;
     // A regularised form is metadata, not printed text: Perseus uses <reg> for gazetteer entries
     // ("Bodrum [27.466,37.5] (inhabited place)…" beside "Halicarnassus"). The printed text stays.
     case "reg": break;

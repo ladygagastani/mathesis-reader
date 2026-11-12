@@ -11,11 +11,25 @@ import styles from "./Reader.module.css";
 
 const TAP = 44;
 
+/**
+ * Where a note's word is among its passage's words: at its number, or, where the text has changed under the note since (a word
+ * broken at a line end joined again, lib/tei/parse.ts), the nearest word a few places either side spelled as the note recorded it.
+ */
+function wordIndex(ws: HTMLElement[], i: number, word: string): number {
+  const is = (j: number) => ws[j]?.textContent === word;
+  if (is(i)) return i;
+  for (let d = 1; d <= 3; d++) { if (is(i - d)) return i - d; if (is(i + d)) return i + d; }
+  return i;
+}
+
 /** Every word of a note on a run of words, or the one element any other note stands on; none when it is on another page. */
 export function locateAll(a: Anchor): HTMLElement[] {
   if (a.kind !== "words") { const el = locate(a); return el ? [el] : []; }
   const unit = document.querySelector<HTMLElement>(`main [data-u="${CSS.escape(a.unit)}"]`);
-  return unit ? [...unit.querySelectorAll<HTMLElement>(`.${styles.w}`)].slice(a.i, a.i + a.n) : [];
+  if (!unit) return [];
+  const ws = [...unit.querySelectorAll<HTMLElement>(`.${styles.w}`)];
+  const i = wordIndex(ws, a.i, a.words.split(" ")[0]);
+  return ws.slice(i, i + a.n);
 }
 
 /** The element a note stands on (a run of words: its first word), on this page; null when it is on another page. */
@@ -24,7 +38,8 @@ export function locate(a: Anchor): HTMLElement | null {
   if (!unit) return null;
   if (a.kind === "passage") return unit.closest("section");
   if (a.kind === "line") return unit.querySelectorAll<HTMLElement>(`.${styles.line}`)[a.line] ?? null;
-  return unit.querySelectorAll<HTMLElement>(`.${styles.w}`)[a.i] ?? null;
+  const ws = [...unit.querySelectorAll<HTMLElement>(`.${styles.w}`)];
+  return ws[wordIndex(ws, a.i, a.kind === "word" ? a.word : a.words.split(" ")[0])] ?? null;
 }
 
 /** The word a note's editor floats by: the note's first word, or the first word of its line or passage. */
