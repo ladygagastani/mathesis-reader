@@ -23,10 +23,11 @@ import { alignChunk, type Row } from "@/lib/tei/align";
 import { chunkOf, findRef } from "@/lib/tei/refs";
 import Icon from "@/components/Icon";
 import { Blocks } from "./Blocks";
-import FootBar from "./FootBar";
+import ReaderBar from "./ReaderBar";
 import Lookup from "./Lookup";
 import NoteEditor, { type Editing } from "./NoteEditor";
 import NoteMarks, { locate } from "./NoteMarks";
+import { placeName } from "@/lib/notes/notes";
 import styles from "./Reader.module.css";
 
 const OPENED = "mathesis-reader:opened";
@@ -118,7 +119,6 @@ const RowView = memo(function RowView({ row, cols, open, onToggle, credit }: {
           {english ? <Blocks blocks={row.trans} greek={false} margin={row.greek.length ? row.key : undefined} /> :!row.cont && <span className={styles.untr}>This translation has no English for this passage.</span>}
         </div>
       )}
-      <div className={styles.margin} aria-hidden="true" data-margin="" />
     </section>
   );
 });
@@ -133,7 +133,9 @@ export default function Reader() {
   const [chosen, setWord] = useState<{ el: HTMLElement; at: WordAt; keyboard: boolean; page: string } | null>(null);
   const [layer, setLayer] = useState<1 | 2>(1);
   const [place, setPlace] = useState<LookupPlace>("note");
-  const [note, setNote] = useState<{ left: number; width: number } | null>(null);
+  // the look-up in the desk beside the text, or (Both on a window too narrow for the desk) over the English column
+  const [deskOn, setDeskOn] = useState(true);
+  const [over, setOver] = useState<{ left: number; width: number } | null>(null);
   const [editing, setEditing] = useState<{ e: Editing; page: string; back: HTMLElement | null } | null>(null);
   const allNotes = useNotes();
 
@@ -227,15 +229,17 @@ export default function Reader() {
     if (n && el) { opened.current = `${pageKey}|${noteParam}`; queueMicrotask(() => openNote(n, el)); }
   }, [noteParam, notes, pageKey, openNote]);
 
-  // the look-up's place: the window over the margin (its left edge and width from the margin's own column), or the sheet
+  // the look-up's place: the desk beside the text; over the English column when Both leaves no room for the desk; or the sheet
   useLayoutEffect(() => {
     const measure = () => {
       const p = lookupPlace(window.innerWidth);
       setPlace(p);
-      // (the window stands at the right edge of the type area, as wide as the margin's column)
-      const cell = document.querySelector<HTMLElement>("[data-margin]");
-      const m = cell?.getBoundingClientRect(), row = cell?.parentElement?.getBoundingClientRect();
-      setNote(p === "note" && m && row && m.width > 0 ? { left: row.right - m.width, width: m.width } : null);
+      const desk = document.querySelector<HTMLElement>("[data-desk]");
+      const on = p === "note" && !!desk && getComputedStyle(desk).display !== "none";
+      setDeskOn(on);
+      const tr = p === "note" && !on ? document.querySelector<HTMLElement>(`main .${styles.tr}`) : null;
+      const r = tr?.getBoundingClientRect();
+      setOver(r && r.width > 0 ? { left: r.left, width: r.width } : null);
     };
     measure();
     addEventListener("resize", measure);
@@ -243,16 +247,17 @@ export default function Reader() {
   }, [rows, columns]);
 
   // the word stays in sight, never under the look-up: above the sheet (as the sheet grows when its words arrive, too), or, with the
-  // window, inside the screen above the foot bar
+  // desk, inside the screen below the bar
   useLayoutEffect(() => {
     const panel = document.querySelector<HTMLElement>("[data-lookup]");
     if (!word || !panel) return;
     const keepClear = () => {
       const r = word.el.getBoundingClientRect();
-      const top = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight - 72;
+      const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
+      const bottom = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight;
       const room = 16;
-      if (r.bottom > top - room) window.scrollBy({ top: r.bottom - top + room + (place === "sheet" ? r.height : 0) });
-      else if (r.top < room) window.scrollBy({ top: r.top - room * 4 });
+      if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + (place === "sheet" ? r.height : 0) });
+      else if (r.top < bar + room) window.scrollBy({ top: r.top - bar - room * 4 });
     };
     keepClear();
     const watch = new ResizeObserver(keepClear);
@@ -318,9 +323,31 @@ export default function Reader() {
   };
   const go = (i: number) => router.push(`/read?w=${encodeURIComponent(workId)}&p=${i + 1}`);
 
+  const titlePage = page === 0 && firstOpening(workId);
+  const barTitle = (
+    <>
+      {greekTitle && <><span lang="grc" className={styles.barGr}>{greekTitle}</span><span aria-hidden="true"> · </span></>}
+      {book.author.name}, {book.work.title}
+      {book.private && <span className={styles.lock}><Icon name="lock" label="Only you can see this" /></span>}
+    </>
+  );
+  // the units of this page, for the notes the desk lists
+  const here = new Set(rows.flatMap((r) => r.greek.map((u) => u.ref.join("."))));
+  const pageNotes = notes.filter((n) => here.has(n.anchor.unit));
+  const lookup = word && (
+    <Lookup at={word.at} place={place} inDesk={deskOn} over={over} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
+      workTitle={book.work.title} takeFocus={word.keyboard} onNote={noteWord} />
+  );
+  const editor = edit && (
+    <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} inDesk={deskOn} over={over} onClose={closeNote} />
+  );
+
   return (
     <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined}>
-      {page === 0 && firstOpening(workId) ? (
+      <ReaderBar title={barTitle} showTitle={!titlePage} where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`}
+        pages={doc.chunks.map((c) => c.label)} page={page} onPage={go} hasEnglish={!!book.tr} notes={notes} onNote={fromMenu} />
+
+      {titlePage && (
         <header className={`${styles.tp} enter`}>
           <AuthorCaps id={book.author.id} name={book.author.name} />
           <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
@@ -332,41 +359,56 @@ export default function Reader() {
             {book.tr && <> · <span className={styles.edKind}>English</span> {describe(book.tr, book.work.texts)}</>}
           </p>
         </header>
-      ) : (
-        <div className={`wrap ${styles.rlWrap} enter`}>
-          <h1 className={styles.rl}>
-            {greekTitle && <><span lang="grc" className={styles.rlGr}>{greekTitle}</span><span aria-hidden="true"> · </span></>}
-            {book.author.name}, {book.work.title}, {chunk.label}
-            {book.private && <span className={styles.lock}><Icon name="lock" label="Only you can see this" /></span>}
-          </h1>
-        </div>
       )}
 
-      <div className={`wrap ${styles.text}`} onClick={onText} onKeyDown={onKey}>
-        <span data-greek-probe="" lang="grc" className={styles.grc} hidden />
-        {rows.map((r) => (
-          <RowView key={r.key} row={r} cols={book.tr ? columns : "greek"} open={!!openEnglish?.has(r.key)} onToggle={toggleEnglish} credit={credit} />
-        ))}
-      </div>
+      <div className={styles.layout}>
+        <div className={styles.column}>
+          <div className={`${styles.text} enter`} onClick={onText} onKeyDown={onKey}>
+            <span data-greek-probe="" lang="grc" className={styles.grc} hidden />
+            {rows.map((r) => (
+              <RowView key={r.key} row={r} cols={book.tr ? columns : "greek"} open={!!openEnglish?.has(r.key)} onToggle={toggleEnglish} credit={credit} />
+            ))}
+          </div>
 
-      <nav className={`wrap ${styles.bottom}`} aria-label="Pages">
-        <span className={styles.hint}>{chunk.label}</span>
-        <div className={styles.bottomGo}>
-          {page > 0 && <button type="button" className="btn ghost" onClick={() => go(page - 1)}><Icon name="back" />{doc.chunks[page - 1].label}</button>}
-          {page < doc.chunks.length - 1 && <button type="button" className="btn" onClick={() => go(page + 1)}>Continue to {doc.chunks[page + 1].label}<Icon name="next" /></button>}
+          <nav className={styles.bottom} aria-label="Pages">
+            <span className={styles.hint}>{chunk.label}</span>
+            <div className={styles.bottomGo}>
+              {page > 0 && <button type="button" className="btn ghost" onClick={() => go(page - 1)}><Icon name="back" />{doc.chunks[page - 1].label}</button>}
+              {page < doc.chunks.length - 1 && <button type="button" className="btn" onClick={() => go(page + 1)}>Continue to {doc.chunks[page + 1].label}<Icon name="next" /></button>}
+            </div>
+          </nav>
         </div>
-      </nav>
 
-      <FootBar where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`} pages={doc.chunks.map((c) => c.label)} page={page} onPage={go}
-        hasEnglish={!!book.tr} hidden={sheetOpen} notes={notes} onNote={fromMenu} />
+        {/* the desk (DESIGN.md, decision 1): the look-up, a note being written, or, with neither, this page's notes and how to look up */}
+        <aside className={styles.desk} data-desk="" aria-label="The desk">
+          {deskOn && (lookup || editor)}
+          {deskOn && !lookup && !editor && (
+            <div className={styles.idle}>
+              <p className={styles.idleHint}>Click a Greek word to see its meaning here. With the keyboard: Tab into the text, the arrow keys to move, Enter to look up.</p>
+              {pageNotes.length > 0 && (
+                <section className={styles.idleNotes} aria-labelledby="desk-notes">
+                  <h2 id="desk-notes" className="label">Notes on this page</h2>
+                  <ol>
+                    {pageNotes.map((n) => (
+                      <li key={n.id}>
+                        <button type="button" className={styles.idleNote} data-colour={n.colour} onClick={() => fromMenu(n)}>
+                          <span className={styles.idlePlace}>{placeName(n.anchor)}</span>
+                          <span className={styles.idleText}>{n.text}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              )}
+            </div>
+          )}
+        </aside>
+      </div>
 
       <NoteMarks notes={notes} layout={[rows, columns, openEnglish]} onOpen={openNote} />
 
-      {word && (
-        <Lookup at={word.at} place={place} note={note} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
-          workTitle={book.work.title} takeFocus={word.keyboard} onNote={noteWord} />
-      )}
-      {edit && <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} margin={note} onClose={closeNote} />}
+      {!deskOn && lookup}
+      {!deskOn && editor}
     </main>
   );
 }

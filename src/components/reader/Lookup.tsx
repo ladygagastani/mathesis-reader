@@ -1,7 +1,8 @@
 "use client";
 /**
- * The word look-up (ADR 0009, decisions 1 and 4). One placement per device: at 1100 px and wider a window over the right margin, fixed
- * while the text scrolls; below, a low sheet from the foot of the screen, and the reader keeps the word above it (Reader.tsx).
+ * The word look-up (ADR 0009, decisions 1 and 4; DESIGN.md, decision 1). At 1100 px and wider it stands in the desk beside the text,
+ * which stays put while the text scrolls (over the English column when Both leaves no room for the desk); below, a low sheet from the
+ * foot of the screen, and the reader keeps the word above it (Reader.tsx).
  * Layer one: the dictionary form, the kind of word (with the core list's class) and the word tapped, the core list's full heading
  * (genitive and article, or principal parts), one meaning with its source, the grammar one word to a part, what the word does in
  * the sentence (only where the treebank says), a plain warning when the analysis is not of this very word, and how common the word
@@ -72,10 +73,12 @@ function unsure(l: Looked): string | null {
   return l.analysis.where === "passage" ? "Uncertain: matched to this passage, not to this exact word." : "Uncertain: this is how the form is read elsewhere in the book.";
 }
 
-export default function Lookup({ at, place, note, layer, onLayer, onStep, onClose, workTitle, takeFocus, onNote }: {
+export default function Lookup({ at, place, inDesk, over, layer, onLayer, onStep, onClose, workTitle, takeFocus, onNote }: {
   at: WordAt; place: LookupPlace;
-  /** the window's left edge and width, over the margin (place "note") */
-  note: { left: number; width: number } | null;
+  /** in the desk beside the text (DESIGN.md, decision 1) */
+  inDesk: boolean;
+  /** with no desk (Both on a narrower window): the English column's left edge and width, which the look-up stands over */
+  over: { left: number; width: number } | null;
   layer: 1 | 2; onLayer: (l: 1 | 2) => void;
   onStep: (dir: 1 | -1) => void; onClose: () => void;
   workTitle: string;
@@ -160,8 +163,8 @@ export default function Lookup({ at, place, note, layer, onLayer, onStep, onClos
   return (
     <aside
       ref={ref} tabIndex={-1} data-lookup={place} data-layer={layer} aria-label={`Look-up: ${at.word}`}
-      className={`${styles.lookup} ${place === "note" ? styles.note : styles.sheet}`}
-      style={note ? { left: note.left, width: note.width } : undefined}
+      className={`${styles.lookup} ${place === "sheet" ? styles.sheet : inDesk ? styles.desk : styles.note}`}
+      style={place === "note" && !inDesk && over ? { left: over.left, width: over.width } : undefined}
       onKeyDown={(e) => {
         if (e.key !== "Escape") return;
         e.stopPropagation();

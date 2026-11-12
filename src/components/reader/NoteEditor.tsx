@@ -1,6 +1,6 @@
 "use client";
 /**
- * Writing or editing a note (SPEC.md, "Notes and Saved"), in the look-up's place: a window over the right margin on a computer, a
+ * Writing or editing a note (SPEC.md, "Notes and Saved"), in the look-up's place: the desk beside the text on a computer, a
  * sheet on a phone (Lookup.module.css). A new note offers what it can stand on (the word, its line of verse if it is in one, its
  * passage); every note has a colour and words. Save keeps it, Remove takes it away, Escape or × leaves it as it was.
  */
@@ -14,9 +14,10 @@ import styles from "./NoteEditor.module.css";
 
 export type Editing = { note: Note } | { anchors: Anchor[] };
 
-export default function NoteEditor({ editing, work, book, place, margin, onClose }: {
+export default function NoteEditor({ editing, work, book, place, inDesk, over, onClose }: {
   editing: Editing; work: string; book: string; place: LookupPlace;
-  margin: { left: number; width: number } | null;
+  /** in the desk beside the text; or, with no desk, over the English column */
+  inDesk: boolean; over: { left: number; width: number } | null;
   onClose: (refocus: boolean) => void;
 }) {
   const old = "note" in editing ? editing.note : null;
@@ -37,8 +38,8 @@ export default function NoteEditor({ editing, work, book, place, margin, onClose
 
   return (
     <aside data-lookup={place} aria-label={old ? `Your note on ${placeName(anchor)}` : "A new note"}
-      className={`${look.lookup} ${place === "note" ? look.note : look.sheet} ${styles.editor}`}
-      style={margin ? { left: margin.left, width: margin.width } : undefined}
+      className={`${look.lookup} ${place === "sheet" ? look.sheet : inDesk ? look.desk : look.note} ${styles.editor}`}
+      style={place === "note" && !inDesk && over ? { left: over.left, width: over.width } : undefined}
       onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(true); } }}>
       <form className={styles.form} onSubmit={save}>
         <div className={`${look.head} ${styles.head}`}>

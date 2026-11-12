@@ -39,7 +39,8 @@ test("a book opens on its title page the first time, then on its one-line title"
   await expect(page.getByText("Burnet, 1905")).toBeVisible();
   await page.reload();
   await words(page).first().waitFor();
-  await expect(page.locator("main h1")).toContainText("Plato, Apology, Sections 17–22");
+  await expect(page.locator("main h1")).toContainText("Ἀπολογία Σωκράτους · Plato, Apology");
+  await expect(page.getByRole("button", { name: /^Pages:/ })).toContainText("Sections 17–22");
 });
 
 test("the Greek stands alone, and Show the English opens one passage's English", async ({ page }) => {
@@ -156,7 +157,7 @@ test("pages: the menu, Continue and the way back, and the Library", async ({ pag
   await page.getByRole("button", { name: /^Pages:/ }).click();
   await page.getByRole("button", { name: "Sections 35–40" }).click();
   await expect(page).toHaveURL(/p=4/);
-  await expect(page.locator("main h1")).toContainText("Sections 35–40");
+  await expect(page.getByRole("button", { name: /^Pages:/ })).toContainText("Sections 35–40");
   await page.getByRole("button", { name: /Continue to Sections 41–42/ }).click();
   await expect(page).toHaveURL(/p=5/);
   await expect(page.getByRole("button", { name: /Continue/ })).toHaveCount(0);

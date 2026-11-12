@@ -40,8 +40,7 @@ export default function NoteMarks({ notes, layout, onOpen }: {
 
     const measure = () => {
       const page = document.documentElement.scrollHeight;
-      const foot = document.querySelector<HTMLElement>("nav[aria-label='The reader']")?.offsetHeight ?? 0;
-      const lowest = innerHeight - foot - TAP;
+      const lowest = innerHeight - TAP;
       const at = placed
         .map(({ n, el }) => ({ n, top: Math.min(lowest, Math.max(0, ((el.getBoundingClientRect().top + scrollY) / page) * innerHeight - TAP / 2)) }))
         .sort((a, b) => a.top - b.top);
