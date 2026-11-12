@@ -57,3 +57,22 @@ describe("looking up a word", () => {
     expect(r.card.lemma).toBe("θεά");
   });
 });
+
+describe("looking up a word followed from a word family", () => {
+  it("gives its LSJ entry and its core meaning, with no analysis or count", async () => {
+    const { lookUpHeadword } = await import("./lookup");
+    const r = await lookUpHeadword("ὅς");
+    expect(r.lsj?.head).toBe("ὅς");
+    expect(r.card.lemma).toBe("ὅς");
+    expect(r.card.meaning.source).toBe("core");
+    expect(r.analysis).toBeNull();
+    expect(r.occurs).toBeNull();
+  });
+
+  it("says plainly when neither dictionary has it", async () => {
+    const { lookUpHeadword } = await import("./lookup");
+    const r = await lookUpHeadword("διὰ παντός");
+    expect(r.lsj).toBeNull();
+    expect(r.card.meaning.source).toBeNull();
+  });
+});

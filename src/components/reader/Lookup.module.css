@@ -126,9 +126,15 @@
 /* the word's family: where it comes from, then the words built on it as a run of words */
 .etym { line-height: 1.5; color: var(--ink); }
 .kin { display: grid; gap: var(--space-1); }
-.words { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); line-height: 1.4; }
+.words { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); line-height: 1.4; list-style: none; margin: 0; padding: 0; }
 .words > [lang="grc"], .words[lang="grc"] > span { font-family: var(--f-greek); }
-.moreN { font-family: var(--f-body); font-style: italic; color: var(--ink-2); }
+/* a related Greek word opens in the look-up: a word underlined in the accent, like the other dictionaries' links */
+.kinWord {
+  font: inherit; font-family: var(--f-greek); color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer;
+  text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+@media (hover: hover) { .kinWord:hover { color: var(--accent); } }
+@media (pointer: coarse) { .kinWord { min-height: var(--tap); } }
 
 /* other dictionaries: a link each, and what it holds */
 .dicts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }

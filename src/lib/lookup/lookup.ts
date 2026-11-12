@@ -64,3 +64,20 @@ export async function lookUp(at: WordAt): Promise<Looked> {
   const card = lookupCard({ analysis, tree, core, lsj });
   return { card, analysis, analysisError, tree, occurs, lsj, lsjError, core };
 }
+
+/**
+ * A word met outside the text (one of a word's family, followed from the look-up): its LSJ entry and its core-vocabulary entry
+ * only. With no place in a passage it has no analysis, no sentence and no count.
+ */
+export async function lookUpHeadword(word: string): Promise<Looked> {
+  let lsj: Looked["lsj"] = null, lsjError: string | undefined;
+  try {
+    for (const h of candidates(word)) {
+      lsj = await lsjEntries(h);
+      if (lsj) break;
+    }
+  } catch (e) { lsjError = message(e); }
+  const core = await coreEntry(lsj?.head ?? lookupForm(word)).catch(() => null);
+  const card = lookupCard({ analysis: null, tree: null, core, lsj });
+  return { card, analysis: null, tree: null, occurs: null, lsj, lsjError, core };
+}
