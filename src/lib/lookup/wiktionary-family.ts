@@ -28,6 +28,32 @@ function textOf(el: Element, dropLists = false): string {
   return clean(c.textContent ?? "");
 }
 
+/** Letters of a script other than Latin and Greek: the site's three typefaces cannot draw them (DESIGN.md, "Type"). */
+const OTHER = /[^\p{Script=Latin}\p{Script=Greek}\p{Script=Common}\p{Script=Inherited}]+/u;
+const OTHER_ALL = new RegExp(OTHER.source, "gu");
+
+/**
+ * An etymology line as the site can draw it: a cognate in another script followed by its transliteration ("Sanskrit वेद (véda)")
+ * keeps the transliteration ("Sanskrit véda"); anything else in another script is left out, and the punctuation around it tidied.
+ */
+export function drawable(line: string): string {
+  if (!OTHER.test(line)) return line;
+  return line
+    .replace(new RegExp(String.raw`${OTHER.source}\s*\(([^()]+)\)`, "gu"), "$1")
+    .replace(OTHER_ALL, "")
+    .replace(/\(\s*\)/g, "")
+    .replace(/\s+([,.;:)])/g, "$1")
+    .replace(/,(\s*,)+/g, ",")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+/**
+ * A Greek word as the text spells it: without the marks of a long or short vowel (the macron and breve, as in ῐ̓́σμεν) that
+ * Wiktionary adds for learners. With them a letter can carry three marks, which no typeface of the three draws as one.
+ */
+export const plainGreek = (w: string) => w.normalize("NFD").replace(/[\u0304\u0306]/g, "").normalize("NFC");
+
 const heading = (s: Element) => s.querySelector(":scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6")?.textContent?.trim() ?? "";
 
 export function parseFamily(html: string, title: string): WordFamily | null {
@@ -40,10 +66,10 @@ export function parseFamily(html: string, title: string): WordFamily | null {
     const h = heading(s);
     const own = [...s.children];
     if (/^Etymology/.test(h)) {
-      for (const p of own.filter((x) => x.tagName === "P")) { const t = textOf(p); if (t) add(fam.etymology, t); }
+      for (const p of own.filter((x) => x.tagName === "P")) { const t = plainGreek(drawable(textOf(p))); if (t) add(fam.etymology, t); }
     } else if (/^(Derived terms|Related terms)/.test(h)) {
       const list = h.startsWith("Derived") ? fam.derived : fam.related;
-      s.querySelectorAll('[lang="grc"]').forEach((x) => add(list, clean(x.textContent ?? "")));
+      s.querySelectorAll('[lang="grc"]').forEach((x) => add(list, plainGreek(clean(x.textContent ?? ""))));
     } else if (/^Descendants/.test(h)) {
       for (const li of s.querySelectorAll("li")) {
         const c = li.cloneNode(true) as Element;
