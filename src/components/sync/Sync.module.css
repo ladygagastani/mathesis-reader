@@ -15,8 +15,14 @@
 }
 @media (hover: hover) { .reveal summary:hover { color: var(--rubric); } }
 .code { font-size: var(--step-1); letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
-.row { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-.row :global(.text-btn) { min-height: var(--tap); }
+/* a button, and under it in small ink-2 what it does */
+.action { display: grid; gap: var(--space-1); justify-items: start; }
+.action :global(.text-btn) { min-height: var(--tap); }
+.what { margin: 0; max-width: 34em; font-size: var(--step--1); line-height: 1.45; color: var(--ink-2); }
+.said { margin: 0; font-size: var(--step--1); color: var(--ink); }
+.said:empty { display: none; }
+.steps { margin: 0; padding-left: 1.4em; display: grid; gap: var(--space-2); line-height: 1.5; }
+.steps li::marker { color: var(--rubric); font-family: var(--f-title); }
 .error { margin-top: var(--space-4); color: var(--rubric); }
 .error:empty { display: none; }
 

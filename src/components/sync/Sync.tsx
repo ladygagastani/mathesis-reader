@@ -2,9 +2,10 @@
 /**
  * Syncing a device (SPEC.md, "Sync"): no email and no password. "Make a new code" asks the database for a code of your own, which
  * starts empty; "I have a code" takes one made before. The device keeps the code, and your notes go with it to every device you type
- * it on. The code can be saved to your files, as a small text file, or in a password manager (1Password and the like): its fields
- * are marked as a password with a fixed user name, so the manager offers to keep a new code and fills a kept one. "Forget" takes the
- * code and its notes off this device.
+ * it on. Every button says, under it, what it does. The code can be copied, saved to your files as a small text file, or kept in a
+ * password manager (1Password and the like): its fields are marked as a password with a fixed user name, so the manager offers to
+ * keep a new code and fills a kept one. The code is shown once, in letters; the password field that carries it for a manager is not
+ * shown, so the page never seems to give two codes. "Forget" takes the code and its notes off this device.
  * After typing a code the page goes back to where it was asked from (?next=/read?w=mine:…), or to the library.
  */
 import Link from "next/link";
@@ -38,6 +39,31 @@ function saveToFiles(code: SyncCode) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+/** A button and, under it, what it does. */
+function Action({ what, children }: { what: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className={styles.action}>
+      {children}
+      <p className={styles.what}>{what}</p>
+    </div>
+  );
+}
+
+/** Copy the code, and Save to your files: the two ways to keep it that need no password manager. */
+function KeepIt({ code, said, onCopy }: { code: SyncCode; said: string; onCopy: () => void }) {
+  return (
+    <>
+      <Action what="Puts the code on your clipboard, to paste into a password manager, a note or a message to yourself.">
+        <button type="button" className="btn ghost" onClick={onCopy}><Icon name="copy" />Copy the code</button>
+      </Action>
+      <Action what="Downloads a small text file, mathesis-sync-code.txt, with the code in it.">
+        <button type="button" className="btn ghost" onClick={() => saveToFiles(code)}><Icon name="download" />Save to your files</button>
+      </Action>
+      <p className={styles.said} aria-live="polite">{said}</p>
+    </>
+  );
+}
+
 export default function Sync() {
   const code = useSyncCode();
   const router = useRouter();
@@ -47,6 +73,7 @@ export default function Sync() {
   const [error, setError] = useState("");
   const [made, setMade] = useState(false);
   const [see, setSee] = useState(false);
+  const [said, setSaid] = useState("");
 
   const run = async (work: () => Promise<void>) => {
     setBusy(true); setError("");
@@ -59,58 +86,39 @@ export default function Sync() {
     void run(async () => { await syncDevice(typed); void syncNotes(); router.push(next); });
   };
   const make = () => run(async () => { await makeCode(); setMade(true); void syncNotes(); });
-  const forget = () => run(async () => { await forgetNotes(); forgetCode(); setMade(false); });
+  const forget = () => run(async () => { await forgetNotes(); forgetCode(); setMade(false); setSaid(""); });
+  const copy = (c: SyncCode) => navigator.clipboard.writeText(showSyncCode(c)).then(
+    () => setSaid("Copied. Paste it where you keep it."),
+    () => setSaid("This browser would not copy it. Select the code above and copy it, or use Save to your files."),
+  );
 
   return (
     <main id="main" className={`wrap ${styles.page}`}>
       <header className={`${styles.head} enter`}>
         <h1 className={styles.title}>Sync</h1>
         <p className={styles.purpose}>
-          A sync code carries your notes to every device you type it on. There is no account, no email and no password. The code is
-          the only key, so keep it to yourself.
+          Sync keeps your notes the same on your phone, your computer and any other device. There is no account, no email and no
+          password. A sync code of 20 letters and digits is the key, and whoever has it can read your notes.
         </p>
       </header>
+
       {code === undefined && <p className="muted" aria-busy="true">Checking this device…</p>}
-      {code && made && (
-        // a form with a new password, sent by "Done": the moment a password manager offers to keep it
-        <form className={styles.box} onSubmit={(e) => { e.preventDefault(); router.push(next); }}>
-          <p>Your new code. Save it now: nobody can show it to you again if it is lost. 1Password and other password managers offer to keep it when you press Done.</p>
-          <User />
-          <p className={styles.code}>{showSyncCode(code)}</p>
-          {/* (a password manager keeps only what is in a password field: the same code, in dots) */}
-          <label className={styles.field}>
-            <span className="label">The code, for your password manager</span>
-            <input type="password" name="password" autoComplete="new-password" value={showSyncCode(code)} readOnly />
-          </label>
-          <div className={styles.row}>
-            <button type="button" className="btn ghost" onClick={() => saveToFiles(code)}><Icon name="download" />Save to your files</button>
-            <button type="submit" className="btn">Done<Icon name="next" /></button>
-          </div>
-        </form>
-      )}
-      {code && !made && (
-        <div className={styles.box}>
-          <p>This device is synced. Your notes go with this code.</p>
-          <details className={styles.reveal}>
-            <summary>Show the code</summary>
-            <p className={styles.code}>{showSyncCode(code)}</p>
-          </details>
-          <div className={styles.row}>
-            <button type="button" className="btn ghost" onClick={() => saveToFiles(code)}><Icon name="download" />Save to your files</button>
-            <Link className="btn" href={next}>Go to the library<Icon name="next" /></Link>
-          </div>
-          <div className={styles.row}>
-            <button type="button" className="text-btn" onClick={forget} disabled={busy}>Forget the code on this device</button>
-          </div>
-          <p className="muted">Forgetting takes the code and its notes off this device. They stay with the code, for when you type it again.</p>
-        </div>
-      )}
+
       {code === null && (
         <>
+          <section className={styles.box} aria-labelledby="how">
+            <h2 id="how" className={styles.part}>How it works</h2>
+            <ol className={styles.steps}>
+              <li>On one device, make a code.</li>
+              <li>Keep it somewhere safe: in a password manager such as 1Password, in a file, or on paper.</li>
+              <li>On each other device, type the code under &ldquo;I have a code&rdquo;. Your notes appear there too.</li>
+            </ol>
+          </section>
           <section className={styles.box} aria-labelledby="new-code">
-            <h2 id="new-code" className={styles.part}>A new code</h2>
-            <p>The database makes a code of 20 random letters and digits. It starts empty, and holds the notes you make with it.</p>
-            <div className={styles.row}><button type="button" className="btn" onClick={make} disabled={busy}><Icon name="sync" />{busy ? "Making it…" : "Make a new code"}</button></div>
+            <h2 id="new-code" className={styles.part}>New here</h2>
+            <Action what="Gets a new, empty code from the database and syncs this device with it. Notes you already made here go with it.">
+              <button type="button" className="btn" onClick={make} disabled={busy}><Icon name="sync" />{busy ? "Making it…" : "Make a new code"}</button>
+            </Action>
           </section>
           <form className={styles.box} onSubmit={submit} noValidate aria-labelledby="have-code">
             <h2 id="have-code" className={styles.part}>I have a code</h2>
@@ -120,14 +128,56 @@ export default function Sync() {
               <input name="password" type={see ? "text" : "password"} autoComplete="current-password" autoCapitalize="characters" spellCheck={false}
                 placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" required />
             </label>
-            <div className={styles.row}>
+            <p className={styles.what}>Saved the code in 1Password or your browser? It can fill it in here. Capitals, spaces and dashes do not matter.</p>
+            <Action what="Checks the code, then brings its notes to this device and sends this device's notes to it.">
               <button type="submit" className="btn ghost" disabled={busy}>{busy ? "Syncing…" : "Sync this device"}</button>
+            </Action>
+            <Action what="Shows the letters you type instead of dots, to check them.">
               <button type="button" className="text-btn" aria-pressed={see} onClick={() => setSee(!see)}>{see ? "Hide the letters" : "Show the letters"}</button>
-            </div>
-            <p className="muted">Kept the code in 1Password or another password manager? It can fill it here.</p>
+            </Action>
           </form>
         </>
       )}
+
+      {code && made && (
+        // a form with a new password, sent by "Done": the moment a password manager offers to keep it
+        <form className={styles.box} onSubmit={(e) => { e.preventDefault(); router.push(next); }} aria-labelledby="your-code">
+          <h2 id="your-code" className={styles.part}>Your new code</h2>
+          <p>Save it now. Nobody can show it to you again, and without it your notes cannot come back to another device.</p>
+          <p className={styles.code}>{showSyncCode(code)}</p>
+          <KeepIt code={code} said={said} onCopy={() => copy(code)} />
+          {/* (a password manager keeps only what a form sends as a password: the same code, in fields nobody needs to see) */}
+          <User />
+          <input className="visually-hidden" type="password" name="password" autoComplete="new-password" value={showSyncCode(code)} readOnly tabIndex={-1} aria-hidden="true" />
+          <Action what="Takes you to the library. This device stays synced. If you use 1Password or your browser's password saving, it may offer to keep the code now; if it does not, use Copy the code.">
+            <button type="submit" className="btn">Done<Icon name="next" /></button>
+          </Action>
+        </form>
+      )}
+
+      {code && !made && (
+        <>
+          <section className={styles.box} aria-labelledby="synced">
+            <h2 id="synced" className={styles.part}>This device is synced</h2>
+            <p>Your notes go to the database under your code, and come back from it, whenever you open a book or change a note.</p>
+            <details className={styles.reveal}>
+              <summary>Show the code</summary>
+              <p className={styles.code}>{showSyncCode(code)}</p>
+            </details>
+            <KeepIt code={code} said={said} onCopy={() => copy(code)} />
+            <Action what="Back to your books.">
+              <Link className="btn" href={next}>Go to the library<Icon name="next" /></Link>
+            </Action>
+          </section>
+          <section className={styles.box} aria-labelledby="stop">
+            <h2 id="stop" className={styles.part}>Stop syncing here</h2>
+            <Action what="Takes the code and its notes off this device. They stay with the code: type it again to bring them back. Use it before you give the device to someone else.">
+              <button type="button" className="btn ghost" onClick={forget} disabled={busy}>Forget the code on this device</button>
+            </Action>
+          </section>
+        </>
+      )}
+
       <p className={styles.error} role="alert">{error}</p>
     </main>
   );

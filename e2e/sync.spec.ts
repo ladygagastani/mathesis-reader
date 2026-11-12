@@ -58,7 +58,7 @@ test("syncing: a malformed or unknown code is said plainly; the right one opens 
   await expect(page.getByRole("img", { name: "Only you can see this" })).toBeVisible();
 
   await page.goto("/sync");
-  await expect(page.getByText("This device is synced.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "This device is synced" })).toBeVisible();
   await page.getByText("Show the code").click();
   await expect(page.getByText("7K3Q-9XWD-M2RT-0HVB-PZ4N")).toBeVisible();
   await page.getByRole("button", { name: "Forget the code on this device" }).click();
@@ -78,6 +78,15 @@ test("making a new code: shown once, for a password manager and as a file; it op
   await expect(page.locator("input[autocomplete=new-password]")).toHaveValue(shown);
   expect(await page.evaluate((k) => localStorage.getItem(k), CODE_KEY)).toBe(NEW);
 
+  // every button says what it does
+  await expect(page.getByText("Puts the code on your clipboard")).toBeVisible();
+  await expect(page.getByText("Downloads a small text file")).toBeVisible();
+  // Copy the code puts the code itself on the clipboard (a password field cannot be copied from)
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.getByRole("button", { name: "Copy the code" }).click();
+  await expect(page.getByText("Copied. Paste it where you keep it.")).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(shown);
+
   const [file] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Save to your files" }).click()]);
   expect(file.suggestedFilename()).toBe("mathesis-sync-code.txt");
   const text = await (await file.createReadStream()).toArray().then((c) => Buffer.concat(c).toString("utf8"));
@@ -90,8 +99,10 @@ test("making a new code: shown once, for a password manager and as a file; it op
   await expect(page.getByText("Your private texts")).toHaveCount(0);
 });
 
-test("a code kept in a password manager is filled into a password field", async ({ page }) => {
+test("a code kept in a password manager is filled into a password field; the page says how sync works", async ({ page }) => {
   await page.goto("/sync");
+  await expect(page.getByRole("heading", { name: "How it works" })).toBeVisible();
+  await expect(page.getByText("Gets a new, empty code from the database")).toBeVisible();
   await expect(page.locator("input[autocomplete=username]")).toHaveValue("Mathesis Reader sync code");
   await expect(page.getByLabel("Sync code")).toHaveAttribute("type", "password");
   await expect(page.getByLabel("Sync code")).toHaveAttribute("autocomplete", "current-password");
