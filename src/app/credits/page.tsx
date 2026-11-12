@@ -1,4 +1,4 @@
-import Masthead from "@/components/Masthead";
+import SiteBar from "@/components/site/SiteBar";
 import Colophon from "@/components/Colophon";
 import styles from "./credits.module.css";
 
@@ -35,7 +35,7 @@ const SOURCES: { part: string; items: { name: string; href: string; what: string
 export default function Credits() {
   return (
     <>
-      <Masthead />
+      <SiteBar />
       <main id="main" className={`wrap ${styles.page}`}>
         <header className={`${styles.head} enter`}>
           <h1 className={styles.title}>Credits</h1>

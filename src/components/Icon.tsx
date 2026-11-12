@@ -53,6 +53,16 @@ const ICONS = {
   "note": [["path", {d: "M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"}], ["path", {d: "M2 6h4"}], ["path", {d: "M2 10h4"}], ["path", {d: "M2 14h4"}], ["path", {d: "M2 18h4"}], ["path", {d: "M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"}]],
   // sync this device (Lucide "refresh-cw")
   "sync": [["path", {d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"}], ["path", {d: "M21 3v5h-5"}], ["path", {d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"}], ["path", {d: "M8 16H3v5"}]],
+  // the library (Lucide "library")
+  "library": [["path", {d: "m16 6 4 14"}], ["path", {d: "M12 6v14"}], ["path", {d: "M8 8v12"}], ["path", {d: "M4 4v16"}]],
+  // the paper page (Lucide "sun")
+  "paper": [["circle", {cx: "12", cy: "12", r: "4"}], ["path", {d: "M12 2v2"}], ["path", {d: "M12 20v2"}], ["path", {d: "m4.93 4.93 1.41 1.41"}], ["path", {d: "m17.66 17.66 1.41 1.41"}], ["path", {d: "M2 12h2"}], ["path", {d: "M20 12h2"}], ["path", {d: "m6.34 17.66-1.41 1.41"}], ["path", {d: "m19.07 4.93-1.41 1.41"}]],
+  // the night page (Lucide "moon")
+  "night": [["path", {d: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],
+  // the keys of the keyboard (Lucide "keyboard")
+  "keys": [["rect", {width: "20", height: "16", x: "2", y: "4", rx: "2"}], ["path", {d: "M6 8h.01"}], ["path", {d: "M10 8h.01"}], ["path", {d: "M14 8h.01"}], ["path", {d: "M18 8h.01"}], ["path", {d: "M8 12h.01"}], ["path", {d: "M12 12h.01"}], ["path", {d: "M16 12h.01"}], ["path", {d: "M7 16h10"}]],
+  // opens on another site (Lucide "external-link")
+  "outside": [["path", {d: "M15 3h6v6"}], ["path", {d: "M10 14 21 3"}], ["path", {d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"}]],
 } satisfies Record<string, Drawing>;
 
 export type IconName = keyof typeof ICONS;

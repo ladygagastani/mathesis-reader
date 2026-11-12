@@ -26,9 +26,3 @@
 .error { margin-top: var(--space-4); color: var(--accent); }
 .error:empty { display: none; }
 
-/* the masthead's link: no frame, ink-2, red under the hand, a finger's height */
-.link {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--tap); min-width: var(--tap); padding-inline: var(--space-1);
-  color: var(--ink-2); font-size: var(--t-ui); text-decoration: none; transition: color var(--dur-quick) var(--ease);
-}
-@media (hover: hover) { .link:hover { color: var(--accent); } }

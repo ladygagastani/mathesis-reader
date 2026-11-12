@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Colophon from "@/components/Colophon";
-import Masthead from "@/components/Masthead";
+import SiteBar from "@/components/site/SiteBar";
 import Library from "@/components/library/Library";
 
 export const metadata = { title: { absolute: "The library · Mathesis Reader" } };
@@ -8,7 +8,7 @@ export const metadata = { title: { absolute: "The library · Mathesis Reader" } 
 export default function Home() {
   return (
     <>
-      <Masthead />
+      <SiteBar />
       <Suspense fallback={null}><Library /></Suspense>
       <Colophon />
     </>

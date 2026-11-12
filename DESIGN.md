@@ -37,7 +37,8 @@ for the title page and the logo. Root size 16 px. Figures are old-style in runni
 | `--t-ui` | 1.0625rem (17 px) | 1.4 | Buttons, menus, list rows, the bar |
 | `--t-body` | 1.1875rem (19 px) | 1.55 | English prose, the English beside or under the Greek, the look-up's meaning |
 | `--t-greek` | 1.5rem (24 px) | 1.65 | The Greek being read. Text sets 18 to 34 px and 1.4 to 2.0 |
-| `--t-head` | 2rem (32 px) | 1.15 | The look-up's dictionary form (Gentium), section heads |
+| `--t-lead` | 1.5rem (24 px) | 1.25 | The look-up's meaning, a part's heading |
+| `--t-head` | 2rem (32 px) | 1.15 | The look-up's dictionary form (Gentium), a page's second heading |
 | `--t-title` | 2.5rem (40 px) | 1.1 | A page's title |
 | `--t-display` | 4rem (64 px) | 1.05 | The book's title page only (GFS Didot) |
 
@@ -82,7 +83,7 @@ thing at a time: the passage numbers in the text, links, and the chosen item in 
 
 ## Space and shape
 
-Spacing steps of 4, 8, 12, 16, 24, 32, 48 and 64 px (`--s-1` to `--s-8`). Hairline rules (1 px `--rule`), a strong
+Spacing steps of 4, 8, 12, 16, 24, 32, 48 and 64 px (`--space-1` to `--space-8`). Hairline rules (1 px `--rule`), a strong
 rule (`--rule-strong`) above each part of a page, square corners everywhere, the grammar tags included. No shadows: the
 desk and menus sit on `--surface` with a hairline edge. Controls are at least 40 px tall on a computer (44 px with a
 touch screen). Focus is a 2 px `--accent` outline 2 px out.
