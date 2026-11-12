@@ -1,13 +1,13 @@
-/* The printer's device (Mark.tsx): the seal in ink, the Σ in red, the name beside it in GFS Didot over small capitals */
+/* The logo (Mark.tsx): the Σ in the page's colour on a red diamond, the name beside it in GFS Didot over small capitals */
 .mark { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; flex: none; min-width: 0; }
-.seal { flex: none; display: block; overflow: visible; }
-.initials { font-family: var(--face-didot); fill: var(--ink); }
-.red { fill: var(--rubric); }
+.logo { flex: none; display: block; overflow: visible; }
+.diamond { fill: var(--rubric); }
+.sigma { fill: var(--bg); }
 .words { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
 .words b { font: 400 1.22rem / 1.1 var(--face-didot); letter-spacing: 0.01em; white-space: nowrap; }
 .words i { font: 500 0.62rem / 1.2 var(--face-garamond); font-style: normal; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-2); margin-top: 4px; white-space: nowrap; }
-.mark:focus-visible .initials { fill: var(--rubric); }
-@media (hover: hover) { .mark:hover .initials { fill: var(--rubric); } }
-/* a phone: the seal a little nearer the name, so that Search and Menu stand beside it */
+.mark:focus-visible .diamond { fill: var(--ink); }
+@media (hover: hover) { .mark:hover .diamond { fill: var(--ink); } }
+/* a phone: the logo a little nearer the name, so that Search and Menu stand beside it */
 @media (max-width: 430px) { .mark { gap: var(--space-2); } }
 @media (max-width: 380px) { .words b { font-size: 1.05rem; } .words i { letter-spacing: 0.16em; } }
