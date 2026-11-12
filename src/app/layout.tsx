@@ -28,7 +28,6 @@ const gentiumSigns = localFont({
 export const metadata: Metadata = {
   title: { default: "Mathesis Reader", template: "%s · Mathesis Reader" },
   description: "Read real Ancient Greek from the first week, with every word explained on the line.",
-  icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
 };
 export const viewport: Viewport = {
   width: "device-width",
