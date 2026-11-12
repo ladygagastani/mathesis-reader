@@ -2,6 +2,9 @@
 // the reader's menus). Shared by check-design.mjs, check-a11y.mjs and sideways.mjs, so a new screen is added once.
 export const SCREENS = [
   { name: "library", path: "/" },
+  { name: "library, search", path: "/?q=plato" },
+  { name: "library, an author opened", path: "/?q=plato", act: "author" },
+  { name: "library, A to Z", path: "/?sort=az" },
   { name: "reader", path: "/read?w=tlg0059.tlg002" },
   { name: "reader, English shown", path: "/read?w=tlg0059.tlg002", act: "english" },
   { name: "reader, Both", path: "/read?w=tlg0059.tlg002", columns: "both" },
@@ -24,6 +27,8 @@ export async function open(page, base, s) {
   await page.goto(base + s.path);
   await page.locator("h1, main a, main button").first().waitFor({ timeout: 30_000 });
   if (s.path.startsWith("/read")) await page.locator("[role=button]").first().waitFor({ timeout: 30_000 });
+  else await page.locator("main h3").first().waitFor({ timeout: 30_000 });
+  if (s.act === "author") await page.locator("main button[aria-expanded]").first().click();
   await page.evaluate(() => document.fonts.ready);
   if (s.act === "english") await page.getByRole("button", { name: "Show the English" }).first().click();
   if (s.act === "look" || s.act === "more") {

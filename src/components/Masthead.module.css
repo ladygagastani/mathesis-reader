@@ -1,0 +1,10 @@
+/* The printed page's masthead (the old app's Header.module.css, .mast): on the paper, the device and the name, and a double rule
+   under it, as on a title page. It stands at the top of the page and scrolls away with it. */
+.mast { position: relative; }
+.mast::after, .mast::before {
+  content: ""; position: absolute; left: max(var(--gutter), env(safe-area-inset-left, 0px)); right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+.mast::before { bottom: 3px; border-bottom: 1px solid var(--rule); }
+.mast::after { bottom: 0; border-bottom: 1px solid var(--rule-2); }
+.in { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 68px; padding-block: var(--space-2); }
+.end { display: flex; align-items: center; gap: var(--space-3); }

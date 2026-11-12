@@ -1,0 +1,69 @@
+/* The library on the printed page (the old app's Library.module.css and its page head, without photographs): the title with its
+   Greek name in red, one line on what is here; a search set as a catalogue's, one line to write on in italic, ruled in ink; then
+   every work under a rule of ink, each kind of writing a small red heading with its count, each author a row under a hairline. */
+.library { padding-bottom: var(--space-8); }
+
+.head { padding-block: clamp(28px, 5vh, var(--space-7)) var(--space-5); }
+.title { margin: 18px 0 10px; font-size: clamp(2.8rem, 6vw, 5.2rem); line-height: 0.98; letter-spacing: -0.015em; }
+.titleGr { display: block; margin-top: var(--space-3); font: 400 0.46em / 1.2 var(--f-title); color: var(--rubric); letter-spacing: 0.01em; }
+.purpose { max-width: 31em; margin-top: var(--space-3); font-size: var(--step-sub); line-height: 1.5; color: var(--ink-2); }
+
+/* the search: one line to write on, its name in small capitals over it, and beside it what to show, the chosen one in red */
+.find { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3) 28px; margin-top: var(--space-5); padding-bottom: 6px; border-bottom: 1px solid var(--ink); }
+.find:focus-within { border-bottom-color: var(--rubric); }
+.field { flex: 1 1 18rem; display: grid; gap: 2px; min-width: 0; }
+.field :global(.label) { color: var(--ink-3); }
+.field input { width: 100%; min-width: 0; min-height: var(--tap); border: 0; padding: 6px 0; font: italic 400 var(--step-1) / 1.3 var(--f-body); color: var(--ink); background: transparent; }
+.field input:focus-visible { outline: none; }
+.show { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.show > button {
+  min-height: var(--tap); padding: 10px; background: none; border: 0; border-bottom: 2px solid var(--rule); border-radius: 0;
+  font: 400 var(--step-0) / 1.2 var(--f-body); color: var(--ink-2); transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+@media (hover: hover) { .show > button:hover { color: var(--rubric); } }
+.show > button[aria-checked="true"] { color: var(--rubric); border-bottom-color: var(--rubric); }
+@media (max-width: 760px) {
+  .find { border-bottom: 0; padding-bottom: 0; row-gap: 6px; }
+  .field { border-bottom: 1px solid var(--ink); }
+  .find:focus-within .field { border-bottom-color: var(--rubric); }
+  .show { width: 100%; justify-content: space-between; }
+  .show > button { padding-inline: var(--space-1); border-bottom-color: transparent; }
+  .show > button[aria-checked="true"] { border-bottom-color: var(--rubric); }
+}
+
+/* every work: a part under a rule of ink with room above it */
+.all { display: grid; gap: var(--space-4); margin-top: clamp(56px, 7vh, 80px); padding-top: 20px; border-top: 1px solid var(--ink); }
+.allHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); }
+.allHead h2 { font-size: var(--step-3); }
+.all > :global(.segmented) { justify-self: start; }
+.count, .partCount { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); font-variant-numeric: lining-nums; }
+.status { padding-block: var(--space-5); }
+
+.part { margin-top: var(--space-5); }
+.partHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--ink); }
+.partName { font: 500 var(--step--2) / 1.35 var(--f-label); letter-spacing: 0.2em; text-transform: uppercase; color: var(--rubric); }
+
+.shelves, .works { list-style: none; margin: 0; padding: 0; }
+.shelf { border-bottom: 1px solid var(--rule); }
+/* an author's row: the name and the Greek name, what they were, and their one work or how many; a red sign at the right */
+.row {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; min-height: var(--tap);
+  padding: var(--space-3) 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+}
+.who { display: grid; gap: 2px; min-width: 0; }
+.name { font-size: var(--step-sub); line-height: 1.3; transition: color var(--dur-quick) var(--ease); }
+@media (hover: hover) { .row:hover .name, .work:hover .workTitle { color: var(--rubric); } }
+.row:focus-visible .name { color: var(--rubric); }
+.grc { margin-left: var(--space-2); font-size: var(--step-0); color: var(--ink-2); }
+.desc { font-size: var(--step--1); line-height: 1.4; color: var(--ink-2); }
+.one { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); font-size: var(--step--1); color: var(--ink-2); }
+.note { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); }
+.go { flex: none; color: var(--rubric); }
+
+/* an author's works, opened under their row */
+.works { padding: 0 0 var(--space-3) var(--space-5); }
+.work { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap); padding: var(--space-1) 0; color: var(--ink); text-decoration: none; }
+.workTitle { font-style: italic; transition: color var(--dur-quick) var(--ease); }
+.work .go { margin-left: auto; }
+.work:focus-visible .workTitle { color: var(--rubric); }
+@media (max-width: 760px) { .works { padding-left: var(--space-3); } }
