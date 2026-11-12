@@ -110,3 +110,71 @@ test("with a sync code, notes come from the database and new ones go to it", asy
   await expect.poll(() => Object.values(notes[CODE]).map((n) => n.text).sort(), { timeout: 10_000 })
     .toEqual(["From another device.", "Made on this device."]);
 });
+
+test("a note is kept as you write it: closed with ×, its words are there", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  await open(page);
+  await words(page).nth(30).click();
+  await page.locator("[data-lookup]").getByRole("button", { name: "Note", exact: true }).click();
+  const editor = page.getByRole("complementary", { name: "A new note" });
+  await editor.getByLabel("Your note").fill("Written, then closed.");
+  await expect(editor).toContainText("Kept as you write.");
+  await editor.getByRole("button", { name: "Close the note" }).click();
+  await expect(editor).toHaveCount(0);
+  expect((await stored(page)).map((n: { text: string }) => n.text)).toEqual(["Written, then closed."]);
+});
+
+test("words selected in the text take a note, and each of them is underlined", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  await open(page);
+  const from = (await words(page).nth(3).boundingBox())!, to = (await words(page).nth(5).boundingBox())!;
+  await page.mouse.move(from.x + 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width - 2, to.y + to.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await page.getByRole("button", { name: "Note on these words" }).click();
+  const editor = page.getByRole("complementary", { name: "A new note" });
+  await expect(editor.getByRole("radio", { name: "The words" })).toHaveAttribute("aria-checked", "true");
+  await editor.getByLabel("Your note").fill("Three words.");
+  await editor.getByRole("button", { name: "Save the note" }).click();
+  const [note] = await stored(page);
+  expect(note.anchor).toMatchObject({ kind: "words", n: 3 });
+  await expect(page.locator("main [role=button][data-noted=word]")).toHaveCount(3);
+});
+
+test("Save word keeps a word for the Saved page, which opens where it was met and takes it off", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  await open(page);
+  await words(page).nth(14).click();
+  const save = page.locator("[data-lookup]").getByRole("button", { name: "Save word" });
+  await save.click();
+  await expect(page.locator("[data-lookup]").getByRole("button", { name: "Saved" })).toHaveAttribute("aria-pressed", "true");
+  const kept = await page.evaluate(() => JSON.parse(localStorage.getItem("mathesis-reader:words") ?? "[]"));
+  expect(kept).toEqual([expect.objectContaining({ type: "word", lemma: "οἶδα", work: "tlg0059.tlg002", book: "Plato, Apology" })]);
+
+  await page.goto("/saved");
+  const list = page.getByRole("region", { name: "Saved words" });
+  await expect(list).toContainText("οἶδα");
+  await expect(list).toContainText("to know");
+  await expect(list).toContainText("in Plato, Apology, 17");
+  await list.getByRole("link", { name: "Open where you met it" }).click();
+  await expect(page).toHaveURL(/w=tlg0059\.tlg002&at=17/);
+  await page.goto("/saved");
+  await page.getByRole("region", { name: "Saved words" }).getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByText("Nothing saved yet.")).toBeVisible();
+});
+
+test("with a sync code, a saved word goes to the database beside the notes, and comes back on another device", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the computer's reader");
+  const notes: Record<string, Record<string, Record<string, unknown>>> = {
+    [CODE]: { "w-elsewhere": { id: "w-elsewhere", type: "word", lemma: "λόγος", form: "λόγον", kind: "noun", meaning: "word", work: "tlg0059.tlg002", book: "Plato, Apology", unit: "18", updated: 5 } },
+  };
+  await fakeSupabase(page, { notes: notes as never });
+  await synced(page.context());
+  await open(page);
+  await words(page).nth(14).click();
+  await page.locator("[data-lookup]").getByRole("button", { name: "Save word" }).click();
+  await expect.poll(() => Object.values(notes[CODE]).map((n) => n.lemma).sort(), { timeout: 10_000 }).toEqual(["λόγος", "οἶδα"]);
+  await page.goto("/saved");
+  await expect(page.getByRole("region", { name: "Saved words" })).toContainText("λόγος");
+});

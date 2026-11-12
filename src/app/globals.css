@@ -1,11 +1,11 @@
 /* =====================================================================
-   The printed page: the old app's base styles (its web/src/app/globals.css), kept for the parts this app has. Colours, sizes,
-   spacing and motion are named in styles/tokens.css: the paper and the ink, three typefaces, hairline rules, square corners,
-   small capitals for labels, red for what matters. The only movement is the ink-in.
+   The base styles (DESIGN.md). Colours, sizes, spacing and motion are named in styles/tokens.css: the paper and the ink,
+   three typefaces, hairline rules, square corners, small capitals for labels, red for what matters. The only movement is
+   the ink-in.
    ===================================================================== */
 @import "../styles/tokens.css";
 
-:root { --reading-leading: 1.75; }
+:root { --reading-leading: 1.65; }
 
 /* ---------------------------------------------------------------- base */
 *, *::before, *::after { box-sizing: border-box; }
@@ -14,34 +14,31 @@ html { -webkit-text-size-adjust: 100%; background: var(--bg); transition: backgr
 @media (min-width: 1600px) { html { font-size: var(--root-grow); } }
 /* nothing may nudge a phone's page sideways; clip makes no scroll box, so sticky things keep working */
 main { display: block; overflow-x: clip; outline: none; }
-/* EB Garamond at 19 px on a computer, 18 px on a phone, with old-style figures as a book has */
+/* EB Garamond at 17 px for the interface, with old-style figures as a book has; running English is --t-body */
 body {
   margin: 0; color: var(--ink); background: transparent;
-  font: 400 var(--step-text) / 1.55 var(--f-body); font-variant-numeric: oldstyle-nums;
+  font: 400 var(--t-ui) / 1.45 var(--f-body); font-variant-numeric: oldstyle-nums;
   -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
-@media (max-width: 900px) { :root { --step-text: 1.125rem; } }
-@media (max-width: 760px) {
-  :root { --step-1: 1.18rem; --step-2: 1.4rem; --step-3: clamp(1.7rem, 7.4vw, 2.1rem); --step-4: clamp(2.4rem, 11.5vw, 3.2rem); }
-}
+@media (max-width: 760px) { :root { --t-head: 1.75rem; --t-title: 2.125rem; } }
 h1, h2, h3, h4 { font-family: var(--f-body); font-weight: 400; line-height: 1.1; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
 h1 { overflow-wrap: anywhere; }
 @media (min-width: 761px) { h1 { overflow-wrap: break-word; } }
 p { margin: 0; }
 a { color: inherit; }
 button { font: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--rubric); outline-offset: 3px; }
-::selection { background: color-mix(in srgb, var(--rubric) 22%, transparent); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--ink); }
 /* Greek is never put in capitals by a style: accented Greek capitals are not set in print */
 [lang="grc"] { font-family: var(--f-greek); text-transform: none; }
-:where(small) { font-size: var(--step--1); }
+:where(small) { font-size: var(--t-small); }
 
 .wrap {
   max-width: var(--maxw); margin: 0 auto;
   padding-left: max(var(--gutter), env(safe-area-inset-left, 0px)); padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
 }
-/* small labels: capitals spaced wide, as a printed running head. Only for labels, which you cannot press. */
-.label { font-family: var(--f-label); font-weight: 500; font-size: var(--step--2); line-height: 1.35; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-2); }
+/* small labels: capitals, a little spaced. Only for labels, which you cannot press. */
+.label { font-family: var(--f-label); font-weight: 500; font-size: var(--t-label); line-height: 1.35; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
 .muted { color: var(--ink-2); }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .skip { position: absolute; left: -9999px; top: var(--space-2); z-index: 100; background: var(--ink); color: var(--bg); padding: var(--space-3) var(--space-4); }
@@ -53,34 +50,34 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-2) var(--space-5); min-height: var(--tap);
   border: 1px solid var(--btn-bg); border-radius: var(--radius); background: var(--btn-bg); color: var(--btn-ink);
-  font: 500 var(--step-0) / 1.2 var(--f-body); letter-spacing: 0.01em; text-decoration: none; cursor: pointer;
+  font: 500 var(--t-ui) / 1.2 var(--f-body); letter-spacing: 0.01em; text-decoration: none; cursor: pointer;
   transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule-strong); }
 .btn.quiet { background: transparent; color: var(--ink); border-color: transparent; padding-inline: var(--space-1); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 @media (hover: hover) {
-  .btn:where(:not(:disabled)):hover { background: var(--rubric); border-color: var(--rubric); color: var(--bg); }
-  .btn.ghost:where(:not(:disabled)):hover { border-color: var(--rubric); color: var(--rubric); background: transparent; }
-  .btn.quiet:where(:not(:disabled)):hover { background: transparent; border-color: transparent; color: var(--rubric); }
+  .btn:where(:not(:disabled)):hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .btn.ghost:where(:not(:disabled)):hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+  .btn.quiet:where(:not(:disabled)):hover { background: transparent; border-color: transparent; color: var(--accent); }
 }
 /* a sign alone (×): no frame, the ink a shade quieter, red under the hand; a finger's target on a touch screen */
 .icon-btn {
   display: inline-grid; place-items: center; flex: none; min-width: 36px; height: 36px; padding: 0;
-  border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-2); font-size: var(--step-2); line-height: 1; cursor: pointer;
+  border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-2); font-size: var(--t-lead); line-height: 1; cursor: pointer;
   transition: color var(--dur-quick) var(--ease);
 }
-@media (hover: hover) { .icon-btn:hover:not(:disabled) { color: var(--rubric); } }
+@media (hover: hover) { .icon-btn:hover:not(:disabled) { color: var(--accent); } }
 @media (pointer: coarse) { .icon-btn { min-width: var(--tap); min-height: var(--tap); } }
 /* a button that reads as a link, inside a line of text */
-.text-btn { padding: 0; border: 0; background: none; color: var(--rubric); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.text-btn { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 /* a row of choices, one of them chosen: a hairline frame, the chosen one in ink */
-.segmented { display: inline-flex; border: 1px solid var(--rule); border-radius: var(--radius); }
+.segmented { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: var(--radius); }
 .segmented > button {
-  border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-2); padding: var(--space-2) var(--space-3); min-height: var(--tap);
-  font: 400 var(--step--1) / 1.2 var(--f-body); white-space: nowrap; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  border: 0; border-radius: var(--radius); background: transparent; color: var(--ink-2); padding: var(--space-2) var(--space-3); min-height: var(--tap); min-width: var(--tap);
+  font: 400 var(--t-small) / 1.2 var(--f-body); white-space: nowrap; transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
-@media (hover: hover) { .segmented > button:hover:not([aria-checked="true"], :disabled) { color: var(--rubric); } }
+@media (hover: hover) { .segmented > button:hover:not([aria-checked="true"], :disabled) { color: var(--accent); } }
 .segmented > button[aria-checked="true"] { background: var(--sel-bg); color: var(--sel-fg); }
 .segmented > button:disabled { opacity: 0.45; cursor: not-allowed; }
 
@@ -88,7 +85,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 :where(input[type="text"], input[type="search"], input[type="email"], input[type="password"], input:not([type])) {
   background-color: transparent; color: var(--ink); border: 0; border-bottom: 1px solid var(--ink-3); border-radius: var(--radius); box-shadow: none;
 }
-:where(input):focus-visible { outline: none; border-color: var(--rubric); }
+:where(input):focus-visible { outline: none; border-color: var(--accent); }
 :where(input)::placeholder { color: var(--ink-3); font-style: italic; opacity: 1; }
 input { text-overflow: ellipsis; }
 

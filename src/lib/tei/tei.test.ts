@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { parseTei } from "./parse";
 import { translationPieces, placePieces, alignChunk, mendBreaks } from "./align";
 import type { Block, TeiDoc } from "./types";
+import { unitWords } from "./words";
 
 const load = (f: string) => readFileSync(`test-fixtures/${f}.xml`, "utf8");
 const doc = (f: string) => parseTei(load(f));
@@ -12,10 +13,21 @@ const blockText = (b: Block) =>
 const docText = (d: TeiDoc) => d.units.flatMap((u) => u.blocks.map(blockText)).join("");
 const plain = (b: Block[]) => b.map(blockText).join(" ");
 
-/** Every letter of printed text in the file's <body>, in order (tags, and <reg> metadata, removed). */
-function bodyLetters(xml: string, re: RegExp) {
+/** The running text without its notes, and the notes alone. */
+const runText = (d: TeiDoc) =>
+  d.units.flatMap((u) => u.blocks.map((b) => (("speaker" in b && b.speaker) || "") + b.c.filter((x) => typeof x === "string").join(""))).join("");
+const noteText = (d: TeiDoc) =>
+  d.units.flatMap((u) => u.blocks.flatMap((b) => b.c.map((x) => (typeof x !== "string" && "note" in x ? x.note : "")))).join("");
+
+/**
+ * Every letter of printed text in the file's <body>, in order (tags, and <reg> metadata, removed): of the running text, or of
+ * the notes. The two are counted apart because a note met between the halves of a word broken at a line end follows the word.
+ */
+function bodyLetters(xml: string, re: RegExp, part: "text" | "notes") {
   const body = xml.slice(xml.indexOf("<body"), xml.lastIndexOf("</body>")).replace(/<reg\b[^>]*>[\s\S]*?<\/reg>/g, "");
-  const text = body.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+  const NOTE = /<note\b[^>]*>([\s\S]*?)<\/note>/g;
+  const chosen = part === "notes" ? [...body.matchAll(NOTE)].map((m) => m[1]).join(" ") : body.replace(NOTE, " ");
+  const text = chosen.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
   return (text.match(re) ?? []).join("");
 }
 const GREEK = /[Ͱ-Ͽἀ-῿]/gu;
@@ -24,14 +36,15 @@ const LATIN = /[A-Za-z]/g;
 describe("TEI parsing keeps the text exactly", () => {
   for (const [f, re] of [
     ["tlg0012.tlg001.perseus-grc2", GREEK], ["tlg0059.tlg002.perseus-grc2", GREEK], ["tlg0011.tlg002.perseus-grc2", GREEK],
-    ["tlg0031.tlg004.perseus-grc2", GREEK], ["tlg0555.tlg001.1st1K-grc1", GREEK],
+    ["tlg0031.tlg004.perseus-grc2", GREEK], ["tlg0555.tlg001.1st1K-grc1", GREEK], ["tlg0731.tlg001.1st1K-grc1", GREEK],
     ["tlg0012.tlg001.perseus-eng3", LATIN], ["tlg0059.tlg002.perseus-eng2", LATIN], ["tlg0011.tlg002.perseus-eng2", LATIN],
     ["tlg0016.tlg001.perseus-eng2", LATIN],
   ] as const) {
     it(`loses and changes no letter: ${f}`, () => {
       const xml = load(f);
-      const got = (docText(parseTei(xml)).match(re) ?? []).join("");
-      expect(got).toBe(bodyLetters(xml, re));
+      const d = parseTei(xml);
+      expect((runText(d).match(re) ?? []).join("")).toBe(bodyLetters(xml, re, "text"));
+      expect((noteText(d).match(re) ?? []).join("")).toBe(bodyLetters(xml, re, "notes"));
     });
   }
 });
@@ -243,5 +256,38 @@ describe("English cut only where a sentence or clause ends (review fix list, sli
     expect(mendBreaks(done)).toEqual(done);
     const speech = [piece("35", [long + "Enter the chorus of Argive Elders"]), piece("40", ["This is now the tenth year."], "Chorus")];
     expect(mendBreaks(speech)).toEqual(speech);
+  });
+});
+
+describe("words the printed edition broke at a line end", () => {
+  // First1KGreek keeps the print's lines: "Ἀριστο-" ends one, "τέλους" begins the next, sometimes with <lb/> or a note between
+  const one = (body: string) => {
+    const d = parseTei(`<TEI><text><body><div type="edition" xml:lang="grc"><div type="textpart" subtype="section" n="1">${body}</div></div></body></text></TEI>`);
+    return unitWords(d.units[0]);
+  };
+  it("joins a word broken by a line end in the text", () => {
+    expect(one("<p>ἀπό τε Ἀριστο-\nτέλους ἀναλεξάμενος</p>")).toEqual(["ἀπό", "τε", "Ἀριστοτέλους", "ἀναλεξάμενος"]);
+  });
+  it("joins it across an <lb/>, before or after the line end", () => {
+    expect(one('<p>τὴν κατά-\n<lb n="10"/> ληψιν, ἔτι</p>')).toEqual(["τὴν", "κατάληψιν", "ἔτι"]);
+    expect(one('<p>καὶ δη- <lb n="10"/>\nλοῦσι τοῦτο</p>')).toEqual(["καὶ", "δηλοῦσι", "τοῦτο"]);
+  });
+  it("joins it across a note, which then follows the word", () => {
+    const d = parseTei('<TEI><text><body><div type="edition" xml:lang="grc"><div type="textpart" subtype="section" n="1">'
+      + '<p>καὶ ἔθνη προσ-\n<note type="footnote">Adam. 3.</note>\nήκει τοῖς</p></div></div></body></text></TEI>');
+    expect(unitWords(d.units[0])).toEqual(["καὶ", "ἔθνη", "προσήκει", "τοῖς"]);
+    expect(d.units[0].blocks[0].c.findIndex((x) => typeof x !== "string")).toBe(1);
+  });
+  it("joins a word inside an editor's brackets", () => {
+    expect(one("<p>〈ἐκ Πο-\nλέμωνος〉 ἐπὶ</p>")).toEqual(["ἐκ", "Πολέμωνος", "ἐπὶ"]);
+  });
+  it("keeps a hyphen with no word after it in its block, and leaves English and a hyphen within a line alone", () => {
+    const d = parseTei('<TEI><text><body><div type="edition" xml:lang="grc"><div type="textpart" subtype="section" n="1">'
+      + "<p>τέλος προσ-\n</p><p>well-\nknown, α-β</p></div></div></body></text></TEI>");
+    expect(d.units[0].blocks.map((b) => b.c.join(""))).toEqual(["τέλος προσ-", "well- known, α-β"]);
+  });
+  it("leaves none of the Physiognomy's 274 broken words broken", () => {
+    const words = parseTei(load("tlg0731.tlg001.1st1K-grc1")).units.flatMap((u) => u.blocks.flatMap((b) => b.c.filter((x) => typeof x === "string")));
+    expect(words.join(" ")).not.toMatch(/[Ͱ-Ͽἀ-῿]- [Ͱ-Ͽἀ-῿]/u);
   });
 });

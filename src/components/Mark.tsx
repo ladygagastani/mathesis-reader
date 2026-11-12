@@ -9,7 +9,7 @@ import styles from "./Mark.module.css";
 export default function Mark() {
   return (
     <Link className={styles.mark} href="/">
-      <svg className={styles.logo} width={46} height={46} viewBox="0 0 100 100" aria-hidden="true">
+      <svg className={styles.logo} width={36} height={36} viewBox="0 0 100 100" aria-hidden="true">
         <rect className={styles.diamond} x={DIAMOND.x} y={DIAMOND.y} width={DIAMOND.size} height={DIAMOND.size} rx={DIAMOND.rx} transform={DIAMOND.transform} />
         <path className={styles.sigma} d={SIGMA.d} transform={SIGMA.transform} />
       </svg>

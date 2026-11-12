@@ -1,14 +1,15 @@
 // Screenshots of every screen, at a computer's width and a phone's, for the owner to compare (and for the review of visual bugs).
-// usage: node scripts/shots.mjs <base-url> <out-folder> [old]
-//   with "old", the old app's reader on the live site is taken instead, on the same book and the same word (nothing is changed there).
+// usage: node scripts/shots.mjs <base-url> <out-folder> [old | computer | phone]
+//   with "old", the old app's reader on the live site is taken instead, on the same book and the same word (nothing is changed there);
+//   with "computer" or "phone", only that width.
 import { mkdirSync } from "node:fs";
 import { chromium } from "playwright";
-import { SCREENS, open, prepare } from "./screens.mjs";
+import { SCREENS, forWidth, open, prepare } from "./screens.mjs";
 
 const [base = "http://localhost:3300", out = "screenshots/new", which] = process.argv.slice(2);
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();
-const sizes = [["computer", 1440, 900], ["phone", 390, 844]];
+const sizes = [["computer", 1440, 900], ["phone", 390, 844]].filter(([name]) => !["computer", "phone"].includes(which) || name === which);
 
 if (which === "old") {
   for (const [name, w, h] of sizes) {
@@ -33,10 +34,10 @@ if (which === "old") {
 } else {
   for (const [name, w, h] of sizes) {
     for (const theme of ["paper", "night"]) {
-      for (const s of SCREENS) {
-        if (theme === "night" && !["reader", "look-up", "look-up, more"].includes(s.name)) continue;
+      for (const s of SCREENS.filter(forWidth(w))) {
+        if (theme === "night" && !["reader", "look-up", "look-up, more", "library", "reader, Both"].includes(s.name)) continue;
         const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: w < 500, hasTouch: w < 500, reducedMotion: "reduce" });
-        await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes });
+        await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes, words: s.words });
         const page = await ctx.newPage();
         await open(page, base, s);
         await page.screenshot({ path: `${out}/${s.name.replace(/[ ,]+/g, "-")}-${name}-${theme}.png` });

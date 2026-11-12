@@ -52,3 +52,16 @@ export function fold(s: string) {
 
 /** Search key for a Greek word: no accents, breathings, case or elision mark; final sigma folded. */
 export const greekKey = (w: string) => fold(w).replace(/[^α-ωϝ]/g, "");
+
+/**
+ * A title from the catalogue as the site can draw it in its three typefaces: the numeral sign (ʹ, which Unicode folds to the
+ * modifier letter prime) as an apostrophe; editors' brackets (⟨ ⟩ ⎡ ⎤) left out; an inverted breve used as a circumflex made
+ * the circumflex; and any mark still not part of a letter after that (a macron over a numeral, an accent on a consonant) left out.
+ */
+export function drawableGreek(s: string): string {
+  return s
+    .replace(/[\u02B9\u0374]/g, "\u2019")
+    .replace(/[\u27E8\u27E9\u23A1-\u23A6]/g, "")
+    .normalize("NFD").replace(/\u0311/g, "\u0342").normalize("NFC")
+    .replace(/[\u0300-\u036F]/g, "");
+}

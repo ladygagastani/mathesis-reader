@@ -8,12 +8,16 @@ export interface Credit { text: string; href?: string }
 
 /** GLAUx, for the analysis and the treebank that the card and the grammar come from */
 export const GLAUX_CREDIT = "Analysis and treebank: GLAUx (Keersmaekers 2021), CC BY-SA 4.0";
+/** the Morpheus parser, for a form no text in GLAUx has (morpheus.ts) */
+export const MORPHEUS_CREDIT = "Parsing: Morpheus, Perseus Digital Library at Tufts University, through the Alpheios morphology service";
 /** LSJ_CREDIT (lsj.ts) is Perseus's full wording, with its funding and address; the line at the foot keeps the source and the licence */
 export const LSJ_CREDIT_SHORT = "LSJ: Perseus Digital Library, CC BY-SA";
 
 export interface Shown {
   /** GLAUx's analysis of the word, or its place in the treebank, is on the look-up */
   glaux: boolean;
+  /** the grammar came from the Morpheus parser (morpheus.ts) */
+  parser?: boolean;
   /** an LSJ entry is on the look-up */
   lsj: boolean;
   /** the card's meaning came from the core vocabulary */
@@ -23,6 +27,7 @@ export interface Shown {
 export function creditsFor(shown: Shown): Credit[] {
   const out: Credit[] = [];
   if (shown.glaux) out.push({ text: GLAUX_CREDIT });
+  if (shown.parser) out.push({ text: MORPHEUS_CREDIT });
   if (shown.lsj) out.push({ text: LSJ_CREDIT_SHORT });
   if (shown.core) out.push({ text: CORE_CREDIT });
   return out;

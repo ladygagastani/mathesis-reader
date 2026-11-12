@@ -1,17 +1,21 @@
 "use client";
 /**
- * The notes on this device, and their sync. The device always keeps its own copy (localStorage), so notes work without a code
- * and without a connection. With a sync code the copy is made one with the database's: on the first use in a visit, and a moment
- * after every change. A removed note stays as a mark without its words, so the removal reaches the other devices too.
+ * The notes and the saved words on this device, and their sync. The device always keeps its own copy (localStorage), so they work
+ * without a code and without a connection. With a sync code the copy is made one with the database's: on the first use in a visit,
+ * and a moment after every change. A removed note stays as a mark without its words, and a removed word as a mark, so the removal
+ * reaches the other devices too. The database keeps both in one list; each side reads only its own (words.ts).
  */
 import { useEffect, useSyncExternalStore } from "react";
 import { savedCode, notesList, notesSave, trouble } from "@/lib/sync";
 import { mergeNotes, newerThan, parseNotes, type Note } from "./notes";
+import { parseWords, type SavedWord } from "./words";
 
 const KEY = "mathesis-reader:notes";
 const CHANGED = "mathesis-reader:notes-changed";
 const BATCH = 500;
 const EMPTY: Note[] = [];
+const WORDS_KEY = "mathesis-reader:words";
+const NO_WORDS: SavedWord[] = [];
 
 let cache: Note[] | null = null;
 function read(): Note[] {
@@ -25,8 +29,20 @@ function write(notes: Note[]) {
   dispatchEvent(new Event(CHANGED));
 }
 
+let words: SavedWord[] | null = null;
+function readWords(): SavedWord[] {
+  if (words) return words;
+  try { words = parseWords(JSON.parse(localStorage.getItem(WORDS_KEY) ?? "[]")); } catch { words = []; }
+  return words;
+}
+function writeWords(list: SavedWord[]) {
+  words = list;
+  try { localStorage.setItem(WORDS_KEY, JSON.stringify(list)); } catch { /* storage full or blocked: kept for this visit */ }
+  dispatchEvent(new Event(CHANGED));
+}
+
 const subscribe = (on: () => void) => {
-  const other = (e: StorageEvent) => { if (e.key === KEY) { cache = null; on(); } };
+  const other = (e: StorageEvent) => { if (e.key === KEY) { cache = null; on(); } if (e.key === WORDS_KEY) { words = null; on(); } };
   addEventListener(CHANGED, on); addEventListener("storage", other);
   return () => { removeEventListener(CHANGED, on); removeEventListener("storage", other); };
 };
@@ -35,6 +51,12 @@ const subscribe = (on: () => void) => {
 export function useNotes(): Note[] {
   useEffect(() => { if (!pulled) void syncNotes(); }, []);
   return useSyncExternalStore(subscribe, read, () => EMPTY);
+}
+
+/** Every saved word on this device, removed ones included (filter on `deleted`). Starts a sync once per visit. */
+export function useWords(): SavedWord[] {
+  useEffect(() => { if (!pulled) void syncNotes(); }, []);
+  return useSyncExternalStore(subscribe, readWords, () => NO_WORDS);
 }
 
 export type SyncState = { state: "off" | "syncing" | "done" } | { state: "failed"; error: string };
@@ -55,10 +77,12 @@ export function syncNotes(): Promise<void> {
       if (!code) { setStatus({ state: "off" }); return; }
       setStatus({ state: "syncing" });
       try {
-        const theirs = parseNotes(await notesList(code));
-        const merged = mergeNotes(read(), theirs);
+        const raw = await notesList(code);
+        const theirs = parseNotes(raw), theirWords = parseWords(raw);
+        const merged = mergeNotes(read(), theirs), mergedWords = mergeNotes(readWords(), theirWords);
         if (newerThan(merged, read()).length) write(merged);
-        const send = newerThan(merged, theirs);
+        if (newerThan(mergedWords, readWords()).length) writeWords(mergedWords);
+        const send: (Note | SavedWord)[] = [...newerThan(merged, theirs), ...newerThan(mergedWords, theirWords)];
         for (let i = 0; i < send.length; i += BATCH) await notesSave(code, send.slice(i, i + BATCH));
         pulled = true;
         setStatus({ state: "done" });
@@ -77,6 +101,17 @@ export function saveNote(n: Omit<Note, "updated">) {
   soon();
 }
 
+export function saveWord(w: Omit<SavedWord, "updated">) {
+  const word: SavedWord = { ...w, updated: Math.max(Date.now(), (readWords().find((x) => x.id === w.id)?.updated ?? 0) + 1) };
+  writeWords([...readWords().filter((x) => x.id !== w.id), word]);
+  soon();
+}
+
+export function removeWord(id: string) {
+  const was = readWords().find((x) => x.id === id);
+  if (was) saveWord({ ...was, deleted: true });
+}
+
 export function removeNote(id: string) {
   const was = read().find((x) => x.id === id);
   if (was) saveNote({ ...was, text: "", deleted: true });
@@ -89,4 +124,5 @@ export async function forgetNotes(): Promise<void> {
   if (status.state === "failed") throw new Error(`Your latest notes have not reached the database yet. ${status.error}`);
   pulled = false;
   write([]);
+  writeWords([]);
 }

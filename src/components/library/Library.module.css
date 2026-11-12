@@ -1,69 +1,120 @@
-/* The library on the printed page (the old app's Library.module.css and its page head, without photographs): the title with its
-   Greek name in red, one line on what is here; a search set as a catalogue's, one line to write on in italic, ruled in ink; then
-   every work under a rule of ink, each kind of writing a small red heading with its count, each author a row under a hairline. */
+/* The library (DESIGN.md, "Library"): a short head, a search set large, the order and the filters in one band, then the list:
+   each author a row of two columns (who they were at the left, their works at the right), under a strong rule for each letter or
+   kind, with a rail of letters at the left of an A to Z list. */
 .library { padding-bottom: var(--space-8); }
 
-.head { padding-block: clamp(28px, 5vh, var(--space-7)) var(--space-5); }
-.title { margin: 18px 0 10px; font-size: clamp(2.8rem, 6vw, 5.2rem); line-height: 0.98; letter-spacing: -0.015em; }
-.titleGr { display: block; margin-top: var(--space-3); font: 400 0.46em / 1.2 var(--f-title); color: var(--rubric); letter-spacing: 0.01em; }
-.purpose { max-width: 31em; margin-top: var(--space-3); font-size: var(--step-sub); line-height: 1.5; color: var(--ink-2); }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-6); padding-block: var(--space-6) var(--space-4); }
+.title { font-size: var(--t-title); line-height: 1.1; letter-spacing: -0.01em; }
+.titleGr { margin-left: var(--space-3); font-size: var(--t-lead); color: var(--accent); }
+.purpose { max-width: 36em; font-size: var(--t-ui); line-height: 1.5; color: var(--ink-2); }
 
-/* the search: one line to write on, its name in small capitals over it, and beside it what to show, the chosen one in red */
-.find { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3) 28px; margin-top: var(--space-5); padding-bottom: 6px; border-bottom: 1px solid var(--ink); }
-.find:focus-within { border-bottom-color: var(--rubric); }
-.field { flex: 1 1 18rem; display: grid; gap: 2px; min-width: 0; }
+/* the search: one line to write on, set large, ruled in ink; its sign at the left, its key at the right */
+.find { display: block; }
+.field { display: grid; gap: var(--space-1); }
 .field :global(.label) { color: var(--ink-3); }
-.field input { width: 100%; min-width: 0; min-height: var(--tap); border: 0; padding: 6px 0; font: italic 400 var(--step-1) / 1.3 var(--f-body); color: var(--ink); background: transparent; }
+.fieldRow { display: flex; align-items: center; gap: var(--space-3); border-bottom: 1px solid var(--rule-strong); }
+.fieldRow:focus-within { border-bottom-color: var(--accent); box-shadow: 0 1px 0 var(--accent); }
+.fieldSign { color: var(--ink-3); font-size: var(--t-lead); }
+.field input { flex: 1; min-width: 0; min-height: 56px; border: 0; padding: var(--space-2) 0; font: 400 var(--t-lead) / 1.3 var(--f-body); color: var(--ink); background: transparent; }
 .field input:focus-visible { outline: none; }
-.show { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.show > button {
-  min-height: var(--tap); padding: 10px; background: none; border: 0; border-bottom: 2px solid var(--rule); border-radius: 0;
-  font: 400 var(--step-0) / 1.2 var(--f-body); color: var(--ink-2); transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-}
-@media (hover: hover) { .show > button:hover { color: var(--rubric); } }
-.show > button[aria-checked="true"] { color: var(--rubric); border-bottom-color: var(--rubric); }
-@media (max-width: 760px) {
-  .find { border-bottom: 0; padding-bottom: 0; row-gap: 6px; }
-  .field { border-bottom: 1px solid var(--ink); }
-  .find:focus-within .field { border-bottom-color: var(--rubric); }
-  .show { width: 100%; justify-content: space-between; }
-  .show > button { padding-inline: var(--space-1); border-bottom-color: transparent; }
-  .show > button[aria-checked="true"] { border-bottom-color: var(--rubric); }
-}
+.key { flex: none; display: inline-grid; place-items: center; min-width: 1.8em; box-shadow: var(--rule-box); font: 400 var(--t-small) / 1.6 var(--f-body); color: var(--ink-3); }
 
-/* every work: a part under a rule of ink with room above it */
-.all { display: grid; gap: var(--space-4); margin-top: clamp(56px, 7vh, 80px); padding-top: 20px; border-top: 1px solid var(--ink); }
+/* the order and the filters, in one band under the search */
+.controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-4) var(--space-6); padding-block: var(--space-4) var(--space-5); }
+.control { display: grid; gap: var(--space-1); }
+.control :global(.label) { color: var(--ink-3); }
+.selects { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.selects select {
+  min-height: var(--tap); max-width: 18rem; padding: 0 var(--space-2); border: 1px solid var(--rule-strong); border-radius: var(--radius);
+  background: var(--bg); color: var(--ink-2); font: 400 var(--t-small) / 1.2 var(--f-body);
+}
+.selects select[data-set] { color: var(--ink); border-color: var(--ink); }
+.selects :global(.text-btn) { min-height: var(--tap); font-size: var(--t-small); }
+
+/* the books you are reading: a row of short entries under a label */
+.reading { display: grid; gap: var(--space-2); padding-block: var(--space-4); box-shadow: var(--rule-over); }
+.reading ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: var(--space-2) var(--space-5); }
+.readingLink { display: grid; gap: 2px; padding: var(--space-2) 0 var(--space-2) var(--space-3); box-shadow: inset 2px 0 0 var(--accent); color: var(--ink); text-decoration: none; }
+.readingBook { font-style: italic; transition: color var(--dur-quick) var(--ease); }
+.readingAt { font-size: var(--t-small); color: var(--ink-2); font-variant-numeric: oldstyle-nums; }
+@media (hover: hover) { .readingLink:hover .readingBook { color: var(--accent); } }
+.readingLink:focus-visible .readingBook { color: var(--accent); }
+
+/* where to begin: folded to one line */
+.begin { box-shadow: var(--rule-over); }
+.begin summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); min-height: var(--tap); padding-block: var(--space-3); cursor: pointer; list-style: none; }
+.begin summary::-webkit-details-marker { display: none; }
+.begin summary::before { content: ""; align-self: center; width: var(--tri-size); height: var(--tri-size); background: var(--accent); clip-path: var(--tri-right); }
+.begin[open] summary::before { clip-path: var(--tri-down); }
+.beginName { font-size: var(--t-body); }
+.beginWhy { font-size: var(--t-small); color: var(--ink-2); }
+@media (hover: hover) { .begin summary:hover .beginName { color: var(--accent); } }
+.beginBody { display: grid; gap: var(--space-3); padding-bottom: var(--space-4); }
+.note { max-width: 46em; font-size: var(--t-small); line-height: 1.5; color: var(--ink-2); }
+
+/* every work: a part under a strong rule with room above it */
+.all { display: grid; gap: var(--space-2); margin-top: var(--space-5); padding-top: var(--space-5); box-shadow: inset 0 1px 0 var(--rule-strong); }
 .allHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); }
-.allHead h2 { font-size: var(--step-3); }
-.all > :global(.segmented) { justify-self: start; }
-.count, .partCount { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); font-variant-numeric: lining-nums; }
-.status { padding-block: var(--space-5); }
+.allHead h2 { font-size: var(--t-head); }
+.count, .partCount { font-size: var(--t-small); color: var(--ink-2); font-variant-numeric: lining-nums; }
+.status { display: grid; gap: var(--space-2); padding-block: var(--space-5); }
 
-.part { margin-top: var(--space-5); }
-.partHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--ink); }
-.partName { font: 500 var(--step--2) / 1.35 var(--f-label); letter-spacing: 0.2em; text-transform: uppercase; color: var(--rubric); }
-
-.shelves, .works { list-style: none; margin: 0; padding: 0; }
-.shelf { border-bottom: 1px solid var(--rule); }
-/* an author's row: the name and the Greek name, what they were, and their one work or how many; a red sign at the right */
-.row {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; min-height: var(--tap);
-  padding: var(--space-3) 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+/* the rail of letters beside an A to Z list, which stays in view as the list scrolls */
+.withRail { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: var(--space-5); }
+.rail {
+  position: sticky; top: calc(var(--bar-h) + var(--space-4)); align-self: start; display: grid; gap: 0; padding-top: var(--space-4);
+  font: 400 var(--t-small) / 1 var(--f-body); text-align: center;
 }
-.who { display: grid; gap: 2px; min-width: 0; }
-.name { font-size: var(--step-sub); line-height: 1.3; transition: color var(--dur-quick) var(--ease); }
-@media (hover: hover) { .row:hover .name, .work:hover .workTitle { color: var(--rubric); } }
-.row:focus-visible .name { color: var(--rubric); }
-.grc { margin-left: var(--space-2); font-size: var(--step-0); color: var(--ink-2); }
-.desc { font-size: var(--step--1); line-height: 1.4; color: var(--ink-2); }
-.one { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); font-size: var(--step--1); color: var(--ink-2); }
-.note { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); }
-.go { flex: none; color: var(--rubric); }
+.rail a, .rail span { display: grid; place-items: center; height: 26px; }
+.rail a { color: var(--ink-2); text-decoration: none; transition: color var(--dur-quick) var(--ease); }
+.rail span { color: var(--rule-strong); }
+@media (hover: hover) { .rail a:hover { color: var(--accent); } }
+.rail a[aria-current] { color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
+.listCol { min-width: 0; }
 
-/* an author's works, opened under their row */
-.works { padding: 0 0 var(--space-3) var(--space-5); }
-.work { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap); padding: var(--space-1) 0; color: var(--ink); text-decoration: none; }
+.part { margin-top: var(--space-5); scroll-margin-top: calc(var(--bar-h) + var(--space-4)); }
+.partHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--rule-strong); }
+.partName { font: 400 var(--t-lead) / 1.2 var(--f-body); color: var(--accent); scroll-margin-top: calc(var(--bar-h) + var(--space-4)); }
+
+.authors, .works, .titles { list-style: none; margin: 0; padding: 0; }
+/* an author's row: who they were at the left, their works at the right */
+.author { display: grid; grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr); gap: var(--space-2) var(--space-6); padding-block: var(--space-4); border-bottom: 1px solid var(--rule); }
+.who { display: grid; align-content: start; gap: 2px; min-width: 0; }
+.name { font-size: var(--t-body); line-height: 1.3; }
+.grc { font-size: var(--t-ui); color: var(--ink-2); }
+.desc { font-size: var(--t-small); line-height: 1.4; color: var(--ink-3); }
+.worksBox { display: grid; justify-items: start; min-width: 0; }
+.works { width: 100%; }
+.more:global(.text-btn) { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--tap); font-size: var(--t-small); }
+
+/* a work: its title and Greek title on one line, what it is under them; a red arrow at the right */
+.work {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-4); align-items: center;
+  padding: var(--space-2) 0; color: var(--ink); text-decoration: none;
+}
+.works li + li .work, .titles li + li .work { box-shadow: var(--rule-over); }
+.workName { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-3); min-width: 0; }
 .workTitle { font-style: italic; transition: color var(--dur-quick) var(--ease); }
-.work .go { margin-left: auto; }
-.work:focus-visible .workTitle { color: var(--rubric); }
-@media (max-width: 760px) { .works { padding-left: var(--space-3); } }
+.workGr { font-size: var(--t-ui); color: var(--ink-2); }
+.by { font-size: var(--t-small); color: var(--ink-2); }
+.facts { grid-column: 1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4); font-size: var(--t-small); color: var(--ink-3); font-variant-numeric: lining-nums; }
+.go { grid-column: 2; grid-row: 1 / 3; color: var(--accent); }
+@media (hover: hover) { .work:hover .workTitle { color: var(--accent); } }
+.work:focus-visible .workTitle { color: var(--accent); }
+.english { color: var(--ink-2); }
+.greekOnly { color: var(--ink-3); }
+/* how familiar the words are: three short bars, as many filled as the band */
+.vocab { display: inline-flex; align-items: center; gap: var(--space-2); }
+.bars { display: inline-flex; gap: 2px; }
+.bars span { width: 4px; height: 10px; box-shadow: inset 0 0 0 1px var(--ink-3); }
+.bars span[data-on] { background: var(--ink-3); }
+
+/* the search's letters, marked in a title or a name */
+.library mark { background: var(--word-on); color: inherit; }
+
+/* a narrow window (phones come later): the author over their works, no rail */
+@media (max-width: 760px) {
+  .author { grid-template-columns: minmax(0, 1fr); }
+  .withRail { grid-template-columns: minmax(0, 1fr); }
+  .rail { display: none; }
+}

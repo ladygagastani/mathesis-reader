@@ -1,26 +1,52 @@
 /* The Saved page, as the library's head and a list ruled with hairlines: the book's name a small heading, each note its place, its
    words and three quiet actions. */
 .page { padding-bottom: var(--space-8); }
-.head { padding-block: clamp(28px, 5vh, var(--space-7)) var(--space-5); }
-.title { margin: 18px 0 10px; font-size: clamp(2.4rem, 5vw, 4rem); line-height: 1; letter-spacing: -0.015em; }
-.purpose { max-width: 31em; margin-top: var(--space-3); font-size: var(--step-sub); line-height: 1.5; color: var(--ink-2); }
-.status { margin-top: var(--space-2); font-size: var(--step--1); color: var(--ink-2); }
+.head { padding-block: var(--space-6) var(--space-5); }
+.title { font-size: var(--t-title); line-height: 1.1; letter-spacing: -0.01em; }
+.purpose { max-width: 36em; margin-top: var(--space-3); font-size: var(--t-body); line-height: 1.5; color: var(--ink-2); }
+/* the books at the left, which stay in view; the notes at the right */
+.cols { display: grid; grid-template-columns: minmax(12rem, 18rem) minmax(0, 46rem); column-gap: var(--space-8); align-items: start; padding-top: var(--space-4); border-top: 1px solid var(--rule-strong); }
+@media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-5); } }
+.books { position: sticky; top: calc(var(--bar-h) + var(--space-4)); display: grid; gap: var(--space-2); }
+.books ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.books button {
+  display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); width: 100%; min-height: var(--tap); padding: var(--space-2) 0 var(--space-2) var(--space-3);
+  border: 0; background: none; box-shadow: inset 1px 0 0 var(--rule); text-align: left; color: var(--ink-2); font: 400 var(--t-ui) / 1.3 var(--f-body);
+  transition: color var(--dur-quick) var(--ease);
+}
+@media (hover: hover) { .books button:hover { color: var(--accent); } }
+.books button[aria-pressed="true"] { color: var(--ink); box-shadow: inset 2px 0 0 var(--accent); }
+.n { font-size: var(--t-small); color: var(--ink-3); font-variant-numeric: lining-nums; }
+.notes { min-width: 0; }
+.status { margin-top: var(--space-2); font-size: var(--t-small); color: var(--ink-2); }
 .status:empty { display: none; }
-.none { padding-top: var(--space-5); border-top: 1px solid var(--ink); color: var(--ink-2); }
-.book { max-width: 46rem; padding-top: var(--space-4); border-top: 1px solid var(--ink); }
-.book + .book { margin-top: var(--space-6); }
-.bookName { margin: 0 0 var(--space-2); font: 400 var(--step-2) / 1.2 var(--f-body); letter-spacing: 0; }
+.none { padding-top: var(--space-5); border-top: 1px solid var(--rule-strong); color: var(--ink-2); }
+.book + .book { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--rule); }
+.bookName { margin: 0 0 var(--space-2); font: 400 var(--t-lead) / 1.2 var(--f-body); letter-spacing: 0; }
 .list { list-style: none; margin: 0; padding: 0; }
 .item { display: grid; gap: var(--space-1); padding-block: var(--space-3); box-shadow: var(--rule-under); }
 .item:last-child { box-shadow: none; }
-.place { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--step--1); color: var(--ink-2); }
+.place { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--t-small); color: var(--ink-2); }
 .swatch { flex: none; width: 10px; height: 10px; background: var(--c); }
-.words { margin: 0; white-space: pre-wrap; line-height: 1.5; }
+.words { margin: 0; white-space: pre-wrap; font-size: var(--t-body); line-height: 1.5; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--space-4); }
-.actions :global(.text-btn) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: var(--tap); min-width: var(--tap); font-size: var(--step--1); }
+.actions :global(.text-btn) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: var(--tap); min-width: var(--tap); font-size: var(--t-small); }
 .edit { display: grid; gap: var(--space-2); }
 .text {
   width: 100%; resize: vertical; padding: var(--space-2); border: 0; box-shadow: var(--rule-box); background: var(--bg);
-  color: var(--ink); font: 400 var(--step-0) / 1.5 var(--f-body);
+  color: var(--ink); font: 400 var(--t-ui) / 1.5 var(--f-body);
 }
 .text:focus-visible { outline: none; box-shadow: inset 0 0 0 var(--hair) var(--ink); }
+/* the two groups at the left */
+.groupGap { margin-top: var(--space-4); }
+.books button:disabled { opacity: 0.45; cursor: default; }
+/* a saved word: its dictionary form in the Greek face at the left, what it is and where it was met beside it */
+.word { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: var(--space-1) var(--space-5); padding-block: var(--space-3); box-shadow: var(--rule-under); }
+.word:last-child { box-shadow: none; }
+.lemma { font: 400 var(--t-lead) / 1.25 var(--f-greek); }
+.wordAbout { display: grid; gap: 2px; min-width: 0; }
+.kind { font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.meaning { font-size: var(--t-body); line-height: 1.4; }
+.met { font-size: var(--t-small); color: var(--ink-2); }
+.word .actions { grid-column: 2; }
+@media (max-width: 760px) { .word { grid-template-columns: minmax(0, 1fr); } .word .actions { grid-column: 1; } }

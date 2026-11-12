@@ -1,0 +1,7 @@
+/* The page for an address that leads nowhere: the title, one line, a search field and the way to the library. */
+.page { display: grid; gap: var(--space-5); justify-items: start; padding-block: var(--space-8); max-width: var(--maxw); }
+.title { font-size: var(--t-title); }
+.what { max-width: 34em; font-size: var(--t-body); color: var(--ink-2); }
+.find { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-4); width: min(40rem, 100%); }
+.field { flex: 1 1 18rem; display: grid; gap: var(--space-1); }
+.field input { width: 100%; min-height: var(--tap); padding: var(--space-1) 0; font: italic 400 var(--t-body) / 1.3 var(--f-body); }

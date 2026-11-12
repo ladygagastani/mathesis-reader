@@ -4,17 +4,22 @@
  * opened on this device); the Greek stands alone, each passage with "Show the English"; Aa offers Both and English for the whole book.
  * A click, a tap, or Enter on a Greek word opens the look-up; the arrow keys go from word to word. The address says the book and
  * the page (/read?w=tlg0059.tlg002&p=2), and "at" opens the page holding a passage (&at=17).
- * Notes (SPEC.md, "Notes and Saved"): "Note" in the look-up writes one on the word, its line or its passage; the foot bar's Notes
+ * Notes (SPEC.md, "Notes and Saved"): "Note" in the look-up writes one on the word, its line or its passage; the bar's Notes
  * lists the book's notes; marks at the right edge jump to them. "&note=<id>" opens a note (the Saved page links that way).
+ * The reader keeps your place in each book (lib/reader/place.ts) and opens there next time; "&find=<word>" marks a search's words on
+ * the page; "&ed=" and "&tr=" choose the edition and the translation. The keys are listed in the bar's Keys menu.
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { loadAuthorNames, titleCaps } from "@/lib/authors";
-import { describe } from "@/lib/catalog";
+import { describe, versionOf } from "@/lib/catalog";
+import { fold } from "@/lib/greek";
 import { lookupPlace, type LookupPlace } from "@/lib/lookup/placement";
 import type { WordAt } from "@/lib/lookup/lookup";
 import { openBook, SyncFirst, type Book } from "@/lib/reader/book";
+import { findInBook, type Found } from "@/lib/reader/find";
+import { getPlace, savePlace } from "@/lib/reader/place";
 import type { Columns } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
 import { shown, type Anchor, type Note } from "@/lib/notes/notes";
@@ -23,7 +28,7 @@ import { alignChunk, type Row } from "@/lib/tei/align";
 import { chunkOf, findRef } from "@/lib/tei/refs";
 import Icon from "@/components/Icon";
 import { Blocks } from "./Blocks";
-import FootBar from "./FootBar";
+import ReaderBar, { type Open } from "./ReaderBar";
 import Lookup from "./Lookup";
 import NoteEditor, { type Editing } from "./NoteEditor";
 import NoteMarks, { locate } from "./NoteMarks";
@@ -87,14 +92,16 @@ function AuthorCaps({ id, name }: { id: string; name: string }) {
   );
 }
 
-const RowView = memo(function RowView({ row, cols, open, onToggle, credit }: {
+const RowView = memo(function RowView({ row, cols, open, onToggle, credit, resumed }: {
   row: Row; cols: Columns; open: boolean; onToggle: (key: string) => void; credit: string | null;
+  /** the passage you stopped at last time, when the book opened there */
+  resumed: boolean;
 }) {
   const english = row.trans.length > 0;
   if (!row.greek.length && cols === "greek") return null;   // English the Greek has no place for shows only beside it
   return (
     <section className={styles.row} id={`p-${row.key}`} aria-label={`Passage ${row.key}`}>
-      <div className={styles.ref} aria-hidden="true">{row.greek.length ? row.key : ""}</div>
+      <div className={styles.ref} aria-hidden="true">{row.greek.length ? row.key : ""}{resumed && <span className={styles.resumed}>You stopped here</span>}</div>
       <div className={styles.grc} lang="grc">
         {row.greek.map((u, k) => (
           <div key={k} data-u={u.ref.join(".")}><Blocks blocks={u.blocks} greek margin={k === 0 ? row.key : undefined} /></div>
@@ -115,10 +122,10 @@ const RowView = memo(function RowView({ row, cols, open, onToggle, credit }: {
       </div>
       {cols !== "greek" && (
         <div className={styles.tr} lang="en" data-reading="">
-          {english ? <Blocks blocks={row.trans} greek={false} margin={row.greek.length ? row.key : undefined} /> :!row.cont && <span className={styles.untr}>This translation has no English for this passage.</span>}
+          {english ? <Blocks blocks={row.trans} greek={false} margin={row.greek.length ? row.key : undefined} />
+            : <span className={styles.untr}>{row.cont ? "The English for these lines begins on the page before." : "This translation has no English for this passage."}</span>}
         </div>
       )}
-      <div className={styles.margin} aria-hidden="true" data-margin="" />
     </section>
   );
 });
@@ -127,24 +134,55 @@ export default function Reader() {
   const params = useSearchParams();
   const router = useRouter();
   const workId = params.get("w") ?? "";
+  const edParam = params.get("ed"), trParam = params.get("tr");
+  const findParam = params.get("find");
   const { columns } = useSettings();
   const [got, setGot] = useState<{ id: string; book?: Book; error?: string; syncFirst?: boolean }>({ id: "" });
+  // a menu the keyboard asks the bar for
+  const [ask, setAsk] = useState<{ menu: Open; n: number } | null>(null);
+  // the passage the book opened at because you stopped there last time
+  const [resumed, setResumed] = useState<{ work: string; at: string } | null>(null);
   const [english, setEnglish] = useState<{ page: string; open: Set<string> }>({ page: "", open: new Set() });
   const [chosen, setWord] = useState<{ el: HTMLElement; at: WordAt; keyboard: boolean; page: string } | null>(null);
   const [layer, setLayer] = useState<1 | 2>(1);
-  const [place, setPlace] = useState<LookupPlace>("note");
-  const [note, setNote] = useState<{ left: number; width: number } | null>(null);
+  // the look-up's place: a card floating by the word, or a sheet on a phone
+  const [place, setPlace] = useState<LookupPlace>("float");
   const [editing, setEditing] = useState<{ e: Editing; page: string; back: HTMLElement | null } | null>(null);
   const allNotes = useNotes();
+  // words selected in the text: a note can stand on them (the button under the selection)
+  const [picked, setPicked] = useState<{ anchors: Anchor[]; top: number; left: number; page: string } | null>(null);
+  useEffect(() => {
+    const gone = () => { const s = getSelection(); if (!s || s.isCollapsed) setPicked(null); };
+    document.addEventListener("selectionchange", gone);
+    return () => document.removeEventListener("selectionchange", gone);
+  }, []);
 
+  // a book opened with no page, passage or note asked for opens where you stopped last time, in the edition you chose then
+  const resumeFor = useRef("");
+  useEffect(() => {
+    if (!workId || resumeFor.current === workId) return;
+    resumeFor.current = workId;
+    if (params.get("p") || params.get("at") || params.get("note")) return;
+    const pl = getPlace(workId);
+    if (!pl) return;
+    const q = new URLSearchParams(params);
+    q.set("at", pl.at);
+    if (pl.ed && !q.get("ed")) q.set("ed", pl.ed);
+    if (pl.tr && !q.get("tr")) q.set("tr", pl.tr);
+    router.replace(`/read?${q}`, { scroll: false });
+    queueMicrotask(() => setResumed({ work: workId, at: pl.at }));
+  }, [workId, params, router]);
+
+  const loadKey = `${workId}|${edParam ?? ""}|${trParam ?? ""}`;
   useEffect(() => {
     if (!workId) return;
     let live = true;
-    openBook(workId).then((book) => { if (live) setGot({ id: workId, book }); }, (e: Error) => { if (live) setGot({ id: workId, error: e.message, syncFirst: e instanceof SyncFirst }); });
+    openBook(workId, { ed: edParam, tr: trParam }).then((book) => { if (live) setGot({ id: loadKey, book }); }, (e: Error) => { if (live) setGot({ id: loadKey, error: e.message, syncFirst: e instanceof SyncFirst }); });
     return () => { live = false; };
-  }, [workId]);
+  }, [workId, edParam, trParam, loadKey]);
 
-  const book = got.id === workId ? got.book ?? null : null;
+  // (while another edition loads, the one on screen stays)
+  const book = got.id === loadKey || got.id.startsWith(`${workId}|`) ? got.book ?? null : null;
   const doc = book?.doc ?? null;
   const atRef = params.get("at");
   const page = useMemo(() => {
@@ -168,12 +206,13 @@ export default function Reader() {
   // this book's notes, in the order of the book
   const notes = useMemo(() => {
     if (!doc) return [];
-    const at = (n: Note) => findRef(doc, n.anchor.unit) * 1e4 + (n.anchor.kind === "word" ? n.anchor.i : n.anchor.kind === "line" ? n.anchor.line : -1);
+    const at = (n: Note) => findRef(doc, n.anchor.unit) * 1e4 + (n.anchor.kind === "word" || n.anchor.kind === "words" ? n.anchor.i : n.anchor.kind === "line" ? n.anchor.line : -1);
     return shown(allNotes).filter((n) => n.work === workId).sort((a, b) => at(a) - at(b));
   }, [allNotes, doc, workId]);
 
   const close = useCallback((refocus = false) => {
-    setWord((w) => { if (w) { w.el.removeAttribute("aria-current"); if (refocus) w.el.focus(); } return null; });
+    // (a word clicked has no tab stop: it takes one, to be given the focus back)
+    setWord((w) => { if (w) { w.el.removeAttribute("aria-current"); if (refocus) { w.el.tabIndex = 0; w.el.focus(); } } return null; });
     setLayer(1);
   }, []);
   const choose = useCallback((el: HTMLElement, keyboard: boolean) => {
@@ -216,6 +255,77 @@ export default function Reader() {
     if (target) target.scrollIntoView(); else window.scrollTo(0, 0);
   }, [doc, page, atRef]);
 
+  // where you are: the first passage under the bar, kept as you read (and once the page has settled)
+  const placeOf = useRef({ at: "", where: "", book: "", ed: "", tr: "" });
+  useEffect(() => {
+    if (!doc || !book) return;
+    const ed = versionOf(book.grc.urn), tr = book.tr ? versionOf(book.tr.urn) : "none";
+    placeOf.current = {
+      at: "", where: doc.chunks[page]?.label ?? "", book: `${book.author.name}, ${book.work.title}`,
+      ed: book.editions.length > 1 && ed !== versionOf(book.editions[0].urn) ? ed : "",
+      tr: book.translations.length > 1 && tr !== versionOf(book.translations[0]?.urn ?? "") ? tr : "",
+    };
+    let timer = 0;
+    const keep = () => {
+      const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
+      const row = [...document.querySelectorAll<HTMLElement>("main section[id^='p-']")].find((r) => r.getBoundingClientRect().bottom > bar + 8);
+      if (!row) return;
+      const { where, book: name, ed: e, tr: t } = placeOf.current;
+      savePlace(workId, { at: row.id.slice(2), where, book: name, ...(e ? { ed: e } : {}), ...(t ? { tr: t } : {}) });
+    };
+    const onScroll = () => { clearTimeout(timer); timer = window.setTimeout(keep, 400); };
+    timer = window.setTimeout(keep, 1000);
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("pagehide", keep);
+    return () => { clearTimeout(timer); removeEventListener("scroll", onScroll); removeEventListener("pagehide", keep); };
+  }, [doc, book, page, workId]);
+
+  // "&find=<word>": the words of the page that hold the search, marked
+  useEffect(() => {
+    const words = [...document.querySelectorAll<HTMLElement>(`main .${styles.w}`)];
+    for (const w of words) w.removeAttribute("data-found");
+    const qs = (findParam ?? "").split(/\s+/).map((q) => fold(q)).filter((q) => q.length > 1);
+    if (!qs.length) return;
+    for (const w of words) { const f = fold(w.textContent ?? ""); if (qs.some((q) => f.includes(q))) w.setAttribute("data-found", ""); }
+  }, [rows, findParam, columns]);
+
+  // the keys of the whole page (the text's own keys, from word to word, come first: they mark the key as used)
+  const keys = useRef({ step: (dir: 1 | -1) => { void dir; }, turn: (dir: 1 | -1) => { void dir; }, escape: () => {} });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable || t.closest("[role=dialog]")) return;
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        const dir = e.key === "ArrowRight" ? 1 : -1;
+        if (document.querySelector("[data-lookup] [aria-busy]")) keys.current.step(dir); else keys.current.turn(dir);
+      } else if (e.key === "Escape") keys.current.escape();
+      else if (e.key === "g") { e.preventDefault(); setAsk({ menu: "pages", n: Date.now() }); }
+      else if (e.key === "?") { e.preventDefault(); setAsk({ menu: "keys", n: Date.now() }); }
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  }, []);
+
+  // the address of a page or a passage, keeping the edition and translation chosen
+  const href = (o: { p?: number; at?: string; find?: string }) => {
+    const q = new URLSearchParams({ w: workId });
+    if (edParam) q.set("ed", edParam);
+    if (trParam) q.set("tr", trParam);
+    if (o.p !== undefined) q.set("p", String(o.p + 1));
+    if (o.at) q.set("at", o.at);
+    if (o.find) q.set("find", o.find);
+    return `/read?${q}`;
+  };
+  useEffect(() => {
+    keys.current = {
+      step,
+      turn: (dir) => { const i = page + dir; if (doc && i >= 0 && i < doc.chunks.length) router.push(href({ p: i })); },
+      escape: () => { if (word) close(true); },
+    };
+  });
+
   // "&note=<id>": the note opened, once, when its page is shown
   const noteParam = params.get("note");
   const opened = useRef("");
@@ -227,32 +337,37 @@ export default function Reader() {
     if (n && el) { opened.current = `${pageKey}|${noteParam}`; queueMicrotask(() => openNote(n, el)); }
   }, [noteParam, notes, pageKey, openNote]);
 
-  // the look-up's place: the window over the margin (its left edge and width from the margin's own column), or the sheet
   useLayoutEffect(() => {
-    const measure = () => {
-      const p = lookupPlace(window.innerWidth);
-      setPlace(p);
-      // (the window stands at the right edge of the type area, as wide as the margin's column)
-      const cell = document.querySelector<HTMLElement>("[data-margin]");
-      const m = cell?.getBoundingClientRect(), row = cell?.parentElement?.getBoundingClientRect();
-      setNote(p === "note" && m && row && m.width > 0 ? { left: row.right - m.width, width: m.width } : null);
-    };
+    const measure = () => setPlace(lookupPlace(window.innerWidth));
     measure();
     addEventListener("resize", measure);
     return () => removeEventListener("resize", measure);
-  }, [rows, columns]);
+  }, []);
 
-  // the word stays in sight, never under the look-up: above the sheet (as the sheet grows when its words arrive, too), or, with the
-  // window, inside the screen above the foot bar
+  // a click anywhere but on the floating look-up or on another word puts the look-up away (another word is looked up instead)
+  useEffect(() => {
+    if (!word || place !== "float") return;
+    const away = (e: PointerEvent) => {
+      const t = e.target as Element | null;
+      if (!t || t.closest(`[data-lookup], .${styles.w}`)) return;
+      close();
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [word, place, close]);
+
+  // on a phone the word stays in sight, above the sheet (as the sheet grows when its words arrive, too); the floating card keeps
+  // clear of the word by itself (useFloat.ts)
   useLayoutEffect(() => {
     const panel = document.querySelector<HTMLElement>("[data-lookup]");
-    if (!word || !panel) return;
+    if (!word || !panel || place !== "sheet") return;
     const keepClear = () => {
       const r = word.el.getBoundingClientRect();
-      const top = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight - 72;
+      const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
+      const bottom = panel.getBoundingClientRect().top;
       const room = 16;
-      if (r.bottom > top - room) window.scrollBy({ top: r.bottom - top + room + (place === "sheet" ? r.height : 0) });
-      else if (r.top < room) window.scrollBy({ top: r.top - room * 4 });
+      if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + r.height });
+      else if (r.top < bar + room) window.scrollBy({ top: r.top - bar - room * 4 });
     };
     keepClear();
     const watch = new ResizeObserver(keepClear);
@@ -268,7 +383,7 @@ export default function Reader() {
       </main>
     );
   }
-  if (got.id === workId && got.syncFirst) {
+  if (got.id === loadKey && got.syncFirst) {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
         <p>This is one of your private texts. Sync this device to open it.</p>
@@ -276,7 +391,7 @@ export default function Reader() {
       </main>
     );
   }
-  if (got.id === workId && got.error) {
+  if (got.id === loadKey && got.error) {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
         <p>This book could not be opened. {got.error}</p>
@@ -300,6 +415,33 @@ export default function Reader() {
     else router.push(`/read?w=${encodeURIComponent(workId)}&at=${encodeURIComponent(n.anchor.unit)}&note=${n.id}`);
   };
 
+  // words selected in one passage (two or more): offer a note on them
+  const onPick = () => {
+    const sel = getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const hit = [...document.querySelectorAll<HTMLElement>(`main .${styles.w}`)].filter((w) => range.intersectsNode(w));
+    const unit = hit[0]?.closest<HTMLElement>("[data-u]");
+    const run = unit ? hit.filter((w) => w.closest("[data-u]") === unit) : [];
+    if (!unit || run.length < 2) { setPicked(null); return; }
+    const all = [...unit.querySelectorAll<HTMLElement>(`.${styles.w}`)];
+    const box = range.getBoundingClientRect();
+    setPicked({
+      anchors: [
+        { kind: "words", unit: unit.dataset.u!, i: all.indexOf(run[0]), n: run.length, words: run.map((w) => w.textContent ?? "").join(" ") },
+        { kind: "passage", unit: unit.dataset.u! },
+      ],
+      top: box.bottom + scrollY + 8, left: Math.max(0, box.left + scrollX), page: pageKey,
+    });
+  };
+  const notePicked = () => {
+    if (!picked) return;
+    close();
+    getSelection()?.removeAllRanges();
+    setEditing({ e: { anchors: picked.anchors }, page: pageKey, back: null });
+    setPicked(null);
+  };
+
   const onText = (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>(`.${styles.w}`);
     if (el) choose(el, false);
@@ -308,19 +450,81 @@ export default function Reader() {
     const el = (e.target as HTMLElement).closest<HTMLElement>(`.${styles.w}`);
     if (!el) return;
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(el, true); return; }
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+    const all = words();
+    const i = all.indexOf(el);
+    // with a word looked up, ← and → look up the word before or after it, and the keyboard follows
+    if (word && (e.key === "ArrowRight" || e.key === "ArrowLeft")) {
       e.preventDefault();
-      const all = words();
-      const next = all[all.indexOf(el) + (e.key === "ArrowRight" ? 1 : -1)];
-      if (next) { el.tabIndex = -1; next.tabIndex = 0; next.focus(); }
+      const next = all[all.indexOf(word.el) + (e.key === "ArrowRight" ? 1 : -1)];
+      if (next) { el.removeAttribute("tabindex"); next.tabIndex = 0; next.focus(); choose(next, false); }
+      return;
+    }
+    let to: HTMLElement | undefined;
+    if (e.key === "ArrowRight") to = all[i + 1];
+    else if (e.key === "ArrowLeft") to = all[i - 1];
+    else if (e.key === "Home") to = all[0];
+    else if (e.key === "End") to = all[all.length - 1];
+    else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      // the word on the next (or the last) line nearest the same place across
+      const r = el.getBoundingClientRect();
+      const line = e.key === "ArrowDown" ? all.slice(i + 1).find((x) => x.getBoundingClientRect().top > r.bottom - 2)
+        : all.slice(0, i).reverse().find((x) => x.getBoundingClientRect().bottom < r.top + 2);
+      if (line) {
+        const top = line.getBoundingClientRect().top;
+        const there = all.filter((x) => Math.abs(x.getBoundingClientRect().top - top) < 2);
+        const dx = (x: HTMLElement) => Math.abs(x.getBoundingClientRect().left - r.left);
+        to = there.reduce((a, b) => (dx(b) < dx(a) ? b : a));
+      }
+    }
+    if (["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      e.preventDefault();
+      if (to) { el.removeAttribute("tabindex"); to.tabIndex = 0; to.focus(); }
     }
     if (e.key === "Escape" && word) close(true);
   };
-  const go = (i: number) => router.push(`/read?w=${encodeURIComponent(workId)}&p=${i + 1}`);
+  const go = (i: number) => router.push(href({ p: i }));
+  const goTo = (ref: string): string | null => {
+    const u = findRef(doc, ref);
+    if (u < 0) return ref.trim() ? `No passage "${ref.trim()}" in this text. Try a reference such as ${example}.` : `Type a reference, such as ${example}.`;
+    router.push(href({ at: doc.units[u].ref.join(".") }));
+    return null;
+  };
+  const example = doc.units[Math.min(40, doc.units.length - 1)].ref.join(".");
+  const onFound = (f: Found, q: string) => router.push(href({ at: f.ref, find: q.trim() }));
+  const choose2 = (k: "ed" | "tr", v: string) => {
+    const q = new URLSearchParams(params);
+    q.set(k, v);
+    q.delete("p"); q.delete("find"); q.delete("note");
+    q.set("at", rows[0]?.key ?? "");
+    router.replace(`/read?${q}`);
+  };
+  const option = (t: Book["grc"], among: Book["grc"][]) => ({ value: versionOf(t.urn), label: describe(t, among) });
+
+  const titlePage = page === 0 && firstOpening(workId);
+  const barTitle = (
+    <>
+      {greekTitle && <><span lang="grc" className={styles.barGr}>{greekTitle}</span><span aria-hidden="true"> · </span></>}
+      {book.author.name}, {book.work.title}
+      {book.private && <span className={styles.lock}><Icon name="lock" label="Only you can see this" /></span>}
+    </>
+  );
+  const lookup = word && (
+    <Lookup at={word.at} anchor={word.el} place={place} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
+      workTitle={book.work.title} book={{ work: workId, name: bookName }} takeFocus={word.keyboard} onNote={noteWord} />
+  );
+  const editor = edit && (
+    <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} onClose={closeNote} />
+  );
 
   return (
     <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined}>
-      {page === 0 && firstOpening(workId) ? (
+      <ReaderBar title={barTitle} showTitle={!titlePage} onTop={() => window.scrollTo(0, 0)} where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`}
+        pages={doc.chunks.map((c) => c.label)} page={page} onPage={go} hasEnglish={!!book.tr} notes={notes} onNote={fromMenu} ask={ask}
+        example={example} goTo={goTo} find={(q) => findInBook(doc, q)} onFound={onFound}
+        editions={book.editions.map((t) => option(t, book.editions))} edition={versionOf(book.grc.urn)} onEdition={(v) => choose2("ed", v)}
+        englishes={book.translations.map((t) => option(t, book.translations))} english={book.tr ? versionOf(book.tr.urn) : ""} onEnglish={(v) => choose2("tr", v)} />
+
+      {titlePage && (
         <header className={`${styles.tp} enter`}>
           <AuthorCaps id={book.author.id} name={book.author.name} />
           <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
@@ -332,41 +536,38 @@ export default function Reader() {
             {book.tr && <> · <span className={styles.edKind}>English</span> {describe(book.tr, book.work.texts)}</>}
           </p>
         </header>
-      ) : (
-        <div className={`wrap ${styles.rlWrap} enter`}>
-          <h1 className={styles.rl}>
-            {greekTitle && <><span lang="grc" className={styles.rlGr}>{greekTitle}</span><span aria-hidden="true"> · </span></>}
-            {book.author.name}, {book.work.title}, {chunk.label}
-            {book.private && <span className={styles.lock}><Icon name="lock" label="Only you can see this" /></span>}
-          </h1>
-        </div>
       )}
 
-      <div className={`wrap ${styles.text}`} onClick={onText} onKeyDown={onKey}>
-        <span data-greek-probe="" lang="grc" className={styles.grc} hidden />
-        {rows.map((r) => (
-          <RowView key={r.key} row={r} cols={book.tr ? columns : "greek"} open={!!openEnglish?.has(r.key)} onToggle={toggleEnglish} credit={credit} />
-        ))}
-      </div>
+      <div className={styles.layout}>
+        <div className={styles.column}>
+          <div className={`${styles.text} enter`} onClick={onText} onKeyDown={onKey} onMouseUp={onPick}>
+            <span data-greek-probe="" lang="grc" className={styles.grc} hidden />
+            {rows.map((r) => (
+              <RowView key={r.key} row={r} cols={book.tr ? columns : "greek"} open={!!openEnglish?.has(r.key)} onToggle={toggleEnglish} credit={credit}
+                resumed={resumed?.work === workId && resumed.at === r.key && r.key !== doc.units[0].ref.join(".")} />
+            ))}
+          </div>
 
-      <nav className={`wrap ${styles.bottom}`} aria-label="Pages">
-        <span className={styles.hint}>{chunk.label}</span>
-        <div className={styles.bottomGo}>
-          {page > 0 && <button type="button" className="btn ghost" onClick={() => go(page - 1)}><Icon name="back" />{doc.chunks[page - 1].label}</button>}
-          {page < doc.chunks.length - 1 && <button type="button" className="btn" onClick={() => go(page + 1)}>Continue to {doc.chunks[page + 1].label}<Icon name="next" /></button>}
+          <nav className={styles.bottom} aria-label="Pages">
+            <span className={styles.hint}>{chunk.label}</span>
+            <div className={styles.bottomGo}>
+              {page > 0 && <button type="button" className="btn ghost" onClick={() => go(page - 1)}><Icon name="back" />{doc.chunks[page - 1].label}</button>}
+              {page < doc.chunks.length - 1 && <button type="button" className="btn" onClick={() => go(page + 1)}>Continue to {doc.chunks[page + 1].label}<Icon name="next" /></button>}
+            </div>
+          </nav>
         </div>
-      </nav>
 
-      <FootBar where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`} pages={doc.chunks.map((c) => c.label)} page={page} onPage={go}
-        hasEnglish={!!book.tr} hidden={sheetOpen} notes={notes} onNote={fromMenu} />
+      </div>
 
       <NoteMarks notes={notes} layout={[rows, columns, openEnglish]} onOpen={openNote} />
 
-      {word && (
-        <Lookup at={word.at} place={place} note={note} layer={layer} onLayer={setLayer} onStep={step} onClose={() => close(true)}
-          workTitle={book.work.title} takeFocus={word.keyboard} onNote={noteWord} />
+      {picked?.page === pageKey && (
+        <button type="button" className={`btn ghost ${styles.pick}`} style={{ top: picked.top, left: picked.left }}
+          onMouseDown={(e) => e.preventDefault()} onClick={notePicked}><Icon name="note" />Note on these words</button>
       )}
-      {edit && <NoteEditor key={"note" in edit.e ? edit.e.note.id : "new"} editing={edit.e} work={workId} book={bookName} place={place} margin={note} onClose={closeNote} />}
+
+      {lookup}
+      {editor}
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeNotes, newId, newerThan, parseNote, parseNotes, placeName, shown, type Note } from "./notes";
+import { mergeNotes, newId, newerThan, parseNote, parseNotes, placeName, shortQuote, shown, type Note } from "./notes";
 
 const note = (id: string, updated: number, extra: Partial<Note> = {}): Note => ({
   id, work: "tlg0059.tlg002", book: "Plato, Apology", anchor: { kind: "word", unit: "17a", i: 3, word: "λόγος" }, colour: "red", text: "a note", updated, ...extra,
@@ -50,4 +50,19 @@ it("makes ids the database accepts, and different each time", () => {
   const a = newId(), b = newId();
   expect(a).toMatch(/^[a-z0-9]{24}$/);
   expect(a).not.toBe(b);
+});
+
+describe("a note on a run of words", () => {
+  const words = { id: "abc123", work: "w", book: "B", colour: "blue", text: "t", updated: 1, anchor: { kind: "words", unit: "17", i: 3, n: 2, words: "ὦ ἄνδρες" } };
+  it("is read back whole", () => {
+    expect(parseNote(words)?.anchor).toEqual({ kind: "words", unit: "17", i: 3, n: 2, words: "ὦ ἄνδρες" });
+  });
+  it("needs two words or more, and a place to start", () => {
+    expect(parseNote({ ...words, anchor: { ...words.anchor, n: 1 } })).toBeNull();
+    expect(parseNote({ ...words, anchor: { ...words.anchor, i: -1 } })).toBeNull();
+  });
+  it("is named by its words, a long run by its first and last two", () => {
+    expect(placeName({ kind: "words", unit: "17", i: 3, n: 2, words: "ὦ ἄνδρες" })).toBe("ὦ ἄνδρες in 17");
+    expect(shortQuote("ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι")).toBe("ὅτι μὲν … ἄνδρες Ἀθηναῖοι");
+  });
 });

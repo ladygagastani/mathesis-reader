@@ -1,0 +1,29 @@
+/* The site bar (DESIGN.md, "Site bar"): 56 px on the second surface with a hairline under it, fixed to the top of the window as the
+   page scrolls. The logo and Library at the left, your things at the right. */
+.bar {
+  position: sticky; top: 0; z-index: var(--z-bar);
+  background: var(--surface); box-shadow: inset 0 -1px 0 var(--rule);
+}
+.in { display: flex; align-items: center; gap: var(--space-6); height: var(--bar-h); }
+.main { display: flex; align-items: center; gap: var(--space-2); }
+.links { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+
+/* a link or button in the bar: ink-2, red under the hand; the page you are on in ink with a red rule under it */
+.link {
+  position: relative; display: inline-flex; align-items: center; gap: var(--space-2); height: var(--bar-h); padding-inline: var(--space-2);
+  border: 0; background: none; color: var(--ink-2); font: 400 var(--t-ui) / 1 var(--f-body); text-decoration: none; white-space: nowrap;
+  transition: color var(--dur-quick) var(--ease);
+}
+@media (hover: hover) { .link:hover { color: var(--accent); } }
+.link[aria-current="page"] { color: var(--ink); }
+.link[aria-current="page"]::after { content: ""; position: absolute; left: var(--space-2); right: var(--space-2); bottom: 0; height: 2px; background: var(--accent); }
+/* the switch's room before the page knows the device's choice, so nothing moves when it appears */
+.themeSpace { display: inline-block; width: 5.5em; }
+
+/* a narrow window (phones come later): the bar scrolls away with the page and wraps, so nothing stands over the page or off it */
+@media (max-width: 760px) {
+  .bar { position: static; }
+  .in { flex-wrap: wrap; height: auto; min-height: var(--bar-h); gap: 0 var(--space-3); }
+  .links { margin-left: 0; flex-wrap: wrap; }
+  .link { height: 44px; }
+}

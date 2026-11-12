@@ -85,3 +85,83 @@ test("the credits name every source with its licence", async ({ page }) => {
   for (const name of ["Perseus Digital Library, canonical-greekLit", "GLAUx, by Alek Keersmaekers", "Liddell–Scott–Jones", "Dickinson College Commentaries", "Wikidata", "Lucide"])
     await expect(page.getByRole("link", { name: new RegExp(name) })).toBeVisible();
 });
+
+test("the site bar: the way to the library from every page, and Paper or Night", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/credits");
+  const bar = page.getByRole("navigation", { name: "The site" });
+  await bar.getByRole("link", { name: "Library" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(bar.getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
+  await page.getByRole("button", { name: "Switch to the night page" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  await page.goto("/saved");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
+  await page.getByRole("button", { name: "Switch to the paper page" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "paper");
+});
+
+test("an address that leads nowhere says so, and its search goes to the library", async ({ page }) => {
+  const res = await page.goto("/no-such-page");
+  expect(res?.status()).toBe(404);
+  await expect(page.locator("main h1")).toHaveText("This page is not here");
+  await page.getByRole("searchbox").fill("plato");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/\?q=plato$/);
+  await expect(page.getByRole("searchbox")).toHaveValue("plato");
+});
+
+test("Titles A to Z and By period; a filter narrows the list and says so; the letters jump", async ({ page, isMobile }) => {
+  await page.goto("/");
+  await ready(page);
+  const count = async () => Number((await page.locator("main p[aria-live]").textContent())!.split(" ")[0].replace(/,/g, ""));
+  const total = await count();
+  await page.getByRole("radio", { name: "Titles A–Z" }).click();
+  await expect(page).toHaveURL(/sort=titles/);
+  await expect(page.locator("main h3").first()).toHaveText("A");
+  await page.getByRole("radio", { name: "By period" }).click();
+  await expect(page.locator("main h3").first()).toHaveText("Archaic · 8th–6th c. BC");
+  await page.getByRole("combobox", { name: "Period" }).selectOption("Classical · 5th–4th c. BC");
+  await expect(page).toHaveURL(/period=Classical/);
+  await expect(page.getByText(/^[\d,]+ of [\d,]+ works$/)).toBeVisible();
+  await expect(page.locator("main h3")).toHaveText(["Classical · 5th–4th c. BC"]);
+  await page.getByRole("combobox", { name: "Vocabulary" }).selectOption("familiar");
+  const narrowed = await count();
+  expect(narrowed).toBeLessThan(total);
+  await page.getByRole("button", { name: "Clear the filters" }).click();
+  await expect(page).not.toHaveURL(/period=/);
+  if (!isMobile) {
+    await page.getByRole("radio", { name: "Authors A–Z" }).click();
+    await page.getByRole("navigation", { name: "Letters" }).getByRole("link", { name: "X" }).click();
+    await expect(page.locator("#part-X")).toBeInViewport();
+  }
+});
+
+test("the books you are reading come first; where to begin opens, and stays open", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("mathesis-reader:places", JSON.stringify({ "tlg0059.tlg002": { at: "29", where: "Sections 29–34", book: "Plato, Apology", t: 5 } })));
+  await page.goto("/");
+  await ready(page);
+  const reading = page.getByRole("region", { name: "Continue reading" });
+  await expect(reading).toContainText("Plato, Apology");
+  await expect(reading).toContainText("Sections 29–34 · at 29");
+  await page.getByText("Where to begin").click();
+  await expect(page.locator("details[open]")).toContainText(/\d+% common words/);
+  await page.reload();
+  await ready(page);
+  await expect(page.locator("details[open]")).toHaveCount(1);
+  await reading.getByRole("link").click();
+  await expect(page).toHaveURL(/w=tlg0059\.tlg002/);
+  await expect(page).toHaveURL(/at=29/);
+});
+
+test("/ searches the library from any page", async ({ page, isMobile }) => {
+  test.skip(isMobile, "a key");
+  await page.goto("/credits");
+  // (the switch appears once the page's scripts run, and with them the key)
+  await page.getByRole("button", { name: /^Switch to the/ }).waitFor();
+  await page.keyboard.press("/");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("searchbox")).toBeFocused();
+  await page.keyboard.type("hom");
+  await expect(page.getByRole("searchbox")).toHaveValue("hom");
+});

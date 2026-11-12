@@ -3,9 +3,9 @@
 // For every visible piece of words it lists:
 //   face    - a letter or sign drawn in a typeface other than EB Garamond, GFS Didot and Gentium Book Plus. The browser is asked
 //             which font drew each piece, so a sign none of the three has (an arrow, a cross) is caught, letter by letter.
-//   size    - a size below 12 px, or, up to the h3 step, not a step of the type scale. Lettering in GFS Didot, the page's title,
+//   size    - a size below 12 px, or, up to the title step, not a step of the type scale. Lettering in GFS Didot, the page's title,
 //             and the Greek being read at the reader's own size are not judged.
-//   colour  - words in a colour that is not a token for words: --ink, --ink-2, --ink-3, --rubric; on a block of ink, the paper
+//   colour  - words in a colour that is not a token for words: --ink, --ink-2, --ink-3, --accent; on a block of ink, the paper
 //             and --ink-2-on-ink; on a red field, the paper.
 //   button  - a filled button whose fill is not the ink, the one primary fill.
 // usage: node scripts/check-design.mjs <base-url>   (exits with 1 on a problem)
@@ -13,7 +13,7 @@
 // Proved 2026-11-12: PROVE_CSS='.btn { background: #c8b428 !important }' lists the filled buttons (button: "Continue", Aa's "α−"
 // and "α+"), and PROVE_CSS='h1 span { font-family: Arial !important }' lists the one-line title's signs (face: "·" in Arial).
 import { chromium } from "playwright";
-import { SCREENS, open, prepare } from "./screens.mjs";
+import { SCREENS, forWidth, open, prepare } from "./screens.mjs";
 
 const [base = "http://localhost:3300"] = process.argv.slice(2);
 const THREE = ["EB Garamond", "GFS Didot", "Gentium Book Plus"];
@@ -72,7 +72,7 @@ async function faces(page, ctx, at) {
 function judge(measureType) {
   const probe = document.createElement("span");
   document.body.append(probe);
-  const steps = ["--step--2", "--step--1", "--step-0", "--step-sub", "--step-text", "--step-1", "--step-2", "--step-3", "--step-4"].map((v) => {
+  const steps = ["--t-label", "--t-small", "--t-ui", "--t-body", "--t-lead", "--t-head", "--t-title"].map((v) => {
     probe.style.fontSize = `var(${v})`;
     return parseFloat(getComputedStyle(probe).fontSize);
   });
@@ -123,8 +123,8 @@ function judge(measureType) {
       else if (px <= steps[6] + 0.6 && !steps.some((v) => Math.abs(v - px) < 0.6)) out.size.push([`${Math.round(px * 100) / 100}px`, word]);
     }
     const bg = ground(e);
-    const onInk = bg && near(bg, token(e, "--ink")), onRed = bg && near(bg, token(e, "--rubric"));
-    const ok = (onInk ? ["--bg", "--ink-2-on-ink"] : onRed ? ["--bg"] : ["--ink", "--ink-2", "--ink-3", "--rubric"]).map((v) => token(e, v));
+    const onInk = bg && near(bg, token(e, "--ink")), onRed = bg && near(bg, token(e, "--accent"));
+    const ok = (onInk ? ["--bg", "--ink-2-on-ink"] : onRed ? ["--bg"] : ["--ink", "--ink-2", "--ink-3", "--accent"]).map((v) => token(e, v));
     const colour = rgba(s.color);
     if (!ok.some((c) => near(c, colour))) out.colour.push([`${show(colour)}${onInk ? " on the ink" : onRed ? " on the red" : ""}`, word]);
   }
@@ -144,9 +144,9 @@ function judge(measureType) {
 
 for (const theme of ["paper", "night"]) {
   for (const [w, h] of [[1440, 900], [390, 844]]) {
-    for (const s of SCREENS) {
+    for (const s of SCREENS.filter(forWidth(w))) {
       const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: "reduce", hasTouch: w < 500, isMobile: w < 500 });
-      await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes });
+      await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes, words: s.words });
       if (process.env.PROVE_CSS) await ctx.addInitScript((c) => addEventListener("load", () => document.head.append(Object.assign(document.createElement("style"), { textContent: c }))), process.env.PROVE_CSS);
       const page = await ctx.newPage();
       const at = `${s.name} ${w}px ${theme}`;
