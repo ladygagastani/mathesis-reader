@@ -4,7 +4,7 @@
  * analyses for the work start loading with the texts, so the first look-up seldom waits for them. (Starting them after the texts
  * was measured on a slow phone, scripts/weigh.mjs: the Greek showed no sooner, and the first look-up was slower.)
  *
- * A private text (w=mine:<id>) comes from the database instead, for its signed-in owner only, and becomes a book the same way the
+ * A private text (w=mine:<id>) comes from the database instead, only on a device that holds a sync code, and becomes a book the same way the
  * old app made one (lib/mine/mine.ts). Its words are looked up in the analyses of the work it names (its urn), if it names one.
  */
 import { greekEditions, loadCatalog, translations, type CatAuthor, type CatText, type CatWork } from "@/lib/catalog";
@@ -15,7 +15,7 @@ import type { Placed } from "@/lib/tei/align";
 import type { TeiDoc } from "@/lib/tei/types";
 import { loadWordPack } from "@/lib/lookup/words";
 import { loadSyntax } from "@/lib/syntax";
-import { getPrivate, hasSavedSession } from "@/lib/account";
+import { getPrivate, savedCode } from "@/lib/sync";
 import { isMine, mineBook, mineId, mineParsed } from "@/lib/mine/mine";
 import { hasPublished, workOf } from "@/lib/mine/private-translations";
 
@@ -29,13 +29,13 @@ export interface Book {
   placed: Placed[] | null;
   /** the work whose word analyses the look-up reads */
   lookupWork: string;
-  /** a private text: only its owner can see it */
+  /** a private text: only a synced device can see it */
   private: boolean;
 }
 
 export class NoSuchBook extends Error {}
-/** A private text, asked for by someone not signed in on this browser. */
-export class SignInFirst extends Error {}
+/** A private text, asked for on a device that holds no sync code. */
+export class SyncFirst extends Error {}
 
 function prefetch(work: string) {
   loadWordPack(work).catch(() => null);
@@ -57,9 +57,10 @@ export async function openBook(workId: string): Promise<Book> {
 }
 
 async function openPrivate(workId: string): Promise<Book> {
-  if (!hasSavedSession()) throw new SignInFirst("Sign in to open your private texts.");
-  const got = await getPrivate(mineId(workId));
-  if (got.state === "missing") throw new NoSuchBook("There is no private text with this name in your account.");
+  const code = savedCode();
+  if (!code) throw new SyncFirst("Sync this device to open your private texts.");
+  const got = await getPrivate(code, mineId(workId));
+  if (got.state === "missing") throw new NoSuchBook("There is no private text with this name.");
   if (got.state === "broken") throw new NoSuchBook(`This private text no longer passes the check: ${got.problems.join(" ")}`);
   const stored = got.doc;
   const lookupWork = workOf(stored.urn)?.work ?? workId;

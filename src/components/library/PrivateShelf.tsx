@@ -1,35 +1,35 @@
 "use client";
 /**
- * The owner's private texts, at the top of the library once signed in (SPEC.md, "Sign-in and private texts"). Nothing shows for
- * anyone else, and the database gives them nothing: only the owner can read the table private_translations.
+ * The owner's private texts, at the top of the library on a synced device (SPEC.md, "Sync and private texts"). Nothing shows for
+ * a device without a sync code, and the database gives nothing for a code it does not know.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
-import { listPrivate, trouble, useAccount, type PrivateSummary } from "@/lib/account";
+import { listPrivate, trouble, useSyncCode, type PrivateSummary } from "@/lib/sync";
 import { mineHref } from "@/lib/mine/mine";
 import styles from "./Library.module.css";
 
 export default function PrivateShelf() {
-  const { email } = useAccount();
+  const code = useSyncCode();
   const [got, setGot] = useState<{ list?: PrivateSummary[]; error?: string }>({});
   useEffect(() => {
-    if (!email) return;
+    if (!code) return;
     let live = true;
-    listPrivate().then((list) => { if (live) setGot({ list }); }, (e) => { if (live) setGot({ error: trouble(e) }); });
+    listPrivate(code).then((list) => { if (live) setGot({ list }); }, (e) => { if (live) setGot({ error: trouble(e) }); });
     return () => { live = false; };
-  }, [email]);
-  if (!email) return null;
+  }, [code]);
+  if (!code) return null;
 
   return (
     <section className={styles.private} aria-labelledby="private-texts">
       <div className={styles.partHead}>
         <h2 id="private-texts" className={styles.partName}>Your private texts</h2>
-        <span className={styles.partCount}><Icon name="lock" /> Only you can see these</span>
+        <span className={styles.partCount}><Icon name="lock" /> Only synced devices see these</span>
       </div>
       {!got.list && !got.error && <p className="muted" aria-busy="true">Opening your texts…</p>}
       {got.error && <p className={styles.status}>{got.error}</p>}
-      {got.list && !got.list.length && <p className={styles.status}>You have no private texts in this account.</p>}
+      {got.list && !got.list.length && <p className={styles.status}>There are no private texts yet.</p>}
       {got.list && got.list.length > 0 && (
         <ul className={styles.shelves}>
           {got.list.map((t) => (

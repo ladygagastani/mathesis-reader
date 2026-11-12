@@ -12,7 +12,7 @@ import { loadAuthorNames, titleCaps } from "@/lib/authors";
 import { describe } from "@/lib/catalog";
 import { lookupPlace, type LookupPlace } from "@/lib/lookup/placement";
 import type { WordAt } from "@/lib/lookup/lookup";
-import { openBook, SignInFirst, type Book } from "@/lib/reader/book";
+import { openBook, SyncFirst, type Book } from "@/lib/reader/book";
 import type { Columns } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
 import { alignChunk, type Row } from "@/lib/tei/align";
@@ -109,7 +109,7 @@ export default function Reader() {
   const router = useRouter();
   const workId = params.get("w") ?? "";
   const { columns } = useSettings();
-  const [got, setGot] = useState<{ id: string; book?: Book; error?: string; signIn?: boolean }>({ id: "" });
+  const [got, setGot] = useState<{ id: string; book?: Book; error?: string; syncFirst?: boolean }>({ id: "" });
   const [english, setEnglish] = useState<{ page: string; open: Set<string> }>({ page: "", open: new Set() });
   const [chosen, setWord] = useState<{ el: HTMLElement; at: WordAt; keyboard: boolean; page: string } | null>(null);
   const [layer, setLayer] = useState<1 | 2>(1);
@@ -119,7 +119,7 @@ export default function Reader() {
   useEffect(() => {
     if (!workId) return;
     let live = true;
-    openBook(workId).then((book) => { if (live) setGot({ id: workId, book }); }, (e: Error) => { if (live) setGot({ id: workId, error: e.message, signIn: e instanceof SignInFirst }); });
+    openBook(workId).then((book) => { if (live) setGot({ id: workId, book }); }, (e: Error) => { if (live) setGot({ id: workId, error: e.message, syncFirst: e instanceof SyncFirst }); });
     return () => { live = false; };
   }, [workId]);
 
@@ -212,11 +212,11 @@ export default function Reader() {
       </main>
     );
   }
-  if (got.id === workId && got.signIn) {
+  if (got.id === workId && got.syncFirst) {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
-        <p>This is one of your private texts. Sign in to open it.</p>
-        <Link className="btn" href={`/account?next=${encodeURIComponent(`/read?w=${workId}`)}`}><Icon name="sign-in" />Sign in</Link>
+        <p>This is one of your private texts. Sync this device to open it.</p>
+        <Link className="btn" href={`/sync?next=${encodeURIComponent(`/read?w=${workId}`)}`}><Icon name="sync" />Sync this device</Link>
       </main>
     );
   }

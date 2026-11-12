@@ -41,7 +41,7 @@ FONTS AND SOFTWARE
 - EB Garamond (Georg Duffner and Octavio Pardo), GFS Didot (Greek Font Society) and Gentium Book
   Plus (SIL International). SIL Open Font License 1.1. The old site's copies of the arrows and signs
   of EB Garamond and Gentium Book Plus are in src/fonts/, with their licences beside them.
-- Next.js, React, supabase-js: MIT. saxes: ISC.
+- Next.js, React: MIT. saxes: ISC.
 - The icons on the buttons are Lucide's (https://lucide.dev), ISC License, Copyright (c) Lucide
   Contributors 2022, portions Copyright (c) Cole Bemis 2013-2022 as part of Feather (MIT); copied as
   drawings into src/components/Icon.tsx with the licence beside them.

@@ -20,9 +20,11 @@ the sentence.
 3. **The library.** A search field first: an author, a title, or a Greek word in a title. Under it the catalogue,
    always opening as one list of authors A to Z, each with their works; "By kind" groups them by kind of writing. A work
    opens straight into the reader.
-4. **Sign-in and private texts.** You sign in with the existing Supabase project. Once signed in, your private texts
-   (table `private_translations`) appear at the top of the library and open in the same reader. Nobody else sees
-   them, and the app never reads or types your password.
+4. **Sync and private texts.** There is no sign-in, for privacy. A sync code of 20 random letters and digits, made once
+   in the Supabase SQL editor (`supabase/migrations/20261112120000_sync_codes.sql`), is typed on each device under
+   Sync. A synced device shows the private texts (table `private_translations`) at the top of the library, and they open
+   in the same reader. A device without a code sees none of them and never contacts Supabase. The app asks for no email
+   and no password, and the database keeps only a hash of each code.
 
 Not in version 1, with no hooks left for them: forum, map, wiki, lyre, vase studio, census, manuscripts, metre, eras,
 the Android app, photographs, Listen, Echoes, Compare, Find, Share, the Wiktionary look-up.
@@ -45,8 +47,8 @@ Nothing is copied. The app reads, at the moment you need it:
 ## How it is built
 
 The same stack as the old app: Next.js as a static site (pages built ahead of time, no server), React, TypeScript,
-Vitest for tests, Playwright for browser checks, ESLint for lint. Two runtime libraries beyond React and Next:
-`saxes` (reads the texts' XML) and `@supabase/supabase-js` (sign-in, loaded only when you sign in). Zustand,
+Vitest for tests, Playwright for browser checks, ESLint for lint. One runtime library beyond React and Next:
+`saxes` (reads the texts' XML). The private texts are read with two plain requests to the database's functions, without supabase-js. Zustand,
 three.js, OpenSeadragon and abcjs stay behind.
 
 ## Done means

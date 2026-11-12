@@ -36,7 +36,7 @@ if (which === "old") {
       for (const s of SCREENS) {
         if (theme === "night" && !["reader", "look-up", "look-up, more"].includes(s.name)) continue;
         const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: w < 500, hasTouch: w < 500, reducedMotion: "reduce" });
-        await prepare(ctx, { theme, columns: s.columns, signedIn: s.signedIn });
+        await prepare(ctx, { theme, columns: s.columns, synced: s.synced });
         const page = await ctx.newPage();
         await open(page, base, s);
         await page.screenshot({ path: `${out}/${s.name.replace(/[ ,]+/g, "-")}-${name}-${theme}.png` });

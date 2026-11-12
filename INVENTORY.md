@@ -17,7 +17,7 @@ Keep means version 1. Later means undecided until you answer in step 2. Drop mea
 | Aa menu: Greek size, Paper or Night, Greek / Both / English | Keep | Reading comfort. Small. |
 | Reader's foot bar (Library, where you are, Aa, Study) | Keep, without Study | Study holds the tools below, all cut or later. |
 | Library search and catalogue (`/library`, `/search`, `/library/author`) | Keep | Version 1, item 3. |
-| Sign-in (`/account`) | Keep, sign-in only | Needed for private texts. Profiles and forum identity go. |
+| Sign-in (`/account`) | Drop | Replaced by a sync code (`/sync`), for privacy: no email, no password. Profiles and forum identity go. |
 | Private texts (`/library/private`) | Keep | Version 1, item 4. |
 | Settings: Follow device, Paper, Night | Keep | Part of the look (ADR 0008, decision 2). |
 | Admin of translations (`/admin/translations`) | Later | Only if you upload private texts through the app. I will ask. |

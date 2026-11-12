@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 import Colophon from "@/components/Colophon";
 import Masthead from "@/components/Masthead";
-import Account from "@/components/account/Account";
+import Sync from "@/components/sync/Sync";
 
-export const metadata = { title: "Sign in" };
+export const metadata = { title: "Sync" };
 
-export default function AccountPage() {
+export default function SyncPage() {
   return (
     <>
       <Masthead />
-      <Suspense fallback={null}><Account /></Suspense>
+      <Suspense fallback={null}><Sync /></Suspense>
       <Colophon />
     </>
   );
