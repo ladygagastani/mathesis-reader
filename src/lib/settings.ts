@@ -13,8 +13,8 @@ export interface Settings { theme: Theme; greekSize: GreekSize; columns: Columns
 export const DEFAULTS: Settings = { theme: "auto", greekSize: "auto", columns: "greek" };
 export const GREEK_SIZES = { min: 1, max: 2, step: 0.125 } as const;
 export const STORAGE_KEY = "mathesis-reader:settings";
-const THEME_COLOUR = "#f3ece0";
-const THEME_COLOUR_NIGHT = "#1b1814";
+const THEME_COLOUR = "#f4eee3";
+const THEME_COLOUR_NIGHT = "#191612";
 
 const THEMES: readonly Theme[] = ["auto", "paper", "night"];
 const COLUMNS: readonly Columns[] = ["greek", "both", "trans"];

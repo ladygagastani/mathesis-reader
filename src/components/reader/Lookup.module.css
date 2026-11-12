@@ -5,15 +5,15 @@
   position: fixed; z-index: var(--z-panel); display: flex; flex-direction: column;
   background: var(--bg); color: var(--ink); line-height: 1.5; outline: none;
 }
-.lookup:focus-visible { box-shadow: inset 0 0 0 2px var(--rubric); }
+.lookup:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
 
 /* a computer: a window over the right margin, near the top of the window, ending above the foot bar; the text scrolls under it */
 .note {
-  top: calc(env(safe-area-inset-top, 0px) + var(--space-4)); width: var(--margin-note);
+  top: calc(env(safe-area-inset-top, 0px) + var(--space-4)); width: var(--desk);
   max-height: calc(100dvh - env(safe-area-inset-top, 0px) - var(--space-7) - 2 * var(--space-4));
   overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
-  padding: 0 var(--space-5) var(--space-5); font-size: var(--step--1);
-  box-shadow: var(--rule-box), -24px 0 48px -40px var(--shadow);
+  padding: 0 var(--space-5) var(--space-5); font-size: var(--t-small);
+  box-shadow: var(--rule-box);
   animation: from-right var(--dur-slow) var(--ease) backwards;
 }
 @keyframes from-right { from { opacity: 0; translate: var(--space-6) 0; } }
@@ -24,7 +24,7 @@
    the meaning and the form both show without scrolling; a hairline along its top; "More about it" makes it tall */
 .sheet {
   left: 0; right: 0; bottom: 0; min-height: clamp(180px, 25dvh, 400px); max-height: 45dvh;
-  box-shadow: 0 -1px 0 var(--rule), var(--shadow-sheet);
+  box-shadow: 0 -1px 0 var(--rule);
   animation: sheet-up 0.5s var(--ease) backwards;
 }
 .sheet[data-layer="2"] { height: 70dvh; max-height: none; }
@@ -44,18 +44,18 @@
 .pw {
   flex: 1; min-width: 0; margin: 0; font-family: var(--f-greek); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   /* one line: a long word is set smaller to fit, never broken (--chars: its letters) */
-  font-size: max(var(--step-1), calc(var(--step-3) * min(1, 9.5 / var(--chars, 1)))); line-height: calc(1.1 * var(--step-3));
+  font-size: max(var(--t-body), calc(var(--t-head) * min(1, 9.5 / var(--chars, 1)))); line-height: calc(1.1 * var(--t-head));
 }
 /* in the sheet the word is a size smaller, so the card's lines have the room (the old sheet's) */
-.sheet .pw { font-size: var(--step-2); line-height: 1.2; }
-.note[data-layer="2"] .pw { font-size: max(var(--step-1), calc(var(--step-2) * min(1, 9 / var(--chars, 1)))); line-height: calc(1.1 * var(--step-2)); }
-.x:global(.icon-btn) { min-width: var(--space-6); width: var(--space-6); height: var(--space-6); font-size: var(--step-1); }
+.sheet .pw { font-size: var(--t-lead); line-height: 1.2; }
+.note[data-layer="2"] .pw { font-size: max(var(--t-body), calc(var(--t-lead) * min(1, 9 / var(--chars, 1)))); line-height: calc(1.1 * var(--t-lead)); }
+.x:global(.icon-btn) { min-width: var(--space-6); width: var(--space-6); height: var(--space-6); font-size: var(--t-body); }
 @media (pointer: coarse) { .x:global(.icon-btn) { width: var(--tap); height: var(--tap); } }
 .back:global(.text-btn) {
   flex: none; display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--space-6);
-  padding-inline: var(--space-2); margin-left: calc(-1 * var(--space-2)); font-size: var(--step-0); color: var(--ink-2); text-decoration: none;
+  padding-inline: var(--space-2); margin-left: calc(-1 * var(--space-2)); font-size: var(--t-ui); color: var(--ink-2); text-decoration: none;
 }
-@media (hover: hover) { .back:global(.text-btn):hover { color: var(--rubric); } }
+@media (hover: hover) { .back:global(.text-btn):hover { color: var(--accent); } }
 @media (pointer: coarse) { .back:global(.text-btn) { min-height: var(--tap); padding-inline: var(--space-3); margin-left: calc(-1 * var(--space-3)); } }
 
 .body { display: grid; align-content: start; gap: var(--space-3); }
@@ -63,36 +63,36 @@
 /* layer one */
 .card { display: grid; gap: var(--space-2); align-content: start; }
 /* the kind of word in the rubric's small capitals, then the form tapped in the Greek face */
-.kind { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-2); font-size: var(--step--1); line-height: 1.4; color: var(--ink-2); }
-.kindName { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.14em; text-transform: uppercase; color: var(--rubric); }
+.kind { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-2); font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
+.kindName { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 .tapped { color: var(--ink); }
 /* the core list's full heading: the genitive and article, or the principal parts */
-.heading { font-family: var(--f-greek); font-size: var(--step-0); line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; }
+.heading { font-family: var(--f-greek); font-size: var(--t-ui); line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; }
 /* the meaning is never smaller than the Greek it explains */
-.meaning { font: 400 var(--step-2) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; font-size: max(var(--step-2), var(--greek-size)); }
+.meaning { font: 400 var(--t-lead) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; font-size: max(var(--t-lead), var(--greek-size)); }
 /* the grammar, one word to a part, each in a hairline frame */
 .parts { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: var(--space-1) 0 0; padding: 0; list-style: none; }
 .parts li {
-  font-family: var(--f-label); font-size: var(--step--2); line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);
-  padding: 0.45em 0.7em 0.4em; border: 1px solid var(--rule); border-radius: 999px; background: var(--bg-2);
+  font-family: var(--f-label); font-size: var(--t-label); line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);
+  padding: 0.45em 0.7em 0.4em; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: transparent;
 }
-.role { font-size: var(--step-0); line-height: 1.4; color: var(--ink-2); }
+.role { font-size: var(--t-ui); line-height: 1.4; color: var(--ink-2); }
 .gov { font-family: var(--f-greek); color: var(--ink); }
-.unsure { font-size: var(--step--1); font-style: italic; color: var(--ink-2); }
+.unsure { font-size: var(--t-small); font-style: italic; color: var(--ink-2); }
 /* how common the word is: a quiet line under a short rule */
 .facts {
   display: flex; flex-wrap: wrap; gap: 0.15em var(--space-4); margin-top: var(--space-1); padding-top: var(--space-2);
-  border-top: 1px solid var(--rule); font-size: var(--step--1); line-height: 1.4; color: var(--ink-2);
+  border-top: 1px solid var(--rule); font-size: var(--t-small); line-height: 1.4; color: var(--ink-2);
 }
 .facts span { display: inline-flex; align-items: baseline; gap: 0.5em; }
-.facts span::before { content: ""; flex: none; width: 0.35em; height: 0.35em; border-radius: 50%; background: var(--rubric); translate: 0 -0.15em; }
+.facts span::before { content: ""; flex: none; width: 0.35em; height: 0.35em; border-radius: 50%; background: var(--accent); translate: 0 -0.15em; }
 
 /* Previous, Next and More about it */
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4); }
 .row :global(.text-btn) { display: inline-flex; align-items: center; gap: var(--space-1); }
 .step:global(.text-btn) { color: var(--ink-2); text-decoration: none; }
-@media (hover: hover) { .step:global(.text-btn):hover { color: var(--rubric); } }
-.more:global(.text-btn) { margin-left: auto; color: var(--rubric); }
+@media (hover: hover) { .step:global(.text-btn):hover { color: var(--accent); } }
+.more:global(.text-btn) { margin-left: auto; color: var(--accent); }
 .more:global(.text-btn):disabled { opacity: 0.45; cursor: default; }
 @media (pointer: coarse) { .row :global(.text-btn) { min-height: var(--tap); padding-inline: var(--space-1); } }
 
@@ -100,24 +100,24 @@
 .second { display: grid; gap: var(--space-3); animation: ink var(--dur) var(--ease) backwards; }
 .second > * + * { padding-top: var(--space-4); box-shadow: var(--rule-over); }
 .recap { display: grid; gap: var(--space-1); }
-.recapMeaning { font: 400 var(--step-1) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; }
+.recapMeaning { font: 400 var(--t-body) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; }
 .sec { display: grid; gap: var(--space-2); }
-.sec :global(h3.label) { font-size: var(--step--2); letter-spacing: 0.16em; color: var(--ink-3); }
+.sec :global(h3.label) { font-size: var(--t-label); letter-spacing: 0.08em; color: var(--ink-3); }
 .lsj { display: grid; gap: var(--space-2); line-height: 1.55; }
 .lsj[data-clip] { max-height: calc(6 * 1.55em + var(--space-2)); overflow: hidden; }
 .lsj[data-clipped] { mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 2.5em), transparent); }
-.senseN { font-family: var(--f-label); color: var(--rubric); }
-.cite { color: var(--ink-2); text-decoration-color: var(--rubric); text-underline-offset: 2px; }
-@media (hover: hover) { .cite:hover { color: var(--rubric); } }
+.senseN { font-family: var(--f-label); color: var(--accent); }
+.cite { color: var(--ink-2); text-decoration-color: var(--accent); text-underline-offset: 2px; }
+@media (hover: hover) { .cite:hover { color: var(--accent); } }
 .quietBtn:global(.text-btn) { justify-self: start; }
 @media (pointer: coarse) { .quietBtn:global(.text-btn) { min-height: var(--tap); } }
-.fine { font-size: var(--step--2); color: var(--ink-2); }
+.fine { font-size: var(--t-label); color: var(--ink-2); }
 /* Wiktionary: each part of speech under its name, the senses numbered in the rubric, an example indented under its sense */
 .wsense { display: grid; gap: var(--space-1); }
-.wpos { font-family: var(--f-label); font-size: var(--step--2); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.wpos { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
 .wlist { display: grid; gap: var(--space-1); margin: 0; padding-left: 1.6em; }
-.wlist li::marker { font-family: var(--f-label); font-size: 0.85em; color: var(--rubric); }
-.wnote { display: block; margin-top: 0.15em; padding-left: var(--space-2); border-left: 1px solid var(--rule); font-size: var(--step--1); font-style: italic; color: var(--ink-2); }
+.wlist li::marker { font-family: var(--f-label); font-size: 0.85em; color: var(--accent); }
+.wnote { display: block; margin-top: 0.15em; padding-left: var(--space-2); border-left: 1px solid var(--rule); font-size: var(--t-small); font-style: italic; color: var(--ink-2); }
 /* the word's family: where it comes from, then the words built on it as a run of words */
 .etym { line-height: 1.5; color: var(--ink); }
 .kin { display: grid; gap: var(--space-1); }

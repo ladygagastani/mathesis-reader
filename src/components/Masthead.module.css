@@ -5,7 +5,7 @@
   content: ""; position: absolute; left: max(var(--gutter), env(safe-area-inset-left, 0px)); right: max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 .mast::before { bottom: 3px; border-bottom: 1px solid var(--rule); }
-.mast::after { bottom: 0; border-bottom: 1px solid var(--rule-2); }
+.mast::after { bottom: 0; border-bottom: 1px solid var(--rule); }
 .in { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 68px; padding-block: var(--space-2); }
 .links { display: flex; align-items: center; gap: var(--space-3); }
 /* a narrow phone: Saved and Sync as words only; the private texts keep their lock, which is all their button shows there */

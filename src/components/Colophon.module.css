@@ -2,6 +2,6 @@
 .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-6); }
 .foot::before { content: ""; flex-basis: 100%; border-top: 1px solid var(--ink); }
 .foot { padding-bottom: var(--space-7); margin-top: var(--space-7); }
-.name { font: 400 var(--step-1) / 1.2 var(--f-title); color: var(--ink); }
-.link { display: inline-flex; align-items: center; min-height: var(--tap); font-size: var(--step--1); color: var(--ink-2); text-decoration-color: var(--link-line); text-underline-offset: 0.2em; }
-@media (hover: hover) { .link:hover { color: var(--rubric); text-decoration-color: var(--rubric); } }
+.name { font: 400 var(--t-body) / 1.2 var(--f-title); color: var(--ink); }
+.link { display: inline-flex; align-items: center; min-height: var(--tap); font-size: var(--t-small); color: var(--ink-2); text-decoration-color: var(--link-line); text-underline-offset: 0.2em; }
+@media (hover: hover) { .link:hover { color: var(--accent); text-decoration-color: var(--accent); } }

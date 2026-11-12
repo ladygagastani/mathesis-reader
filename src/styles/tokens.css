@@ -1,75 +1,70 @@
 /* =====================================================================
-   The design tokens of the printed page (the old app's ADR 0008 and DESIGN.md), copied with their values unchanged from its
-   web/src/styles/tokens.css. Only the tokens of features this app does not have were left out (maps, pens, parchment, colour by
-   case, the stone look's older names); the full file is in _archive/old-look/tokens-full.css.
+   The design tokens (DESIGN.md). Two layers: the primitives (the paper's and the night page's colours, spacing, type sizes),
+   then the roles every stylesheet uses (--bg, --ink, --accent, --rule…). Components use only the roles.
+   scripts/check-design.mjs stops other colours, sizes and typefaces creeping in.
 
-   Paper or Night follows the device: Paper in light mode, Night in dark mode, unless Aa chooses one (data-theme="paper" or
-   "night" on <html>, written by lib/settings.ts). Two layers: the primitives (the paper's and the night page's colours, the
-   spacing steps, the type sizes), then the roles every stylesheet uses (--bg, --ink, --rubric, --rule…). Components use only
-   the roles. scripts/check-design.mjs stops other colours, sizes and typefaces creeping in.
+   Paper or Night follows the device unless one is chosen: data-theme="paper" or "night" on <html>, written by lib/settings.ts.
    ===================================================================== */
 
 :root {
   /* the paper */
-  --paper: #f3ece0;
-  --paper-2: #e9dfcd;
-  --paper-ink: #1e1a15;
-  --paper-ink-2: #41382f;  /* captions: 9.8 : 1 on the paper */
-  --paper-ink-3: #4f4336;  /* small print and credits: 8.2 : 1 on the paper */
-  --paper-rubric: #a3301a; /* red: headings' numbers, links, the chosen thing */
-  --paper-word-on: #e4d8c2;  /* the word looked up: a soft tone of the paper behind it */
-  /* the colours of notes (Notes and Saved): earth pigments, each at least 4.5 : 1 on the paper */
+  --paper: #f4eee3;
+  --paper-surface: #ece4d5;
+  --paper-ink: #1f1b16;    /* 14.8 : 1 on the paper */
+  --paper-ink-2: #4a4036;  /* 8.8 : 1 */
+  --paper-ink-3: #6b5d4d;  /* 5.5 : 1, 5 : 1 on the surface */
+  --paper-accent: #a3301a; /* 6.1 : 1 */
+  --paper-word-on: #e5d7bc;
   --paper-note-red: #a3301a;
   --paper-note-ochre: #855a0c;
   --paper-note-green: #3d6635;
   --paper-note-blue: #2d5585;
   /* the night page */
-  --night: #1b1814;
-  --night-2: #24201a;
-  --night-ink: #ebe1cf;
-  --night-ink-2: #d2c4ab;  /* 10.3 : 1 on the night page */
-  --night-ink-3: #bdad93;  /* 8 : 1 */
-  --night-rubric: #e0805f;
-  --night-word-on: #3a3127;
+  --night: #191612;
+  --night-surface: #221e19;
+  --night-ink: #ece3d3;    /* 14.2 : 1 */
+  --night-ink-2: #cdbfa8;  /* 10 : 1 */
+  --night-ink-3: #a89a84;  /* 6.5 : 1, 6 : 1 on the surface */
+  --night-accent: #e0805f; /* 6.4 : 1 */
+  --night-word-on: #3c3328;
   --night-note-red: #e0805f;
   --night-note-ochre: #d9ad55;
   --night-note-green: #93c283;
   --night-note-blue: #93b5e3;
 
-  /* spacing: 4, 8, 12, 16, 24, 36, 56 and 80 px */
+  /* spacing: 4, 8, 12, 16, 24, 32, 48 and 64 px */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
-  --space-6: 36px;
-  --space-7: 56px;
-  --space-8: 80px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
   --hair: 1px;
   --hair-2: 2px;
 
-  /* type sizes: a book's, its text set in EB Garamond at 19 px on a computer and 18 px on a phone. Every size of words is one of
-     these; only lettering in GFS Didot (titles, numerals) and the Greek being read stand outside them. */
-  --step--2: 0.75rem;                         /* small capitals spaced wide: labels */
-  --step--1: 0.875rem;                        /* captions, credits, small print */
-  --step-0: 1rem;                             /* a quieter line beside the text: a note, a hint, a gloss */
-  --step-sub: 1.125rem;                       /* a small heading, a row's name */
-  --step-text: 1.1875rem;                     /* the text itself (18 px on phones and narrow screens: globals.css) */
-  --step-1: 1.25rem;                          /* a lede */
-  --step-2: 1.6rem;                           /* h3 */
-  --step-3: clamp(1.9rem, 3.4vw, 2.6rem);     /* h2 */
-  --step-4: clamp(2.8rem, 6.6vw, 5.6rem);     /* a page's title */
-  /* the Greek being read, until a size is chosen: 18 px on a phone 390 px wide, growing with the window to 26 px from 1100 px on.
-     The cap is in px: above 1600 px the rem itself grows (--root-grow). A chosen size is --greek-chosen (lib/settings.ts). */
-  --greek-auto: clamp(1.125rem, 0.85rem + 1.13vw, 26px);
+  /* type sizes (DESIGN.md, "Type"). Every size of words is one of these, except the Greek being read at the reader's own size
+     and the title page's lettering in GFS Didot. */
+  --t-label: 0.8125rem;   /* 13 px: small-capital labels, counts */
+  --t-small: 0.9375rem;   /* 15 px: second lines, credits, the look-up's grammar and sources */
+  --t-ui: 1.0625rem;      /* 17 px: buttons, menus, list rows, the bar */
+  --t-body: 1.1875rem;    /* 19 px: English prose, the English beside the Greek */
+  --t-lead: 1.5rem;       /* 24 px: the look-up's meaning, a part's heading */
+  --t-head: 2rem;         /* 32 px: the look-up's dictionary form, a page's second heading */
+  --t-title: 2.5rem;      /* 40 px: a page's title */
+  --t-display: 4rem;      /* 64 px: the title page only */
+  /* the Greek being read, until a size is chosen: 24 px on a computer, smaller on a narrow window. A chosen size is
+     --greek-chosen (lib/settings.ts). */
+  --greek-auto: clamp(1.125rem, 0.85rem + 1.13vw, 24px);
 
-  /* typefaces, three and no more: EB Garamond for English, GFS Didot for titles, Gentium Book Plus for Greek. Each list starts
-     with the typefaces' own arrows and signs (the --font-*-signs files), so no device draws "→" or "×" in a font of its own. */
+  /* typefaces, three and no more: EB Garamond for English, GFS Didot for the title page, Gentium Book Plus for Greek. Each list
+     starts with the typefaces' own arrows and signs (the --font-*-signs files), so no device draws "→" or "×" in a font of its own. */
   --face-garamond: var(--font-garamond-signs), var(--font-gentium-signs), var(--font-garamond), "EB Garamond", var(--font-gentium), Georgia, serif;
   --face-didot: var(--font-gentium-signs), var(--font-garamond-signs), var(--font-didot), "GFS Didot", var(--font-gentium), serif;
   --face-gentium: var(--font-gentium-signs), var(--font-garamond-signs), var(--font-gentium), "Gentium Book Plus", var(--font-garamond), serif;
 
-  /* motion: one movement only, the ink-in; then nothing moves. Reduced motion turns it off (globals.css). */
+  /* motion: one movement only, the ink-in. Reduced motion turns it off (globals.css). */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ink-in: 1.4s;
   --ink-step: 0.12s;
@@ -77,71 +72,73 @@
   --dur: 0.4s;
   --dur-slow: 0.6s;
 
-  /* the small triangle of a fold (pointing right while shut, down when open), drawn rather than set in type */
+  /* the small triangle of a fold (pointing right while shut, down when open) */
   --tri-size: 0.46em;
   --tri-right: polygon(0 0, 100% 50%, 0 100%);
   --tri-down: polygon(0 0, 100% 0, 50% 100%);
 
-  /* shape: hairlines and square corners, as a printed page has */
+  /* shape: hairlines and square corners */
   --radius: 0px;
 
   /* layers */
-  --z-foot: 46;
-  --z-marks: 47;
   --z-panel: 40;
-  --shadow-sheet: 0 -8px 24px -16px var(--shadow);
+  --z-bar: 46;
+  --z-marks: 47;
+  --z-menu: 48;
 
-  /* layout: the type area fills a computer's screen inside a margin of a twentieth of the window; running text keeps its measure */
-  --gutter: clamp(16px, 4vw, 56px);
-  --maxw: 1760px;
-  --measure: 30em;
+  /* layout */
+  --gutter: 32px;
+  --maxw: 1440px;
+  --bar-h: 56px;
+  --measure: 34em;
   --root-grow: clamp(100%, calc(100% + (100vw - 1600px) / 160), 112.5%);
-  --tap: 44px;
-  /* the reader's margin on a computer, where the look-up's window stands */
-  --margin-note: 300px;
-  /* the padding that makes a line of text a finger's target, --tap tall (half a pixel more each side: the browser rounds down) */
+  /* a control's least height: 40 px with a mouse, 44 px under a finger */
+  --tap: 40px;
+  /* the reader: the passage numbers' rail, the Greek's measure, the desk where the look-up stands */
+  --rail: 56px;
+  --desk: 360px;
   --tap-pad: calc((var(--tap) - 1lh) / 2 + 0.5px);
 }
-@media (min-width: 1400px) { :root { --gutter: 5vw; } }
+@media (pointer: coarse) { :root { --tap: 44px; } }
+@media (max-width: 760px) { :root { --gutter: 16px; } }
 
 /* ---------------------------------------------------------- the roles: Paper */
 :root,
 :root[data-theme="paper"] {
   --bg: var(--paper);
-  --bg-2: var(--paper-2);
+  --surface: var(--paper-surface);
   --word-on: var(--paper-word-on);
   --ink: var(--paper-ink);
   --ink-2: var(--paper-ink-2);
   --ink-3: var(--paper-ink-3);
-  --rubric: var(--paper-rubric);
+  --accent: var(--paper-accent);
   --note-red: var(--paper-note-red); --note-ochre: var(--paper-note-ochre); --note-green: var(--paper-note-green); --note-blue: var(--paper-note-blue);
-  --rule: rgba(30, 26, 21, 0.2);
-  --rule-2: rgba(30, 26, 21, 0.1);
-  --shadow: rgba(40, 28, 14, 0.18);
+  --rule: rgb(31 27 22 / 0.16);
+  --rule-strong: rgb(31 27 22 / 0.6);
   color-scheme: light;
 }
 
 /* ---------------------------------------------------------- the roles: Night (the device's dark mode, or chosen) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="paper"]) {
-    --bg: var(--night); --bg-2: var(--night-2); --word-on: var(--night-word-on);
+    --bg: var(--night); --surface: var(--night-surface); --word-on: var(--night-word-on);
     --ink: var(--night-ink); --ink-2: var(--night-ink-2); --ink-3: var(--night-ink-3);
-    --rubric: var(--night-rubric);
+    --accent: var(--night-accent);
     --note-red: var(--night-note-red); --note-ochre: var(--night-note-ochre); --note-green: var(--night-note-green); --note-blue: var(--night-note-blue);
-    --rule: rgba(235, 225, 207, 0.2); --rule-2: rgba(235, 225, 207, 0.1); --shadow: rgba(0, 0, 0, 0.5);
+    --rule: rgb(236 227 211 / 0.14); --rule-strong: rgb(236 227 211 / 0.55);
     color-scheme: dark;
   }
 }
 :root[data-theme="night"] {
-  --bg: var(--night); --bg-2: var(--night-2); --word-on: var(--night-word-on);
+  --bg: var(--night); --surface: var(--night-surface); --word-on: var(--night-word-on);
   --ink: var(--night-ink); --ink-2: var(--night-ink-2); --ink-3: var(--night-ink-3);
-  --rubric: var(--night-rubric);
+  --accent: var(--night-accent);
   --note-red: var(--night-note-red); --note-ochre: var(--night-note-ochre); --note-green: var(--night-note-green); --note-blue: var(--night-note-blue);
-  --rule: rgba(235, 225, 207, 0.2); --rule-2: rgba(235, 225, 207, 0.1); --shadow: rgba(0, 0, 0, 0.5);
+  --rule: rgb(236 227 211 / 0.14); --rule-strong: rgb(236 227 211 / 0.55);
   color-scheme: dark;
 }
 
-/* ---------------------------------------------------------- lines and chosen things, made from the roles */
+/* ---------------------------------------------------------- made from the roles */
 :root {
   --rule-under: inset 0 -1px 0 var(--rule);
   --rule-over: inset 0 1px 0 var(--rule);
@@ -154,7 +151,6 @@
   /* the main button: ink with paper letters; under the hand it turns red */
   --btn-bg: var(--ink);
   --btn-ink: var(--bg);
-  /* the fine line under a link at rest; under the hand it turns red with the words */
   --link-line: color-mix(in srgb, var(--ink) 45%, transparent);
 
   /* type roles */
