@@ -144,12 +144,17 @@ and "All 37 works". The search marks the letters it matched. The first author is
 - **Both:** Greek and English side by side, each 30 em, their passages aligned at the top of each row.
 - **English:** one column at `--t-body`.
 - The look-up's two layers stay. Layer two drops the meaning and grammar it repeated and opens on LSJ.
-- The bar's Notes menu lists the book's notes. A note opened from a mark or from Notes opens in the look-up's panel.
+- The bar's Notes menu starts with "Save this book" and "Save passage 17a" (the passage at the top of the screen). Under them
+  it lists the book's notes and saved places, the whole book first, each with Remove, and Undo after a removal. A note opened
+  from a mark, from Notes or from a passage's number opens in the look-up's panel to edit.
+- A passage's number in the rail is a button: it saves the passage, or opens its note. It looks like the number until the
+  pointer is on it, when it is underlined.
 
 ### Saved
 
-Two columns. On the left, a sticky list of books with a count each, which filters the right. On the right, each note
-with the Greek it is on (the word, or the first line of the passage), its text, and Open, Edit, Remove.
+Two columns. On the left, a sticky list of books with a count each, which filters the right, then Saved books and Saved
+words. On the right, each note with the Greek it is on (the word, or the first line of the passage), its text, and Open,
+Edit, Remove. A book or passage saved without a note says so in small italic, and offers "Add a note" in place of Edit.
 
 ### Sync
 

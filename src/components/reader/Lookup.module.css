@@ -129,7 +129,7 @@
   text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px;
 }
 @media (hover: hover) { .kinWord:hover { color: var(--accent); } }
-@media (pointer: coarse) { .kinWord { min-height: var(--tap); } }
+@media (pointer: coarse) { .kinWord { min-height: var(--tap); min-width: var(--tap); } }
 
 /* other dictionaries: a link each, and what it holds */
 .dicts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }

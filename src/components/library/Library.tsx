@@ -1,7 +1,7 @@
 "use client";
 /**
  * The library (SPEC.md, "The library"; DESIGN.md, "Library"): a short head, the search, then every work. Above the list: the books
- * you are reading (lib/reader/place.ts) and, folded, where to begin. The list opens as one A to Z list of authors (the owner,
+ * you are reading (lib/reader/place.ts), the books you saved (the reader's Notes) and, folded, where to begin. The list opens as one A to Z list of authors (the owner,
  * 2026-11-12), each author a row with their works beside them; it can also list the titles A to Z, or group the authors by kind of
  * writing or by period. With English or Greek only, a period, a dialect and how familiar the words are narrow it. Each work says
  * its Greek title, kind, date, length and vocabulary (lib/library/facts.ts). A rail of letters beside an A to Z list jumps to a
@@ -19,6 +19,8 @@ import { AZ_OTHER } from "@/lib/library/az";
 import { beginnings, bestShelf, byKind, byLetter, byPeriod, byTitle, shelves, type Shelf, type Show, type TitlePart } from "@/lib/library/catalogue";
 import { centuries, commonShare, dialects, length, loadDifficulty, passes, PERIODS, UNDATED, VOCAB, vocabOf, type Filters, type WorkFacts } from "@/lib/library/facts";
 import { loadAuthorsMeta, loadWorksMeta, workKinds, type AuthorMeta } from "@/lib/library/kinds";
+import { shown as notRemoved } from "@/lib/notes/notes";
+import { useNotes } from "@/lib/notes/store";
 import { PLACES_KEY, type Place } from "@/lib/reader/place";
 import { drawableGreek } from "@/lib/greek";
 import { splitMatches } from "@/lib/text-match";
@@ -192,6 +194,9 @@ export default function Library() {
       return Object.entries(all).filter(([, p]) => p && typeof p.at === "string" && typeof p.t === "number").sort((a, b) => b[1].t - a[1].t).slice(0, 4);
     } catch { return []; }
   }, [placesRaw]);
+  // the books saved from the reader's Notes (lib/notes), A to Z
+  const allNotes = useNotes();
+  const saved = useMemo(() => notRemoved(allNotes).filter((n) => n.anchor.kind === "book").sort((a, b) => a.book.localeCompare(b.book)), [allNotes]);
   const beginOpen = useStored(BEGIN_KEY) === "open";
   const railKeys = sort === "az" ? parts.map((p) => p.key) : sort === "titles" ? titleParts.map((p) => p.key) : [];
   const q = query.trim();
@@ -260,6 +265,22 @@ export default function Library() {
                 <Link href={`/read?w=${encodeURIComponent(w)}`} className={styles.readingLink}>
                   <span className={styles.readingBook}>{p.book}</span>
                   <span className={styles.readingAt}>{p.where} · at {p.at}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {saved.length > 0 && !q && (
+        <section className={styles.reading} aria-labelledby="saved-h">
+          <h2 id="saved-h" className="label">Saved books</h2>
+          <ul>
+            {saved.map((n) => (
+              <li key={n.id}>
+                <Link href={`/read?w=${encodeURIComponent(n.work)}`} className={styles.readingLink} style={{ "--accent": `var(--note-${n.colour})` } as React.CSSProperties}>
+                  <span className={styles.readingBook}>{n.book}</span>
+                  {n.text && <span className={styles.readingAt}>{n.text.length > 80 ? `${n.text.slice(0, 79)}…` : n.text}</span>}
                 </Link>
               </li>
             ))}

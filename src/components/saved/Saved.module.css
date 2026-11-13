@@ -50,3 +50,5 @@
 .met { font-size: var(--t-small); color: var(--ink-2); }
 .word .actions { grid-column: 2; }
 @media (max-width: 760px) { .word { grid-template-columns: minmax(0, 1fr); } .word .actions { grid-column: 1; } }
+/* a book or passage saved without a note */
+.bare { margin: 0; font-size: var(--t-small); font-style: italic; color: var(--ink-3); }
