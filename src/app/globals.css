@@ -107,3 +107,7 @@ input { text-overflow: ellipsis; }
 [data-colour="ochre"] { --c: var(--note-ochre); }
 [data-colour="green"] { --c: var(--note-green); }
 [data-colour="blue"] { --c: var(--note-blue); }
+
+/* the narrator's marks (lib/narrator/dom.ts): the sentence being read, and the word being said, found again at a glance */
+::highlight(voice-sentence) { background-color: var(--voice-on); color: var(--ink); }
+::highlight(voice-word) { background-color: var(--word-on); color: var(--ink); text-decoration: underline var(--hair-2) var(--accent); text-underline-offset: 4px; }

@@ -12,7 +12,8 @@ import type { Found } from "@/lib/reader/find";
 import Icon from "@/components/Icon";
 import { GREEK_SIZES, LEADINGS, setSettings, stepLeading, stepSize, type Columns, type Theme } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
-import { placeName, type Note } from "@/lib/notes/notes";
+import type { Note } from "@/lib/notes/notes";
+import NotesMenu from "./NotesMenu";
 import styles from "./ReaderBar.module.css";
 
 export type Open = "" | "aa" | "pages" | "notes" | "keys";
@@ -28,6 +29,9 @@ const KEYS: [keys: string[], what: string][] = [
   [["Enter"], "Look up the word."],
   [["Esc"], "Close the look-up or a menu."],
   [["/"], "Search the library, from any page."],
+  [["l"], "Listen: the English read aloud from where you are. Then l pauses and reads on."],
+  [["[", "]"], "While it reads: the sentence before, the sentence after."],
+  [["{", "}"], "While it reads: the passage before, the passage after."],
   [["?"], "These keys."],
 ];
 
@@ -130,8 +134,8 @@ function shownRem(): number {
   return probe ? parseFloat(getComputedStyle(probe).fontSize) / root : 1.5;
 }
 
-export default function ReaderBar({ title, showTitle, onTop, where, at, pages, page, onPage, hasEnglish, notes, onNote, ask,
-  example, goTo, find, onFound, editions, edition, onEdition, englishes, english, onEnglish }: {
+export default function ReaderBar({ title, showTitle, onTop, where, at, pages, page, onPage, hasEnglish, notes, onNote, here, onSaveBook, onSavePassage, ask,
+  example, goTo, find, onFound, editions, edition, onEdition, englishes, english, onEnglish, listening, onListen }: {
   /** the book: its Greek title, author and English title, and the lock of a private text */
   title: React.ReactNode;
   /** to the top of the page */
@@ -146,6 +150,8 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
   hasEnglish: boolean;
   /** this book's notes, in the order of the book */
   notes: Note[]; onNote: (n: Note) => void;
+  /** the passage at the top of the screen (its unit), asked as the Notes menu opens; saving the book or that passage */
+  here: () => string | null; onSaveBook: () => void; onSavePassage: (unit: string) => void;
   /** a menu the keyboard asks for; n changes with every asking */
   ask: { menu: Open; n: number } | null;
   /** Go to: a reference to show as an example, the way to a passage (a message when there is none), the search of the book */
@@ -153,9 +159,12 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
   /** the Greek editions and the translations to choose from (Text shows a choice only where there is one) */
   editions: TextOption[]; edition: string; onEdition: (v: string) => void;
   englishes: TextOption[]; english: string; onEnglish: (v: string) => void;
+  /** the narrator open, and the way to open or close it (Narrator.tsx); it reads the English, so a book without English has none */
+  listening: boolean; onListen: () => void;
 }) {
   const s = useSettings();
   const [open, setOpen] = useState<Open>("");
+  const [hereNow, setHereNow] = useState<string | null>(null);
   const aaBtn = useRef<HTMLButtonElement>(null);
   const pagesBtn = useRef<HTMLButtonElement>(null);
   const notesBtn = useRef<HTMLButtonElement>(null);
@@ -208,26 +217,25 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
 
           <div className={styles.slot}>
             <button ref={notesBtn} type="button" data-menu-opener="" className={styles.quiet} aria-expanded={open === "notes"} aria-haspopup="dialog"
-              onClick={() => toggle("notes")}><Icon name="note" />Notes{notes.length > 0 && <span className={styles.count}>{notes.length}</span>}</button>
+              onClick={() => { if (open !== "notes") setHereNow(here()); toggle("notes"); }}>
+              <Icon name="note" />Notes{notes.length > 0 && <span className={styles.count}>{notes.length}</span>}
+            </button>
             {open === "notes" && (
               <Menu title="Notes in this book" onClose={onClose} className={styles.notesMenu}>
-                {notes.length === 0 && <p className={styles.empty}>No notes in this book yet. Click a word, then Note, to write one on the word, its line or its passage.</p>}
-                {notes.length > 0 && (
-                  <ol className={styles.pages}>
-                    {notes.map((n) => (
-                      <li key={n.id}>
-                        <button type="button" className={`${styles.pageBtn} ${styles.noteBtn}`} onClick={() => { onClose(false); onNote(n); }}>
-                          <span className={styles.swatch} data-colour={n.colour} aria-hidden="true" />
-                          <span className={styles.noteText}><span className={styles.notePlace}>{placeName(n.anchor)}</span>{n.text}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-                <Link className={styles.allLink} href="/saved">All your notes, in every book<Icon name="next" /></Link>
+                <NotesMenu notes={notes} here={hereNow} onOpen={(n) => { onClose(false); onNote(n); }}
+                  onSaveBook={() => { onClose(false); onSaveBook(); }} onSavePassage={(u) => { onClose(false); onSavePassage(u); }} />
               </Menu>
             )}
           </div>
+
+          {hasEnglish && (
+            <div className={`${styles.slot} ${styles.listenSlot}`}>
+              <button type="button" className={styles.quiet} aria-pressed={listening} onClick={onListen}
+                title={listening ? "Stop listening" : "Listen: the English read aloud from where you are (l)"}>
+                <Icon name="listen" />Listen
+              </button>
+            </div>
+          )}
 
           <div className={styles.slot}>
             <button ref={aaBtn} type="button" data-menu-opener="" className={styles.quiet} aria-expanded={open === "aa"} aria-haspopup="dialog"

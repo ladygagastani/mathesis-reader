@@ -36,10 +36,15 @@ the sentence.
    hash of each code.
 5. **Notes and Saved.** In the look-up, "Note" writes a note on the word, its line of verse, or its passage, in one of
    four colours; selecting words in the text offers a note on them. A note is kept as you write it. "Save word" keeps
-   a word, with its meaning and where it was met. A noted word is underlined in its colour, and a noted line or passage has a bar of it at its left. At
+   a word, with its meaning and where it was met. A whole book, a passage, a line or words selected can also be saved
+   without a note, as favourites. The bar's Notes saves the book or the passage at the top of the screen in one click,
+   and a passage's number in the margin saves that passage or opens its note. Each opens in the note panel at once, to
+   give it a colour or words. A noted word is underlined in its colour, and a noted line or passage has a bar of it at its left. At
    the right edge of the window, a mark for each note stands where the scrollbar's thumb stands when the note is in
-   view, and clicking it jumps there and opens the note. The bar's Notes lists the book's notes. The Saved page
-   lists every note, book by book, to open, edit or remove, and the saved words. Notes stay on the device, and go with the sync code when
+   view, and clicking it jumps there and opens the note. The bar's Notes lists the book's notes and saved places, the
+   book first, with a filter for notes and saved places; one opens in the panel to edit, and Remove has an Undo. The
+   Saved page lists every note, book by book, to open, edit or remove, the saved books, and the saved words. The
+   library lists the saved books under Continue reading. Notes stay on the device, and go with the sync code when
    there is one.
 
 Not in version 1, with no hooks left for them: forum, map, wiki, lyre, vase studio, census, manuscripts, metre, eras,

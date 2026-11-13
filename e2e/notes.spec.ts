@@ -178,3 +178,72 @@ test("with a sync code, a saved word goes to the database beside the notes, and 
   await page.goto("/saved");
   await expect(page.getByRole("region", { name: "Saved words" })).toContainText("λόγος");
 });
+
+test("Notes saves the whole book and a passage; both are edited in the reader, and the book is listed on Saved and in the library", async ({ page }) => {
+  await open(page);
+  const notesMenu = () => page.getByRole("dialog", { name: "Notes in this book" });
+  const book = () => (stored(page) as Promise<{ anchor: { kind: string }; text: string; colour: string; deleted?: true }[]>);
+
+  // the whole book: saved at once, and opened in the panel to give it a colour and words
+  await page.getByRole("button", { name: /^Notes/ }).click();
+  await notesMenu().getByRole("button", { name: "Save this book" }).click();
+  let editor = page.getByRole("complementary", { name: "Your note on the whole book" });
+  await expect(editor).toContainText("Saved: the whole book");
+  expect((await book())[0]).toMatchObject({ anchor: { kind: "book" }, text: "" });
+  await editor.getByRole("radio", { name: "Green" }).click();
+  await editor.getByLabel("Your note").fill("My favourite.");
+  await editor.getByRole("button", { name: "Save the note" }).click();
+  await expect(editor).toHaveCount(0);
+  expect((await book())[0]).toMatchObject({ anchor: { kind: "book" }, text: "My favourite.", colour: "green" });
+
+  // the passage at the top of the screen, saved without words
+  await page.getByRole("button", { name: /^Notes/ }).click();
+  await expect(notesMenu()).toContainText("This book is saved.");
+  await expect(notesMenu().getByRole("button", { name: "Save this book" })).toHaveCount(0);
+  await notesMenu().getByRole("button", { name: /^Save passage / }).click();
+  editor = page.getByRole("complementary", { name: /^Your note on / });
+  await editor.getByRole("button", { name: "Done" }).click();
+  await expect(page.locator("main section[data-noted=passage]")).toHaveCount(1);
+  await expect(marks(page).first()).toHaveAccessibleName(/^Saved: /);
+
+  // the menu lists both, the book first, with a filter; Remove takes one away and Undo puts it back
+  await page.getByRole("button", { name: /^Notes/ }).click();
+  const list = notesMenu().getByRole("list", { name: /Your notes and saved places/ });
+  await expect(list.getByRole("listitem")).toHaveCount(2);
+  await expect(list.getByRole("listitem").first()).toContainText("The whole book");
+  await notesMenu().getByRole("radio", { name: "Saved" }).click();
+  await expect(list.getByRole("listitem")).toHaveCount(1);
+  await expect(list).toContainText("Saved, without a note");
+  await list.getByRole("button", { name: /^Remove the saved / }).click();
+  await expect(page.locator("main section[data-noted]")).toHaveCount(0);
+  await notesMenu().getByRole("button", { name: "Undo" }).click();
+  await expect(page.locator("main section[data-noted=passage]")).toHaveCount(1);
+  await notesMenu().getByRole("button", { name: "Close Notes in this book" }).click();
+
+  // a passage's number in the margin: saves another passage, then opens it again to write on it
+  const number = page.getByRole("button", { name: /^Passage .+: save it, or write a note on it$/ }).nth(2);
+  await number.click();
+  editor = page.getByRole("complementary", { name: "A new note" });
+  await editor.getByRole("button", { name: "Save the passage without a note" }).click();
+  await expect(page.locator("main section[data-noted=passage]")).toHaveCount(2);
+  await number.click();
+  editor = page.getByRole("complementary", { name: /^Your note on / });
+  await expect(editor).toContainText("Saved:");
+  await editor.getByLabel("Your note").fill("Words added in the reader.");
+  await editor.getByRole("button", { name: "Save the note" }).click();
+  expect((await book()).filter((n) => !n.deleted).map((n) => n.text).sort()).toEqual(["", "My favourite.", "Words added in the reader."]);
+
+  // Saved lists the book under Saved books, and opens it in the reader with its note
+  await page.goto("/saved");
+  await page.getByRole("button", { name: /^Saved books/ }).click();
+  const books = page.getByRole("region", { name: "Saved books" });
+  await expect(books).toContainText("Plato, Apology");
+  await expect(books).toContainText("My favourite.");
+  await books.getByRole("link", { name: "Open in the book" }).click();
+  await expect(page).toHaveURL(/w=tlg0059\.tlg002&note=/);
+  await expect(page.getByRole("complementary", { name: "Your note on the whole book" }).getByLabel("Your note")).toHaveValue("My favourite.", { timeout: 30_000 });
+
+  // the library lists it among the saved books
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "Saved books" }).getByRole("link", { name: /Plato, Apology/ })).toBeVisible();
+});

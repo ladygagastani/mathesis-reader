@@ -152,6 +152,8 @@
   --btn-bg: var(--ink);
   --btn-ink: var(--bg);
   --link-line: color-mix(in srgb, var(--ink) 45%, transparent);
+  /* the narrator: a faint red wash behind the sentence being read; the word being said takes --word-on and a red line */
+  --voice-on: color-mix(in srgb, var(--accent) 11%, transparent);
 
   /* type roles */
   --f-greek: var(--face-gentium);
