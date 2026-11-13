@@ -63,6 +63,22 @@ const ICONS = {
   "night": [["path", {d: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],
   // the keys of the keyboard (Lucide "keyboard")
   "keys": [["rect", {width: "20", height: "16", x: "2", y: "4", rx: "2"}], ["path", {d: "M6 8h.01"}], ["path", {d: "M10 8h.01"}], ["path", {d: "M14 8h.01"}], ["path", {d: "M18 8h.01"}], ["path", {d: "M8 12h.01"}], ["path", {d: "M12 12h.01"}], ["path", {d: "M16 12h.01"}], ["path", {d: "M7 16h10"}]],
+  // listen: the English read aloud (Lucide "headphones")
+  "listen": [["path", {d: "M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"}]],
+  // the voice reads on (Lucide "play")
+  "play": [["polygon", {points: "6 3 20 12 6 21 6 3"}]],
+  // the voice stops where it is (Lucide "pause")
+  "pause": [["rect", {x: "14", y: "4", width: "4", height: "16", rx: "1"}], ["rect", {x: "6", y: "4", width: "4", height: "16", rx: "1"}]],
+  // the passage before (Lucide "skip-back")
+  "passage-back": [["polygon", {points: "19 20 9 12 19 4 19 20"}], ["line", {x1: "5", x2: "5", y1: "19", y2: "5"}]],
+  // the passage after (Lucide "skip-forward")
+  "passage-next": [["polygon", {points: "5 4 15 12 5 20 5 4"}], ["line", {x1: "19", x2: "19", y1: "5", y2: "19"}]],
+  // the voice's settings (Lucide "settings-2")
+  "voice": [["path", {d: "M20 7h-9"}], ["path", {d: "M14 17H5"}], ["circle", {cx: "17", cy: "17", r: "3"}], ["circle", {cx: "7", cy: "7", r: "3"}]],
+  // a timer that stops the voice (Lucide "timer")
+  "timer": [["line", {x1: "10", x2: "14", y1: "2", y2: "2"}], ["line", {x1: "12", x2: "15", y1: "14", y2: "11"}], ["circle", {cx: "12", cy: "14", r: "8"}]],
+  // back to where the voice is (Lucide "locate-fixed")
+  "follow": [["line", {x1: "2", x2: "5", y1: "12", y2: "12"}], ["line", {x1: "19", x2: "22", y1: "12", y2: "12"}], ["line", {x1: "12", x2: "12", y1: "2", y2: "5"}], ["line", {x1: "12", x2: "12", y1: "19", y2: "22"}], ["circle", {cx: "12", cy: "12", r: "7"}], ["circle", {cx: "12", cy: "12", r: "3"}]],
   // opens on another site (Lucide "external-link")
   "outside": [["path", {d: "M15 3h6v6"}], ["path", {d: "M10 14 21 3"}], ["path", {d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"}]],
 } satisfies Record<string, Drawing>;

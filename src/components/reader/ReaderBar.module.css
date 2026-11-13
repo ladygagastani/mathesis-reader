@@ -121,3 +121,9 @@
 .noteRemove:global(.text-btn) { flex: none; min-height: var(--tap); font-size: var(--t-small); color: var(--ink-3); }
 .removed { margin: 0; font-size: var(--t-small); color: var(--ink-2); }
 .removed :global(.text-btn) { min-height: var(--tap); }
+
+/* Listen (Narrator.tsx): pressed while the narrator is open, underlined in red as an open menu's
+   button is */
+.quiet[aria-pressed="true"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+/* (a phone has no room for it in the bar: Listen stands at the foot of the screen instead, Narrator.tsx's ListenButton) */
+@media (max-width: 600px) { .listenSlot { display: none; } }

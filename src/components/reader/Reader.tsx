@@ -33,6 +33,7 @@ import ReaderBar, { type Open } from "./ReaderBar";
 import Lookup from "./Lookup";
 import NoteEditor, { type Editing } from "./NoteEditor";
 import NoteMarks, { locate } from "./NoteMarks";
+import Narrator, { ListenButton, type ListenFrom } from "./Narrator";
 import styles from "./Reader.module.css";
 
 const OPENED = "mathesis-reader:opened";
@@ -210,6 +211,13 @@ export default function Reader() {
     if (open.has(key)) open.delete(key); else open.add(key);
     return { page: pageKey, open };
   }), [pageKey]);
+  // the narrator (Narrator.tsx): open while it reads, and where it was asked to begin; with only the Greek showing, it opens each
+  // passage's English as it reaches it
+  const [listen, setListen] = useState<ListenFrom | null>(null);
+  const showEnglish = useCallback((key: string) => setEnglish((e) => {
+    if (e.page === pageKey && e.open.has(key)) return e;
+    return { page: pageKey, open: new Set([...(e.page === pageKey ? e.open : []), key]) };
+  }), [pageKey]);
   // the word looked up, on this page only: a new page lets it go
   const word = chosen?.page === pageKey ? chosen : null;
   const edit = editing?.page === pageKey ? editing : null;
@@ -315,7 +323,7 @@ export default function Reader() {
   }, [rows, findParam, columns]);
 
   // the keys of the whole page (the text's own keys, from word to word, come first: they mark the key as used)
-  const keys = useRef({ step: (dir: 1 | -1) => { void dir; }, turn: (dir: 1 | -1) => { void dir; }, escape: () => {} });
+  const keys = useRef({ step: (dir: 1 | -1) => { void dir; }, turn: (dir: 1 | -1) => { void dir; }, escape: () => {}, listen: (): boolean => false });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -328,6 +336,8 @@ export default function Reader() {
       } else if (e.key === "Escape") keys.current.escape();
       else if (e.key === "g") { e.preventDefault(); setAsk({ menu: "pages", n: Date.now() }); }
       else if (e.key === "?") { e.preventDefault(); setAsk({ menu: "keys", n: Date.now() }); }
+      // (once the narrator is open, its own keys take l)
+      else if (e.key === "l" && keys.current.listen()) e.preventDefault();
     };
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
@@ -348,6 +358,7 @@ export default function Reader() {
       step,
       turn: (dir) => { const i = page + dir; if (doc && i >= 0 && i < doc.chunks.length) router.push(href({ p: i })); },
       escape: () => { if (word) close(true); },
+      listen: () => { if (listen || !book?.tr) return false; setListen({ n: Date.now() }); return true; },
     };
   });
 
@@ -557,14 +568,15 @@ export default function Reader() {
   );
 
   return (
-    <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined} data-shift={aside || undefined}>
+    <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined} data-shift={aside || undefined} data-listening={listen ? "" : undefined}>
       {/* the text column's full width, measured to decide whether the text can move aside for the look-up */}
       <div data-col-probe="" className={styles.colProbe} aria-hidden="true" />
       <ReaderBar title={barTitle} showTitle={!titlePage} onTop={() => window.scrollTo(0, 0)} where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`}
         pages={doc.chunks.map((c) => c.label)} page={page} onPage={go} hasEnglish={!!book.tr} notes={notes} onNote={fromMenu} here={here} onSaveBook={saveBook} onSavePassage={savePassage} ask={ask}
         example={example} goTo={goTo} find={(q) => findInBook(doc, q)} onFound={onFound}
         editions={book.editions.map((t) => option(t, book.editions))} edition={versionOf(book.grc.urn)} onEdition={(v) => choose2("ed", v)}
-        englishes={book.translations.map((t) => option(t, book.translations))} english={book.tr ? versionOf(book.tr.urn) : ""} onEnglish={(v) => choose2("tr", v)} />
+        englishes={book.translations.map((t) => option(t, book.translations))} english={book.tr ? versionOf(book.tr.urn) : ""} onEnglish={(v) => choose2("tr", v)}
+        listening={!!listen} onListen={() => setListen((l) => (l ? null : { n: Date.now() }))} />
 
       {titlePage && (
         <header className={`${styles.tp} enter`}>
@@ -610,6 +622,12 @@ export default function Reader() {
 
       {lookup}
       {editor}
+
+      {!listen && book.tr && <ListenButton onListen={() => setListen({ n: Date.now() })} />}
+      {listen && book.tr && (
+        <Narrator work={workId} title={book.work.title} author={book.author.name} rows={rows} cols={columns} pageKey={pageKey}
+          hasNext={page < doc.chunks.length - 1} onNextPage={() => go(page + 1)} open={showEnglish} from={listen} onClose={() => setListen(null)} />
+      )}
     </main>
   );
 }

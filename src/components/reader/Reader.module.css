@@ -160,3 +160,12 @@
 }
 @media (hover: hover) { .refBtn:hover { text-decoration-color: currentColor; } }
 .refBtn:focus-visible { outline-offset: -6px; }
+
+/* ------------------------------------------------------------ the narrator (Narrator.tsx): room under the last line for its player, the
+   English a reader can click to have it read from there, and the passage being read marked by a short red bar beside its number */
+.reader[data-listening] { padding-bottom: calc(var(--space-8) + var(--space-8)); }
+.reader[data-listening] [data-reading] { cursor: pointer; }
+.row[data-voice] .ref::after {
+  content: ""; display: block; width: var(--space-4); height: var(--hair-2); margin: var(--space-2) 0 0 auto; background: var(--accent);
+}
+@media (max-width: 760px) { .row[data-voice] .ref::after { width: var(--space-3); } }
