@@ -13,6 +13,7 @@ import { bare, byNewest, mayBeBare, placeName, shown, type Note } from "@/lib/no
 import { removeNote, removeWord, saveNote, useNotes, useNotesSync, useWords } from "@/lib/notes/store";
 import { byLemma, type SavedWord } from "@/lib/notes/words";
 import { useSyncCode } from "@/lib/sync";
+import { spellOut } from "@/lib/lookup/abbrev";
 import styles from "./Saved.module.css";
 
 const href = (n: Note) => `/read?w=${encodeURIComponent(n.work)}${n.anchor.unit ? `&at=${encodeURIComponent(n.anchor.unit)}` : ""}&note=${n.id}`;
@@ -61,7 +62,7 @@ function WordItem({ w }: { w: SavedWord }) {
       <span lang="grc" className={styles.lemma}>{w.lemma}</span>
       <span className={styles.wordAbout}>
         {w.kind && <span className={styles.kind}>{w.kind}</span>}
-        <span className={styles.meaning}>{w.meaning || "No meaning was given for it."}</span>
+        <span className={styles.meaning}>{w.meaning ? spellOut(w.meaning) : "No meaning was given for it."}</span>
         <span className={styles.met}>
           Met as <span lang="grc">{w.form}</span> in {w.book}, {w.unit}
         </span>

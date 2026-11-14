@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction A · Daylight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&family=Instrument+Sans:wdth,wght@75..100,400..600&display=block" rel="stylesheet">
+<style>
+/* Direction A, Daylight. Cool stone ground, deep teal ink, Literata for every Greek and English word, Instrument Sans
+   for the controls. The look-up is a panel on a computer and a sheet on a phone; the text moves aside, never under it. */
+:root {
+  --bg: #f7f9f8;
+  --surface: #ebf0ee;
+  --ink: #0f2e33;
+  --ink-2: #3b5a5f;
+  --ink-3: #5d7a7e;
+  --accent: #06525c;
+  --word-on: #d3e6e3;
+  --rule: rgb(15 46 51 / 0.12);
+  --greek: "Literata", serif;
+  --ui: "Instrument Sans", system-ui, sans-serif;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font-family: var(--ui); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.bar { position: fixed; inset: 0 0 auto 0; height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 20px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); z-index: 5; }
+.bar .btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 8px; font-size: 15px; color: var(--ink-2); }
+.bar .title { display: flex; align-items: baseline; gap: 10px; margin: 0 auto; font-size: 15px; color: var(--ink-2); }
+.bar .title .gr { font-family: var(--greek); font-size: 17px; color: var(--ink); }
+.where { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.track { width: 120px; height: 3px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+.track i { display: block; width: 8%; height: 100%; background: var(--accent); }
+
+main { padding: 112px 0 120px; transition: transform 320ms cubic-bezier(.2,.8,.2,1); }
+.col { width: min(660px, 100% - 40px); margin: 0 auto; position: relative; }
+h1 { font-family: var(--greek); font-weight: 400; font-size: 44px; line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 6px; }
+.byline { font-size: 15px; color: var(--ink-3); margin: 0 0 56px; }
+.sec { position: relative; }
+.num { position: absolute; left: -64px; top: 6px; font: 500 13px/1 var(--ui); color: var(--accent); font-variant-numeric: tabular-nums; }
+.greek { font-family: var(--greek); font-size: 23px; line-height: 1.75; margin: 0; hanging-punctuation: first; font-optical-sizing: auto; }
+.st { font: 500 11px/1 var(--ui); color: var(--ink-3); vertical-align: 0.6em; margin: 0 2px; letter-spacing: 0.02em; }
+.w-on { background: var(--word-on); border-radius: 5px; padding: 1px 4px; margin: 0 -4px; box-shadow: inset 0 -2px 0 var(--accent); }
+.eng { margin-top: 20px; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 10px; border-radius: 20px; font-size: 14px; color: var(--accent); background: var(--surface); }
+
+/* the look-up */
+.look { position: fixed; top: 56px; right: 0; bottom: 0; width: 420px; background: var(--surface); padding: 32px 36px 32px;
+  overflow: auto; z-index: 4; border-top-left-radius: 18px; }
+.look .close { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 20px; color: var(--ink-2); }
+.form { font: 14px/1 var(--ui); color: var(--ink-3); margin: 0 0 10px; }
+.form b { font: 400 17px/1 var(--greek); color: var(--ink-2); }
+.lemma { font-family: var(--greek); font-weight: 400; font-size: 52px; line-height: 1.05; letter-spacing: -0.01em; margin: 0; }
+.kind { font-size: 14px; color: var(--ink-3); margin: 12px 0 0; }
+.parts { font-family: var(--greek); font-size: 16px; line-height: 1.55; color: var(--ink-2); margin: 6px 0 0; }
+.meaning { font-family: var(--greek); font-size: 26px; line-height: 1.3; margin: 28px 0 0; letter-spacing: -0.005em; }
+.meaning small { display: block; font-size: 16px; line-height: 1.5; color: var(--ink-2); margin-top: 6px; }
+.parse { margin: 28px 0 0; padding: 18px 0 0; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.5; }
+.parse dt { font-size: 12px; color: var(--ink-3); margin: 0 0 4px; }
+.parse dd { margin: 0 0 14px; }
+.facts { font-size: 13px; line-height: 1.5; color: var(--ink-3); margin: 0; }
+.look { padding-top: 40px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 28px; }
+.actions button { height: 44px; border-radius: 10px; background: var(--bg); font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: var(--ink); }
+.more { margin-top: 8px; width: 100%; height: 48px; font-size: 15px; font-weight: 500; color: var(--accent); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--rule); }
+.steps { display: flex; justify-content: space-between; margin-top: 22px; font-size: 14px; color: var(--ink-2); }
+.steps button { display: inline-flex; align-items: center; gap: 6px; height: 40px; }
+.steps .gr { font-family: var(--greek); font-size: 16px; color: var(--ink); }
+
+@media (min-width: 900px) {
+  main { transform: translateX(-200px); }
+}
+
+/* phone */
+.handle, .ph-only { display: none; }
+@media (max-width: 760px) {
+  .bar { height: 52px; padding: 0 6px; }
+  .bar .btn span, .where, .bar .title .lat { display: none; }
+  .bar .btn { width: 44px; height: 44px; padding: 0; justify-content: center; }
+  .bar .title { font-size: 14px; }
+  main { padding-top: 84px; }
+  .col { width: calc(100% - 40px); }
+  h1 { font-size: 32px; }
+  .byline { margin-bottom: 32px; }
+  .num { position: static; display: block; margin-bottom: 10px; }
+  .greek { font-size: 20px; line-height: 1.7; }
+  .look { top: auto; left: 0; right: 0; width: auto; height: 56%; border-radius: 22px 22px 0 0; padding: 26px 22px 24px; }
+  .handle { display: block; position: absolute; top: 9px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--rule); }
+  .look .close { top: 14px; right: 12px; }
+  .lemma { font-size: 40px; }
+  .meaning { font-size: 22px; margin-top: 20px; }
+  .parse { margin-top: 20px; }
+  .actions { margin-top: 20px; }
+  .steps { display: none; }
+  .ph-only { display: initial; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="btn"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Library</span></button>
+  <div class="title"><span class="gr">Ἀπολογία Σωκράτους</span><span class="lat">Plato, Apology</span></div>
+  <div class="where"><span>17a</span><span class="track"><i></i></span><span>4%</span></div>
+  <button class="btn"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Notes</span></button>
+  <button class="btn"><svg viewBox="0 0 24 24"><path d="M4 18L9 6l5 12M6 14h6M15 18l3-7 3 7M16 16h4"/></svg><span>Text</span></button>
+</header>
+
+<main>
+  <div class="col">
+    <h1>Ἀπολογία Σωκράτους</h1>
+    <p class="byline">Plato · The Apology of Socrates</p>
+    <section class="sec">
+      <span class="num">17</span>
+      <p class="greek">ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ <span class="w-on">οἶδα</span>· ἐγὼ δʼ οὖν καὶ αὐτὸς ὑπʼ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην, οὕτω πιθανῶς ἔλεγον. καίτοι ἀληθές γε ὡς ἔπος εἰπεῖν οὐδὲν εἰρήκασιν. μάλιστα δὲ αὐτῶν ἓν ἐθαύμασα τῶν πολλῶν ὧν ἐψεύσαντο, τοῦτο ἐν ᾧ ἔλεγον ὡς χρῆν ὑμᾶς εὐλαβεῖσθαι μὴ ὑπʼ ἐμοῦ ἐξαπατηθῆτε <span class="st">17b</span> ὡς δεινοῦ ὄντος λέγειν. τὸ γὰρ μὴ αἰσχυνθῆναι ὅτι αὐτίκα ὑπʼ ἐμοῦ ἐξελεγχθήσονται ἔργῳ, ἐπειδὰν μηδʼ ὁπωστιοῦν φαίνωμαι δεινὸς λέγειν, τοῦτό μοι ἔδοξεν αὐτῶν ἀναισχυντότατον εἶναι, εἰ μὴ ἄρα δεινὸν καλοῦσιν οὗτοι λέγειν τὸν τἀληθῆ λέγοντα· εἰ μὲν γὰρ τοῦτο λέγουσιν, ὁμολογοίην ἂν ἔγωγε οὐ κατὰ τούτους εἶναι ῥήτωρ. οὗτοι μὲν οὖν, ὥσπερ ἐγὼ λέγω, ἤ τι ἢ οὐδὲν ἀληθὲς εἰρήκασιν, ὑμεῖς δέ μου ἀκούσεσθε πᾶσαν τὴν ἀλήθειαν—οὐ μέντοι μὰ Δία, ὦ ἄνδρες Ἀθηναῖοι, κεκαλλιεπημένους γε λόγους, ὥσπερ οἱ τούτων, <span class="st">17c</span> ῥήμασί τε καὶ ὀνόμασιν οὐδὲ κεκοσμημένους, ἀλλʼ ἀκούσεσθε εἰκῇ λεγόμενα τοῖς ἐπιτυχοῦσιν ὀνόμασιν—πιστεύω γὰρ δίκαια εἶναι ἃ λέγω—καὶ μηδεὶς ὑμῶν προσδοκησάτω ἄλλως· οὐδὲ γὰρ ἂν δήπου πρέποι, ὦ ἄνδρες, τῇδε τῇ ἡλικίᾳ ὥσπερ μειρακίῳ πλάττοντι λόγους εἰς ὑμᾶς εἰσιέναι.</p>
+      <button class="eng"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Show the English</button>
+    </section>
+  </div>
+</main>
+
+<aside class="look" aria-label="Look-up">
+  <span class="handle"></span>
+  <button class="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <h2 class="lemma">οἶδα</h2>
+  <p class="kind">Verb, irregular</p>
+  <p class="parts">εἰδέναι · ἴσθι · ᾔδειν</p>
+  <p class="meaning">I know<small>A perfect in form with a present sense: “I have seen”, so “I know”.</small></p>
+  <dl class="parse">
+    <dt>Here</dt><dd>Perfect active indicative, first person singular. The main verb of the sentence.</dd>
+  </dl>
+  <p class="facts">42 times in the Apology · No. 110 of the commonest words</p>
+  <div class="actions">
+    <button><svg viewBox="0 0 24 24"><path d="M5 19h4L19 9l-4-4L5 15z"/></svg>Note</button>
+    <button><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg>Save word</button>
+  </div>
+  <button class="more">The full LSJ entry<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <div class="steps">
+    <button><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span class="gr">οὐκ</span></button>
+    <button><span class="gr">ἐγὼ</span><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+</aside>
+</body>
+</html>

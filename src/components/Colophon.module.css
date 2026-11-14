@@ -1,4 +1,4 @@
-/* The colophon (the old app's .site-footer): under a rule of ink, the name in GFS Didot and the way to the credits. */
+/* The colophon (the old app's .site-footer): under a rule of ink, the name in Noto Serif Display and the way to the credits. */
 .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-6); }
 .foot::before { content: ""; flex-basis: 100%; border-top: 1px solid var(--ink); }
 .foot { padding-bottom: var(--space-7); margin-top: var(--space-7); }

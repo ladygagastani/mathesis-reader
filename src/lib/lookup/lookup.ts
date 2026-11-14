@@ -38,6 +38,8 @@ export interface Looked {
   occurs: number | null;
   lsj: { head: string; entries: LsjEntry[] } | null;
   lsjError?: string;
+  /** why the core vocabulary could not be loaded, when it could not */
+  coreError?: string;
   /** the core vocabulary's entry for the dictionary form: its full heading, its class, its group and how common it is */
   core: CoreEntry | null;
 }
@@ -68,10 +70,11 @@ export async function lookUp(at: WordAt): Promise<Looked> {
       if (lsj) break;
     }
   } catch (e) { lsjError = message(e); }
-  const core = await coreEntry(analysis?.lemma ?? lookupForm(at.word)).catch(() => null);
+  let coreError: string | undefined;
+  const core = await coreEntry(analysis?.lemma ?? lookupForm(at.word)).catch((e) => { coreError = message(e); return null; });
 
   const card = lookupCard({ analysis, tree, core, lsj });
-  return { card, analysis, analysisError, tree, occurs, lsj, lsjError, core };
+  return { card, analysis, analysisError, tree, occurs, lsj, lsjError, coreError, core };
 }
 
 /**
@@ -86,7 +89,8 @@ export async function lookUpHeadword(word: string): Promise<Looked> {
       if (lsj) break;
     }
   } catch (e) { lsjError = message(e); }
-  const core = await coreEntry(lsj?.head ?? lookupForm(word)).catch(() => null);
+  let coreError: string | undefined;
+  const core = await coreEntry(lsj?.head ?? lookupForm(word)).catch((e) => { coreError = message(e); return null; });
   const card = lookupCard({ analysis: null, tree: null, core, lsj });
-  return { card, analysis: null, tree: null, occurs: null, lsj, lsjError, core };
+  return { card, analysis: null, tree: null, occurs: null, lsj, lsjError, coreError, core };
 }

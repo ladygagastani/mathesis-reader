@@ -118,12 +118,12 @@ test("the keyboard: Tab to a passage, arrows from word to word, Enter looks up, 
   await expect(ws.nth(2)).toBeFocused();
 });
 
-test("Aa: Paper or Night, the Greek's size, and the columns", async ({ page }) => {
+test("Aa: Day or Night, the Greek's size, and the columns", async ({ page }) => {
   await openBook(page);
   await page.getByRole("button", { name: "Text", exact: true }).click();
   await page.getByRole("radio", { name: "Night" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
-  await page.getByRole("radio", { name: "Paper" }).click();
+  await page.getByRole("radio", { name: "Day" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "paper");
   await page.getByRole("radio", { name: "Follow device" }).click();
   await expect(page.locator("html")).not.toHaveAttribute("data-theme");

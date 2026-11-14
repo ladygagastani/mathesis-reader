@@ -27,7 +27,7 @@ const SOURCES: { part: string; items: { name: string; href: string; what: string
   {
     part: "Type and signs",
     items: [
-      { name: "EB Garamond, GFS Didot and Gentium Book Plus", href: "https://openfontlicense.org/", what: "The three typefaces, by Georg Duffner and Octavio Pardo, the Greek Font Society, and SIL International.", licence: "SIL Open Font License 1.1" },
+      { name: "Literata, Noto Serif Display and Hanken Grotesk", href: "https://openfontlicense.org/", what: "The three typefaces, by TypeTogether, the Noto Project Authors, and Alfredo Marco Pradil.", licence: "SIL Open Font License 1.1" },
       { name: "Lucide", href: "https://lucide.dev", what: "The signs on the buttons.", licence: "ISC" },
     ],
   },

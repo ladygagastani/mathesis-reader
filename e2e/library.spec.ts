@@ -86,7 +86,7 @@ test("the credits name every source with its licence", async ({ page }) => {
     await expect(page.getByRole("link", { name: new RegExp(name) })).toBeVisible();
 });
 
-test("the site bar: the way to the library from every page, and Paper or Night", async ({ page }) => {
+test("the site bar: the way to the library from every page, and Day or Night", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/credits");
   const bar = page.getByRole("navigation", { name: "The site" });
@@ -97,7 +97,7 @@ test("the site bar: the way to the library from every page, and Paper or Night",
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
   await page.goto("/saved");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
-  await page.getByRole("button", { name: "Switch to the paper page" }).click();
+  await page.getByRole("button", { name: "Switch to the day page" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "paper");
 });
 

@@ -60,6 +60,17 @@ export async function prepare(ctx, { theme = "auto", columns = "greek", synced: 
   if (words) await ctx.addInitScript((w) => localStorage.setItem("mathesis-reader:words", JSON.stringify(w)), WORDS);
 }
 
+/** Run one screen's work, but give up on it after a while: a page that never settles (or a browser call that never returns) is
+ *  then reported as that screen's fault instead of stopping a check silently for hours (it did, 2026-11-14). Each screen is
+ *  also named on stderr as it starts, so a slow one can be seen. */
+export async function within(at, work, ms = 90_000) {
+  process.stderr.write(`  ${at}\n`);
+  let timer;
+  try {
+    return await Promise.race([work(), new Promise((_, no) => { timer = setTimeout(() => no(new Error(`gave up after ${ms / 1000} s`)), ms); })]);
+  } finally { clearTimeout(timer); }
+}
+
 /** A screen to take at this width: some are a computer's only (the keys). */
 export const forWidth = (w) => (s) => !(s.computer && w < 500);
 

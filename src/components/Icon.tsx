@@ -57,7 +57,7 @@ const ICONS = {
   "keep": [["path", {d: "m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"}]],
   // the library (Lucide "library")
   "library": [["path", {d: "m16 6 4 14"}], ["path", {d: "M12 6v14"}], ["path", {d: "M8 8v12"}], ["path", {d: "M4 4v16"}]],
-  // the paper page (Lucide "sun")
+  // the day page (Lucide "sun")
   "paper": [["circle", {cx: "12", cy: "12", r: "4"}], ["path", {d: "M12 2v2"}], ["path", {d: "M12 20v2"}], ["path", {d: "m4.93 4.93 1.41 1.41"}], ["path", {d: "m17.66 17.66 1.41 1.41"}], ["path", {d: "M2 12h2"}], ["path", {d: "M20 12h2"}], ["path", {d: "m6.34 17.66-1.41 1.41"}], ["path", {d: "m19.07 4.93-1.41 1.41"}]],
   // the night page (Lucide "moon")
   "night": [["path", {d: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],

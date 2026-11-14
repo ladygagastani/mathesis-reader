@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { lookupCard, NO_ENTRY, NO_SHORT, treeAt, type CardInput } from "./card";
+import { couldNotLoad, lookupCard, NO_ENTRY, NO_SHORT, treeAt, type CardInput } from "./card";
+
+describe("couldNotLoad", () => {
+  it("tells a dictionary that failed to load from a word it lacks", () => {
+    expect(couldNotLoad(NO_ENTRY, [undefined, "Failed to fetch"])).toBe(true);
+    expect(couldNotLoad(NO_ENTRY, [undefined, undefined])).toBe(false);
+    expect(couldNotLoad("to know", ["Failed to fetch"])).toBe(false);
+  });
+});
 import { analyse, type WordPack } from "./words";
 import { readSyntax } from "@/lib/syntax";
 import type { TeiDoc } from "@/lib/tei/types";

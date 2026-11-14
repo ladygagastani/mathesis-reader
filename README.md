@@ -26,8 +26,10 @@ The app opens at http://localhost:3000. It reads its texts and data from the old
 | `npm run lint` and `npm run typecheck` | The code |
 | `npm run build` | The site builds into `out/` |
 | `npm run e2e` | Every control of every screen, clicked in a real browser at 1440 px and 390 px, against the built site |
-| `node scripts/check-design.mjs` | Only the three typefaces, sizes on the type scale, colours from the tokens, one filled-button colour, in Paper and Night |
-| `node scripts/check-a11y.mjs` | Contrast in Paper and Night, names for every control, and finger-sized targets on a phone |
+| `node scripts/check-design.mjs` | Only the three typefaces (Literata, Noto Serif Display, Hanken Grotesk), sizes on the type scale, colours from the tokens, one filled-button colour, in Day and Night |
+| `npm run check:impeccable` | impeccable's design detector, pinned to 4.9.0: first it must still catch the planted faults in `test-fixtures/impeccable/known-bad.html`, then it scans `src/` and the built reader and library at 1280 px and 390 px. Needs the built site running (`npm run start`) |
+| `npm run check:design` | The two above, one after the other |
+| `node scripts/check-a11y.mjs` | Contrast in Day and Night, names for every control, and finger-sized targets on a phone |
 | `node scripts/shots.mjs <url> screenshots/new computer` | Screenshots of every screen at 1440 px, into `screenshots/new` (leave out `computer` for the phone too) |
 | `node scripts/look.mjs <url> <folder> [name]` | A quick look at some screens at 1440 px while building |
 | `node scripts/weigh.mjs` | Page weight and load time on a slow phone, against the old reader |

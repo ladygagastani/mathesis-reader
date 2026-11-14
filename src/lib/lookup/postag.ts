@@ -68,6 +68,14 @@ export function grammarParts(tag: string): string[] {
   return grammarGroups(tag).flat();
 }
 
+/**
+ * The same grammar in its phrases, for the look-up card to set each phrase apart (the critique of 2026-11-14: five loose words
+ * were too many to take in): "v1sria---" → ["perfect active indicative", "1st person singular"].
+ */
+export function grammarPhrases(tag: string): string[] {
+  return grammarGroups(tag).map((g) => g.join(" "));
+}
+
 /** plainGrammar's phrases, each a list of its words: [["perfect", "active", "indicative"], ["1st person", "singular"]] */
 function grammarGroups(tag: string): string[][] {
   const [p, per, num, ten, moo, voi, gen, cas, deg] = tag.padEnd(9, "-").split("");

@@ -28,6 +28,7 @@ import { saveNote, useNotes } from "@/lib/notes/store";
 import { alignChunk, type Row } from "@/lib/tei/align";
 import { chunkOf, findRef } from "@/lib/tei/refs";
 import Icon from "@/components/Icon";
+import Ring from "@/components/Ring";
 import { Blocks } from "./Blocks";
 import ReaderBar, { type Open } from "./ReaderBar";
 import Lookup from "./Lookup";
@@ -580,15 +581,18 @@ export default function Reader() {
 
       {titlePage && (
         <header className={`${styles.tp} enter`}>
-          <AuthorCaps id={book.author.id} name={book.author.name} />
-          <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
-          {greekTitle && <p className={styles.tpEn}>{book.work.title}</p>}
-          <p className={styles.orn} aria-hidden="true">❦</p>
+          {/* the title tondo (DESIGN.md, "Ornament"): the author, the title and its English inside the ring of tongues */}
+          <Ring kind="title" className={styles.tondo}>
+            <AuthorCaps id={book.author.id} name={book.author.name} />
+            <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
+            {greekTitle && <p className={styles.tpEn}>{book.work.title}</p>}
+          </Ring>
           {book.private && <p className={styles.tpPrivate}><Icon name="lock" />Only you can see this</p>}
           <p className={styles.tpEd}>
             <span className={styles.edKind}>Greek</span> {describe(book.grc, book.work.texts)}
             {book.tr && <> · <span className={styles.edKind}>English</span> {describe(book.tr, book.work.texts)}</>}
           </p>
+          <p className={styles.tpHint}>Click or tap any Greek word for its meaning.</p>
         </header>
       )}
 

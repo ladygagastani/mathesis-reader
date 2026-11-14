@@ -67,7 +67,8 @@
 }
 .rail a, .rail span { display: grid; place-items: center; height: 26px; }
 .rail a { color: var(--ink-2); text-decoration: none; transition: color var(--dur-quick) var(--ease); }
-.rail span { color: var(--rule-strong); }
+/* a letter no work starts with: the faintest words colour that still reads (impeccable detect, 2026-11-14: the rule colour was 3.1 : 1) */
+.rail span { color: var(--ink-3); }
 @media (hover: hover) { .rail a:hover { color: var(--accent); } }
 .rail a[aria-current] { color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
 .listCol { min-width: 0; }

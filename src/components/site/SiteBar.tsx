@@ -1,6 +1,6 @@
 /**
  * The site bar on every page outside the reader (DESIGN.md, "Site bar"): the logo and the way to the library at the left; your
- * private texts (when your code opens them), Saved, Sync and the Paper/Night switch at the right. It stays at the top of the
+ * private texts (when your code opens them), Saved, Sync and the Day/Night switch at the right. It stays at the top of the
  * window as the page scrolls, so the library is one click away from anywhere.
  */
 import Icon from "@/components/Icon";

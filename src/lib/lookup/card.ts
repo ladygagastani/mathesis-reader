@@ -54,6 +54,9 @@ export interface Role {
 export const SOURCE_NAMES = { core: "the core vocabulary list", lsj: "LSJ" } as const;
 /** said plainly when neither dictionary has the word */
 export const NO_ENTRY = "Not in the dictionaries this site uses.";
+/** True when the card says the dictionaries lack the word but a dictionary could not be loaded: then nobody knows, and the
+ *  look-up must say the load failed, never that the word is missing (PRODUCT.md, principle 3). */
+export const couldNotLoad = (meaning: string, errors: (string | undefined)[]) => meaning === NO_ENTRY && errors.some(Boolean);
 /** said plainly when LSJ has an entry but gives no short definition */
 export const NO_SHORT = "LSJ has no short definition for it. See More about it.";
 

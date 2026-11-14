@@ -1,5 +1,6 @@
-/* The reader (DESIGN.md, "Reader"): the bar along the top; under it the text column, centred, with the passage numbers in red in
-   a rail at its left. The look-up slides in from the right (Lookup.module.css). The Greek alone by default, a hairline between the passages. */
+/* The reader (DESIGN.md, "Layouts"): the bar along the top; under it the text column, centred, with each passage's number in a
+   ring in a rail at its left. The look-up slides in from the right (Lookup.module.css). The Greek alone by default, a hairline
+   between the passages. Ornament stays out of the lines of text (DESIGN.md, "The idea", rule 1). */
 .reader {
   --greek-size: var(--greek-chosen, var(--greek-auto));
   /* the text column: the rail and 28 em of Greek (about 60 letters a line); English alone, 34 em of English; Both, the two side by side */
@@ -12,23 +13,29 @@
 /* with the look-up's sheet open there is room under the last line, so any word can stand above the sheet */
 .reader[data-sheet] { padding-bottom: 75dvh; }
 
-/* ------------------------------------------------------------ the title page, shown the first time a book is opened (ADR 0009, 3):
-   the author in red capitals spaced wide, the Greek title large, the English in italic, a fleuron between two red rules, the editions */
-.tp { display: grid; justify-items: center; text-align: center; padding: var(--space-8) var(--gutter) var(--space-6); }
-.tpAu { margin: 0; font: 400 1.05rem / 1.3 var(--f-title); letter-spacing: 0.42em; text-transform: uppercase; color: var(--accent); }
-.tpTitle { margin: var(--space-4) 0 var(--space-2); max-width: 16ch; font: 400 var(--t-display) / 1.05 var(--f-title); letter-spacing: 0; }
-@media (max-width: 760px) { .tpTitle { font-size: var(--t-title); } }
+/* ------------------------------------------------------------ the title page, shown the first time a book is opened: the title
+   tondo (DESIGN.md, "Ornament"), a circle 440 px across holding the author in spaced capitals, the Greek title and its English in
+   italic; under it the editions */
+.tp { display: grid; justify-items: center; text-align: center; padding: var(--space-6) var(--gutter) var(--space-6); }
+.tondo { width: min(440px, 100%); aspect-ratio: 1; }
+.tondo > span:last-child { display: grid; justify-items: center; max-width: 66%; }
+.tpAu { margin: 0; font: 500 var(--t-label) / 1.3 var(--f-title); letter-spacing: 0.42em; margin-right: -0.42em; text-transform: uppercase; color: var(--accent); }
+.tpTitle { margin: var(--space-4) 0 var(--space-3); font: var(--display-light, 300) var(--t-display) / 1.08 var(--f-title); letter-spacing: -0.01em; overflow-wrap: normal; }
 .tpTitle [lang="grc"] { font-family: var(--f-title); }
-.tpEn { margin: 0; max-width: 32ch; font: italic 400 var(--t-lead) / 1.3 var(--f-body); color: var(--ink-2); }
-.orn { display: flex; justify-content: center; align-items: center; gap: var(--space-3); width: min(340px, 80%); margin: var(--space-5) auto 0; color: var(--accent); }
-.orn::before, .orn::after { content: ""; height: 1px; flex: 1; background: var(--accent); opacity: 0.6; }
+.tpEn { margin: 0; max-width: 24ch; font: italic 400 var(--t-ui) / 1.4 var(--f-prose); color: var(--ink-2); }
+@media (max-width: 760px) {
+  .tondo { width: min(300px, 100%); }
+  .tpTitle { font-size: var(--t-head); margin-block: var(--space-3) var(--space-2); }
+  .tpEn { font-size: var(--t-small); }
+}
 .tpEd { margin-top: var(--space-5); font-size: var(--t-small); color: var(--ink-3); }
+.tpHint { margin-top: var(--space-2); font-size: var(--t-small); color: var(--ink-2); }
 /* a private text's seal: small capitals in red in a red hairline frame (the old title page's) */
 .tpPrivate {
   display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-1) var(--space-3);
-  font: 500 var(--t-label) / 1.35 var(--f-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent);
+  font: 500 var(--t-label) / 1.35 var(--f-label); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--line); border-radius: var(--pill);
 }
-.edKind { font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; }
+.edKind { font-size: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase; }
 
 /* the Greek title in the bar, in the Greek face and in ink; a private text's lock after it, in red */
 .barGr { font-family: var(--f-greek); color: var(--ink); }
@@ -39,7 +46,7 @@
 .layout {
   display: grid; grid-template-columns: minmax(0, var(--col)); justify-content: center;
   padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)) max(var(--gutter), env(safe-area-inset-right, 0px));
-  transition: padding-right var(--dur-slow) var(--ease);
+  transition: padding-right var(--dur-slide) var(--ease-drawer);
 }
 .reader[data-shift] .layout { padding-right: calc(var(--drawer) + var(--gutter)); }
 /* the column's full width, measured (never seen) */
@@ -57,12 +64,12 @@
 .reader[data-cols="both"] .row { grid-template-columns: var(--rail) minmax(0, calc(26 * var(--greek-size))) minmax(0, 1fr); }
 .reader[data-cols="both"] .tr { padding-left: var(--space-7); }
 
-/* the passage's number in the left margin, in red Didot with old-style figures, as in a printed edition */
-.ref { text-align: right; padding: 0.35em var(--space-4) 0 0; font: 400 var(--t-ui) / 1.25 var(--f-title); color: var(--accent); font-variant-numeric: oldstyle-nums tabular-nums; overflow-wrap: anywhere; }
+/* the passage's number in the left margin, in terracotta Noto Serif Display inside its ring (DESIGN.md, "Ornament") */
+.ref { display: grid; justify-items: end; align-content: start; padding: 0.2em var(--space-4) 0 0; font: 400 var(--t-ui) / 1 var(--f-title); color: var(--accent); font-variant-numeric: lining-nums tabular-nums; }
 
 .grc { font-family: var(--f-greek); font-size: var(--greek-size); line-height: var(--reading-leading); min-width: 0; }
-/* the English beside the Greek, or alone: the body size of English prose, in ink */
-.tr { font-size: var(--t-body); line-height: 1.6; color: var(--ink); min-width: 0; }
+/* the English beside the Greek, or alone: Literata at the body size of English prose, in ink */
+.tr { font-family: var(--f-prose); font-size: var(--t-body); line-height: 1.6; color: var(--ink); min-width: 0; }
 .reader[data-cols="trans"] .grc { display: none; }
 /* a passage the translation leaves out: said in words, quietly, in the English column */
 .untr { font-size: var(--t-small); font-style: italic; color: var(--ink-2); }
@@ -72,32 +79,30 @@
 .head { margin: 0.4em 0 0.6em; font-family: var(--f-title); font-size: 1.4em; color: var(--accent); text-align: center; }
 .line { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); }
 .line .speaker { grid-column: 1 / -1; }
-.ln { font-family: var(--f-label); font-size: 0.62em; color: var(--ink-2); text-align: right; padding-right: 0.9em; padding-top: 0.35em; }
+.ln { font-family: var(--f-label); font-size: 0.62em; color: var(--ink-2); text-align: right; padding-right: 0.9em; padding-top: 0.35em; font-variant-numeric: lining-nums tabular-nums; }
 .lt { padding-left: 1.5em; text-indent: -1.5em; }
 .tr .lt, .one .lt { padding-left: 0; text-indent: 0; }
 .para { margin-top: 0.7em; }
-.speaker { display: block; font-family: var(--f-label); font-size: 0.72em; letter-spacing: 0.08em; color: var(--accent); margin-top: 0.5em; }
+.speaker { display: block; font-family: var(--f-label); font-size: 0.72em; letter-spacing: 0.14em; color: var(--accent); margin-top: 0.5em; }
 .p > .speaker { margin-top: 0; }
 /* a section's marker inside the text: small, red, raised */
-.mk { font-family: var(--f-label); font-size: 0.6em; letter-spacing: 0.04em; color: var(--accent); vertical-align: 0.5em; margin: 0 0.3em; user-select: none; }
+.mk { font-family: var(--f-label); font-size: 0.6em; letter-spacing: 0.04em; color: var(--accent); vertical-align: 0.5em; margin: 0 0.1em; user-select: none; }
 .note { font-family: var(--f-label); font-size: var(--t-small); color: var(--accent); cursor: help; margin: 0 var(--hair); }
 .gap { color: var(--ink-2); }
 
-/* a word: red under the hand; the word being looked up sits on a soft tone of the paper */
-.w { cursor: pointer; transition: color var(--dur-quick) var(--ease); }
+/* a word: terracotta under the hand; the word being looked up stands in a pill of terracotta tint with a hairline round it, so
+   it is found again at a glance after reading its entry. The pill reaches past the word without moving a letter. */
+.w { cursor: pointer; border-radius: var(--pill); transition: color var(--dur-quick) var(--ease), background-color var(--dur-quick) var(--ease); }
 @media (hover: hover) { .w:hover { color: var(--accent); } }
-.w:focus-visible { color: var(--accent); outline: 1px solid var(--accent); outline-offset: 2px; }
-/* (the red line under it finds the word again at a glance after reading its entry) */
-.w[aria-current="true"] { color: var(--ink); background: var(--word-on); outline: var(--hair-2) solid var(--word-on); box-shadow: inset 0 calc(-1 * var(--hair-2)) 0 var(--accent); }
+.w:focus-visible { color: var(--accent); outline: 2px solid var(--accent); outline-offset: 3px; }
+.w[aria-current="true"] { color: var(--ink); background: var(--word-on); box-shadow: 0 0 0 0.22em var(--word-on), 0 0 0 calc(0.22em + 1px) var(--line); }
 
-/* notes in the text (NoteMarks.tsx): a noted word underlined in its note's colour; a noted line or passage with a bar of it at its left */
+/* notes in the text (NoteMarks.tsx): a noted word underlined in its note's colour; a noted passage's number ring takes its
+   colour; a noted line of verse has a dot of it at its left */
 .w[data-noted] { box-shadow: inset 0 calc(-1 * var(--hair-2)) 0 var(--c); }
-/* (the line's shadow moved 6 px left and shrunk 3 px: a bar 3 px wide just outside its left edge) */
-.line[data-noted] { box-shadow: -6px 0 0 -3px var(--c); }
-.row[data-noted] { box-shadow: inset 0 1px 0 var(--rule), inset 3px 0 0 var(--c); }
-/* (the first passage has no rule above it, noted or not) */
-.row[data-noted]:first-of-type { box-shadow: inset 3px 0 0 var(--c); }
-.row[data-noted] .ref { padding-left: var(--space-2); }
+.line[data-noted] { background: radial-gradient(circle, var(--c) 0 3px, transparent 3.5px) no-repeat -10px 0.55lh / 8px 8px; }
+.row[data-noted] .refBtn { border-color: var(--c); }
+.row[data-noted] .refBtn::after { border-color: var(--c); }
 
 /* the notes' marks at the right edge of the window, each at the height of its note in the page, as the scrollbar's thumb would be
    there. A mark is a finger's height and a narrow strip wide; it draws one short bar per note it holds, side by side. */
@@ -111,19 +116,20 @@
 .markBtn:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 
 /* "Show the English" (ADR 0009, 2): one passage's English opens under its Greek, in the Greek's column, so the margin stays clear */
-.oneBox { margin-top: var(--space-2); font-family: var(--f-body); }
+.oneBox { margin-top: var(--space-3); font-family: var(--f-body); }
 .oneBtn:global(.text-btn) { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--ink-2); text-decoration: none; font-size: var(--t-small); }
 @media (hover: hover) { .oneBtn:global(.text-btn):hover { color: var(--accent); } }
-.oneBtn:global(.text-btn)::before { content: ""; flex: none; width: var(--tri-size); height: var(--tri-size); background: currentColor; clip-path: var(--tri-right); }
-.oneBtn:global(.text-btn)[aria-expanded="true"]::before { clip-path: var(--tri-down); }
+/* (a short terracotta line before it, the way into the English; shorter once it is open) */
+.oneBtn:global(.text-btn)::before { content: ""; flex: none; width: 28px; height: 1px; background: var(--accent); transition: width var(--dur-quick) var(--ease); }
+.oneBtn:global(.text-btn)[aria-expanded="true"]::before { width: 14px; }
 @media (pointer: coarse) { .oneBtn:global(.text-btn) { min-height: var(--tap); } }
-.one { margin-top: var(--space-3); max-width: 36em; font-size: var(--t-body); line-height: 1.6; color: var(--ink); padding-left: var(--space-3); box-shadow: var(--rule-left); animation: ink var(--dur) var(--ease) backwards; }
+.one { margin-top: var(--space-3); max-width: 36em; font-family: var(--f-prose); font-size: var(--t-body); line-height: 1.6; color: var(--ink); padding-left: var(--space-4); box-shadow: var(--rule-left); animation: ink var(--dur) var(--ease) backwards; }
 .oneCredit { margin: var(--space-2) 0 0; font-size: var(--t-label); line-height: 1.4; color: var(--ink-2); }
 
 /* the foot of the page: the way to the page before and the page after */
 .bottom { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); padding-block: var(--space-5) var(--space-6); box-shadow: inset 0 1px 0 var(--rule-strong); color: var(--ink-2); }
 .bottomGo { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-left: auto; }
-.hint { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; padding-left: var(--rail); }
+.hint { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase; padding-left: var(--rail); }
 
 .status { padding-block: var(--space-8); display: grid; gap: var(--space-4); justify-items: start; }
 
@@ -135,31 +141,36 @@
 }
 /* phones: the number keeps a narrow column at the left, level with the first line, set small; the Greek takes the rest */
 @media (max-width: 760px) {
-  /* (the old reader's number column: three old-style figures of --t-small, about 0.55em each, and a quarter of an em to spare) */
-  .reader { --rail: calc((0.55 * 3 + 0.25) * var(--t-small) + var(--space-2)); }
-  .row { padding-block: var(--space-3) var(--space-4); }
-  .ref { font-size: var(--t-small); padding: 0.55em var(--space-2) 0 0; }
+  /* (a ring 34 px across and a little air) */
+  .reader { --rail: 46px; }
+  .row { padding-block: var(--space-4) var(--space-5); }
+  .ref { font-size: var(--t-small); padding: 0.25em var(--space-3) 0 0; }
+  .refBtn { min-width: 34px; height: 34px; }
 }
 
 /* the English's heading takes the Greek heading's size and leading, so the two columns start level */
 .tr .head { font-size: calc(1.4 * var(--greek-size)); line-height: var(--reading-leading); }
 
 /* the passage you stopped at last time, said once in the rail when the book opens there */
-.resumed { display: block; margin-top: var(--space-2); font: 400 var(--t-label) / 1.25 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
+.resumed { display: block; margin-top: var(--space-2); font: 400 var(--t-label) / 1.25 var(--f-body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); text-align: right; }
 /* a search's words on the page (Go to, Find in this book) */
 .w[data-found] { background: var(--word-on); }
 /* "Note on these words", under words selected in the text */
 .pick { position: absolute; z-index: var(--z-panel); background: var(--bg); }
 
-/* the passage's number is a button (Reader.tsx, onPassage): it saves the passage or opens its note. It looks like the number, and
-   its pressable area, a finger's size at least, reaches 10 px past the figures without moving them. */
+/* the passage's number is a button (Reader.tsx, onPassage): it saves the passage or opens its note. It is the number's ring: a
+   hairline circle (a pill for a long reference, 1.120) with a dotted ring inside it; under the hand the ring fills faintly.
+   Its pressable area reaches 5 px past the ring all round, a finger's 44 px at least. */
 .refBtn {
-  display: inline-flex; justify-content: flex-end; align-items: flex-start; min-width: var(--tap); min-height: var(--tap);
-  margin: -10px; padding: 10px; border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
-  text-decoration: underline transparent; text-underline-offset: 0.2em; transition: text-decoration-color var(--dur-quick) var(--ease);
+  position: relative; display: inline-grid; place-items: center; min-width: 40px; height: 40px; padding: 0 0.6em;
+  border: 1px solid var(--line); border-radius: var(--pill); background: transparent; color: inherit; font: inherit; cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease), scale var(--dur-press) var(--ease);
 }
-@media (hover: hover) { .refBtn:hover { text-decoration-color: currentColor; } }
-.refBtn:focus-visible { outline-offset: -6px; }
+.refBtn::after { content: ""; position: absolute; inset: 4px; border: 1px dotted var(--line); border-radius: inherit; pointer-events: none; }
+.refBtn::before { content: ""; position: absolute; inset: -5px; }
+@media (hover: hover) { .refBtn:hover { background: var(--word-on); } }
+.refBtn:active { scale: 0.97; }
+.refBtn:focus-visible { outline-offset: 2px; }
 
 /* ------------------------------------------------------------ the narrator (Narrator.tsx): room under the last line for its player, the
    English a reader can click to have it read from there, and the passage being read marked by a short red bar beside its number */

@@ -1,175 +1,190 @@
-# Design
+# Design: Tondo
 
-The look of Mathesis Reader on a computer, 1280 px wide and up. Every choice below serves two things: reading a long
-passage of Greek without strain, and getting a word's meaning without losing your place. Phones and tablets come later.
-Nothing here fixes a width that a phone layout would have to undo: the columns are a CSS grid that can fold to one.
+The look of Mathesis Reader from 14 November 2026. It replaces the printed-page look of 12 November (warm paper, red, EB
+Garamond, Gentium and GFS Didot), which is in git history and is a reference only. The owner chose Tondo from six
+directions drawn on the same page of the Apology; the mock-ups are in [docs/directions](docs/directions), and Tondo's is
+[e-tondo.html](docs/directions/e-tondo.html).
 
-What stays from the old look: warm paper and a night page, black ink, one red, hairline rules, square corners, no
-shadows, and the three typefaces. They suit a printed Greek text and the readers already know them. What changes is
-the layout, the type scale, and where the look-up stands.
+## The idea
 
-## Five decisions
+An Attic drinking cup, a kylix, has one painted circle at the bottom of its bowl, the tondo, ringed by a band of
+tongues. You see it as you drink. Tondo makes the reader that cup: black glaze, the text in the colour of the clay, and
+a ring of terracotta tongues around the two things that matter, the book's title when it opens and every word you look
+up. The Greek is the beauty of the page and the look-up is its moment; the ornament marks only those two, so the
+reading itself stays calm.
 
-1. **The look-up slides in from the right.** A clicked word's entry opens in a panel 400 px wide that slides in from
-   the window's right edge, under the bar and as tall as the window, with a hairline at its left. It never covers the
-   Greek. Where the text column fits beside the panel with 32 px to spare on each side, the text moves aside, 200 px to
-   the left, while the panel is open. With Greek and English side by side and no room for that, the panel lies over the
-   English, as long as the Greek ends 32 px clear of it. Where neither works (narrower than about 1200 px with the Greek
-   alone, and always below 760 px), the look-up is a low sheet from the foot of the screen. The panel scrolls inside
-   itself, and × or Escape closes it. The note editor opens in the same panel. (Until 2026-11-12 the look-up stood in a
-   desk column that was always there; the owner found it awkward to use. A card floating by the word followed for a
-   day, and the owner preferred a panel from the right.)
-2. **The text column is centred in the window,** at a measure of 30 em of Greek (about 60 letters a
-   line, 680 px at 24 px). Passage numbers hang in a 56 px rail to its left.
-3. **Greek is set at 24 px with a line height of 1.65.** A line now takes 40 px instead of 46 px, so a 900 px window
-   holds 21 lines of Greek instead of 18, and Gentium's accents and breathings still clear the line above. Both stay adjustable in Text.
-4. **One bar, at the top, on every page.** In the reader it holds Library, the book and page (which opens Go to), Notes
-   and Text. On the other pages it holds Library, Saved, Sync, Private texts and a Paper/Night switch. Top, because on a
-   computer a bar at the foot sits where the eye ends each screen of text. A phone can move it to the foot later.
-5. **Labels in small capitals are spaced at 0.08 em, not 0.2 em,** and set at 13 px in the second ink. The old wide
-   spacing at 12 px was hard to read in Night.
+Three rules keep it calm for long reading:
+
+1. **Ornament never enters running text.** The rings, the tongue band and the number rings stand on the title page, in
+   the look-up and in the passage rail. A line of Greek or English has nothing drawn on it but the looked-up word's tint.
+2. **One colour.** Terracotta is the only colour beside the ink: the ornament, the passage numbers, links, the chosen
+   thing and the main button. The notes' four colours are the one exception, and only where a note is.
+3. **Night is the home page; Day is its daylight copy.** Both are drawn from the same vase: Night is black glaze with
+   clay letters (red-figure), Day is pale clay with black letters (black-figure). The device's dark or light mode picks
+   one unless the reader does.
+
+## Hard limit: polytonic Greek
+
+Every typeface that sets Greek must draw every precomposed polytonic letter: all of Greek Extended (U+1F00 to U+1FFE)
+and the accented letters of basic Greek, with the elision mark ʼ (U+02BC) and the ano teleia. Checked 2026-11-13 by
+measuring each letter against two fallbacks in Chrome: Literata and Noto Serif Display pass. The texts are NFC, so the
+combining breathings (U+0313, U+0314, U+0342) are not needed; Google's Greek files leave them out, and a text that needs
+them must be normalised to NFC first. Hanken Grotesk has no Greek at all and never sets it: every font list that starts
+with it falls back to Literata, so a Greek word inside a label is drawn in Literata. Literata comes before the
+"Hanken Grotesk Fallback" face that next/font makes from Arial; after it, every Greek letter in a label was drawn in
+Arial. A character none of the three has, such as "←", is drawn as an icon instead.
+
+## Typefaces
+
+| Face | Role | Weights |
+|---|---|---|
+| **Literata** | The Greek being read, the English beside or under it, the look-up's Greek | 400, 500; italic 400 |
+| **Noto Serif Display** | The book's title, the dictionary form in the look-up, the meaning, passage numbers | 300, 400 |
+| **Hanken Grotesk** | The bar, buttons, menus, labels, counts | 400, 500 |
+
+Three and no more. All three are SIL Open Font License, served from the app (next/font), never from Google at reading
+time. Figures are lining and tabular in counts and passage numbers, old-style in running English.
 
 ## Type
 
-Three typefaces, as before: EB Garamond for English and the interface, Gentium Book Plus for all Greek, GFS Didot only
-for the title page and the logo. Root size 16 px. Figures are old-style in running text and lining in tables and counts.
-
 | Token | Size | Line height | Use |
 |---|---|---|---|
-| `--t-label` | 0.8125rem (13 px) | 1.3 | Small-capital labels, counts |
-| `--t-small` | 0.9375rem (15 px) | 1.45 | Second lines in lists, credits, the look-up's grammar and sources |
-| `--t-ui` | 1.0625rem (17 px) | 1.4 | Buttons, menus, list rows, the bar |
-| `--t-body` | 1.1875rem (19 px) | 1.55 | English prose, the English beside or under the Greek, the look-up's meaning |
-| `--t-greek` | 1.5rem (24 px) | 1.65 | The Greek being read. Text sets 18 to 34 px and 1.4 to 2.0 |
-| `--t-lead` | 1.5rem (24 px) | 1.25 | The look-up's meaning, a part's heading |
-| `--t-head` | 2rem (32 px) | 1.15 | The look-up's dictionary form (Gentium), a page's second heading |
-| `--t-title` | 2.5rem (40 px) | 1.1 | A page's title |
-| `--t-display` | 4rem (64 px) | 1.05 | The book's title page only (GFS Didot) |
+| `--t-label` | 13 px | 1.3 | Labels in capitals spaced 0.14 em (Hanken 500), counts |
+| `--t-small` | 15 px | 1.5 | Second lines, the look-up's grammar, credits |
+| `--t-ui` | 16 px | 1.4 | The bar, buttons, menus, list rows |
+| `--t-body` | 19 px | 1.6 | English prose, the English beside or under the Greek (Literata) |
+| `--t-lead` | 24 px | 1.25 | A part's heading; the meaning in the phone's sheet; a long meaning in the panel |
+| `--t-head` | 32 px | 1.15 | The meaning in the panel (Noto Serif Display 300 in Night, 400 in Day), a page's second heading |
 
-The English under a passage moves from 16 px to `--t-body`, so the check you make against the English reads as easily
-as the Greek.
+A meaning of more than 34 letters steps down one size (32 px to 24 px in the panel, 24 px to 19 px in the sheet), so the
+look-up's first line never runs past three lines.
+| `--t-title` | 40 px | 1.1 | A page's title; the dictionary form (Noto Serif Display 400) |
+| `--t-display` | 48 px | 1.08 | The book's title inside the title tondo |
+
+The Greek being read is 22 px on a computer (Literata's x-height is large; 22 px reads as Gentium's 24) with a line
+height of 1.8, and falls to 19 px on a phone. Text still sets 18 to 34 px and 1.4 to 2.0.
 
 ## Colour
 
-Two pages, Paper and Night. Paper follows the device's light mode and Night its dark mode, unless the site bar or Text
-chooses one. Components use only the role names. Every ink is at least 4.5 : 1 on its page.
+Components use only the role names. Every ink is at least 4.5 : 1 on its ground, the main button's letters included.
 
 ```css
-:root, :root[data-theme="paper"] {
-  --bg: #f4eee3;         /* the page */
-  --surface: #ece4d5;    /* the look-up's panel, menus, the bar */
-  --ink: #1f1b16;        /* text: 14.8 : 1 */
-  --ink-2: #4a4036;      /* second lines, labels: 8.8 : 1 */
-  --ink-3: #6b5d4d;      /* small print: 5.5 : 1 (5 : 1 on --surface) */
-  --rule: rgb(31 27 22 / 0.16);
-  --rule-strong: rgb(31 27 22 / 0.6);
-  --accent: #a3301a;     /* red: passage numbers, links, the chosen thing: 6.1 : 1 */
-  --word-on: #e5d7bc;    /* behind the word looked up */
-  --note-red: #a3301a; --note-ochre: #855a0c; --note-green: #3d6635; --note-blue: #2d5585;
-}
-:root[data-theme="night"] {
-  --bg: #191612;
-  --surface: #221e19;
-  --ink: #ece3d3;        /* 14.2 : 1 */
-  --ink-2: #cdbfa8;      /* 10 : 1 */
-  --ink-3: #a89a84;      /* 6.5 : 1 (6 : 1 on --surface) */
-  --rule: rgb(236 227 211 / 0.14);
-  --rule-strong: rgb(236 227 211 / 0.55);
-  --accent: #e0805f;
-  --word-on: #3c3328;
-  --note-red: #e0805f; --note-ochre: #d9ad55; --note-green: #93c283; --note-blue: #93b5e3;
-}
+/* Night: red-figure. The default in the device's dark mode. */
+--bg: #0f0c0a;        /* black glaze */
+--surface: #17120f;   /* the look-up's panel, the menus */
+--ink: #eedcc6;       /* clay light: 14.6 : 1 (13.9 : 1 on --surface) */
+--ink-2: #c7ad92;     /* 9.1 : 1 (8.7 : 1 on --surface) */
+--ink-3: #97806a;     /* 5.2 : 1 (5 : 1 on --surface) */
+--accent: #d77b4a;    /* terracotta: 6.3 : 1 (6 : 1 on --surface); --bg on it 6.3 : 1 */
+--word-on: #2f1e14;   /* behind the looked-up word: terracotta at 16 % */
+--line: rgb(215 123 74 / 0.34); /* ornament hairlines */
+
+/* Day: black-figure. The default in the device's light mode. */
+--bg: #efe1cd;        /* pale fired clay */
+--surface: #e6d4bb;
+--ink: #1b130d;       /* black glaze: 14.3 : 1 (12.7 : 1 on --surface) */
+--ink-2: #4c3b2c;     /* 8.3 : 1 (7.4 : 1 on --surface) */
+--ink-3: #6b5440;     /* 5.5 : 1 (4.9 : 1 on --surface) */
+--accent: #933d19;    /* terracotta, fired darker: 5.6 : 1 (5 : 1 on --surface); --bg on it 5.6 : 1 */
+--word-on: #e1c5ae;
+--line: rgb(147 61 25 / 0.38);
 ```
 
-The same Night values apply under `@media (prefers-color-scheme: dark)` when no page is chosen. Red marks one kind of
-thing at a time: the passage numbers in the text, links, and the chosen item in a list. The looked-up word gets
-`--word-on` behind it and a 2 px `--accent` line under it, so it is found again at a glance after reading the entry.
+The notes keep four colours, re-tuned to sit on each ground at 4.5 : 1 or more.
 
-## Space and shape
+## Ornament
 
-Spacing steps of 4, 8, 12, 16, 24, 32, 48 and 64 px (`--space-1` to `--space-8`). Hairline rules (1 px `--rule`), a strong
-rule (`--rule-strong`) above each part of a page, square corners everywhere, the grammar tags included. No shadows: the
-look-up's panel and menus sit on `--surface` with a hairline edge. Controls are at least 40 px tall on a computer (44 px with a
-touch screen). Focus is a 2 px `--accent` outline 2 px out.
+All drawn in SVG from one component, `Ring`, which measures the box it surrounds and fits a whole number of tongues
+round it. A square box gets a circle; a wider one a stadium (a pill). Every ornament is `aria-hidden`.
 
-One movement, the ink-in, as before, and none with reduced motion.
+- **The title tondo.** The first time a book opens, its title page stands in a circle 440 px across (300 px on a
+  phone): a hairline, a band of tongues, a hairline, a ring of dots, then the author in spaced capitals, the Greek title
+  in Noto Serif Display, the English title in italic.
+- **The word's ring.** In the look-up the dictionary form stands in a smaller ring of the same tongues: a circle for a
+  word of five letters or fewer, a stadium for a longer one. A long word is set smaller down to 24 px, then the ring
+  grows, so a word is never cut or broken. On a short screen (under 520 px tall) the sheet drops the ring so the
+  meaning comes first.
+- **The tongue band.** A strip of tongues 10 px tall along the top edge of the look-up's panel and sheet.
+- **The page marker.** In the bar, beside "page 1 of 5", a short row of tongues, one for each page, the pages up to this
+  one in terracotta. A book of more than 12 pages gets a thin line that fills instead. (A ring was tried first, whole
+  and in pieces; either way it read as something loading.)
+- **The number ring.** Each passage number stands in a hairline circle with a dotted circle inside it.
+
+Tongues alternate full terracotta and terracotta at 40 %. Hairlines are `--line`.
+
+## Shape and space
+
+Spacing steps of 4, 8, 12, 16, 24, 32, 48 and 64 px, as before. Corners: buttons, the grammar's parts and the looked-up
+word's tint are pills (`--pill`); menus and the phone's sheet are rounded 12 px and 24 px (`--radius`); the panel and the
+bar are square, edge to edge. No shadows: the panel and menus are `--surface` with a hairline edge. The bar is the page
+ground at 90 % over a 12 px blur, with a hairline under it.
+
+## Motion
+
+Motion says where a thing came from, then stops. Nothing moves while you read.
+
+- **The look-up opens:** it opens dozens of times a session, so its motion stays under 300 ms. On a computer the panel
+  slides in from the right in 280 ms and the text moves aside in the same 280 ms, both on the drawer curve
+  (`--ease-drawer`, cubic-bezier(0.32, 0.72, 0, 1)); on a phone the sheet rises from the foot in 320 ms. The word's ring
+  turns 12° into place and fades in over 280 ms, starting 40 ms in; the dictionary form rises 6 px over 200 ms. Opening
+  another word changes only the contents, so stepping from word to word, a keyboard action, never animates.
+- **Pressing:** a button sinks to 97 % of its size while pressed (100 ms).
+- **Hover:** colour only, 150 ms. Nothing lifts.
+- **Arriving:** a menu or a second layer rises 6 px and fades in over 240 ms. The old ink-in blur is gone.
+- **Reduced motion:** nothing moves. Each arrival becomes a 150 ms fade in place, colour changes stay gradual, and a
+  press no longer sinks.
+
+## Touch
+
+Every control is at least 44 px tall on a touch screen and 40 px with a mouse. A control drawn smaller (the passage
+number's 34 px ring on a phone) has an invisible pressable area that reaches 44 px. The look-up's buttons are 46 px pills; the passage number's ring is the number's button, and its
+pressable area reaches past the ring to 44 px.
 
 ## Layouts
 
-All widths at 1440 px. The page has a 32 px gutter on each side.
+The structure of the 12 November design stays; only the look above changes.
 
-### Site bar (every page but the reader)
+1. **The look-up slides in from the right** on a computer: 400 px wide, under the bar, as tall as the window. Where
+   the text fits beside it, the text moves aside; where it does not, the panel lies over the English or, failing that,
+   the look-up is a sheet from the foot of the screen (always below 760 px). × or Escape closes it.
+2. **The text column is centred**, about 60 letters of Greek a line, with the passage numbers in a rail at its left.
+3. **One bar, at the top**, on every page: Library, the book and its place (a row of tongues, one to a page), Notes,
+   Text.
 
-```
-| Σ Mathesis   Library                     Private texts · Saved · Sync · ◐ |   56 px, --surface, rule below
-```
-
-### Library
-
-```
-| site bar                                                                      |
-| The library   1,822 works by 371 authors, 686 with English                    |   one line, 40 px title
-| [ Search an author, a title or a Greek word ...                     / ]       |   24 px field
-| With English · Greek only     Order: Authors A–Z · Titles · By kind · Period   |
-| Filters: period ▾  dialect ▾  vocabulary ▾                                     |
-| Continue reading:  Plato, Apology at 18a  ·  Homer, Iliad at 1.120  ...        |   only when there is one
-| Where to begin  (folded, one line)                                            |
-|-------------------------------------------------------------------------------|
-| A |  Achilles Tatius  Ἀχιλλεὺς Τάτιος  | Leucippe and Clitophon  Τὰ κατὰ...  →  |
-| B |  2nd c. AD, novelist              |   novel · 2nd c. · 43,000 words · ■■□ |
-| C |  ...                              |                                         |
-```
-
-A letter rail runs down the left edge and marks the letter you are under. Each author is one row of a two-column grid:
-name, Greek name, dates and description on the left (300 px); the works on the right, each with its Greek title,
-kind, length, a three-step vocabulary meter and English or Greek only. An author with more than six works shows six
-and "All 37 works". The search marks the letters it matched. The first author is above the fold.
-
-### Reader
+### Reader on a computer
 
 ```
-| ← Library   Ἀπολογία Σωκράτους · Plato, Apology · 17–22  ▾ ━━━━━─────  Notes 3 · Text |  48 px top bar
-|                                                                                         |
-|     17   ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε          | οἶδα                      |
-|          ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ [οἶδα]· ἐγὼ δ’ οὖν        | verb · irregular          |
-|          καὶ αὐτὸς ὑπ’ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην...      | to know                   |
-|          ▸ Show the English                                    | perfect · active · ...    |
-|                                                                | ‹ Previous  Next ›  Note  |
-|     18   ...                                                   | More about it             |
-|                                                                |                           |
-|                   ← Sections 1–16     Continue to 23–28 →      |                           |
+| ‹ Library   Ἀπολογία · Plato   17-22 ▮▯▯▯▯ page 1 of 5  Notes  Text |  60 px, ground at 90 %, blur
+|                                                                  |
+|            ( ring of tongues: ΠΛΑΤΩΝ / Ἀπολογία Σωκράτους )        |  title page, first visit only
+|                                                                  |
+|   (17)  ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε    | ▮▯▮▯▮▯▮▯▮▯▮▯▮▯▮ |
+|         ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ (οἶδα)· ἐγὼ δʼ οὖν | ( οἶδα )  ×     |
+|         ...                                           | VERB · IRREGULAR|
+|         ── Show the English                           | to know         |
 ```
 
-- Rail 56 px and text 680 px, centred. The look-up's panel slides in from the right and the text moves aside (decision 1).
-- **Both:** Greek and English side by side, each 30 em, their passages aligned at the top of each row.
-- **English:** one column at `--t-body`.
-- The look-up's two layers stay. Layer two drops the meaning and grammar it repeated and opens on LSJ.
-- The bar's Notes menu starts with "Save this book" and "Save passage 17a" (the passage at the top of the screen). Under them
-  it lists the book's notes and saved places, the whole book first, each with Remove, and Undo after a removal. A note opened
-  from a mark, from Notes or from a passage's number opens in the look-up's panel to edit.
-- A passage's number in the rail is a button: it saves the passage, or opens its note. It looks like the number until the
-  pointer is on it, when it is underlined.
+### Reader on a phone
 
-### Saved
+The bar at the top, the text in one column with the number's ring above each passage, and the look-up as a sheet
+rising over the lower 58 % with the tongue band along its rounded top. The text scrolls so the word stays above it.
 
-Two columns. On the left, a sticky list of books with a count each, which filters the right, then Saved books and Saved
-words. On the right, each note with the Greek it is on (the word, or the first line of the passage), its text, and Open,
-Edit, Remove. A book or passage saved without a note says so in small italic, and offers "Add a note" in place of Edit.
+## Words in the look-up
 
-### Sync
+The dictionaries' shorthand is written out in full: "to know (pf. in pres. sense)" is shown as "to know (perfect in
+present sense)" (`lib/lookup/abbrev.ts`), in the look-up and on the Saved page. Marking each abbreviation with a dotted
+line was tried first; at 32 px the dotted lines were the loudest thing in the panel.
 
-Two columns. On the left, what sync is and how it works. On the right, the actions: "I have a code" first for a device
-that has one, "Make a new code" under it, or, when synced, the code's state and "Stop syncing here".
-
-### Credits
-
-Section names hang in a 240 px left column; the entries run in two columns beside them.
-
-### Not found
-
-The site bar, "This page is not here", a search field that goes to the library, and a link to the library.
+A screen reader hears the word and its meaning once when a word opens or the arrows step to the next ("οἶδα: to know
+..."), from one hidden live line. The card itself is not live, so it is not read out again at every step.
 
 ## Checks
 
-`scripts/check-design.mjs` and `check-a11y.mjs` move to these tokens: only these sizes, only these colours, only the
-three typefaces, contrast in Paper and Night, names on every control.
+- `scripts/check-design.mjs`: only the three typefaces, only the type steps, only the role colours, one filled button
+  (a quiet button on the second surface also passes). It groups the words by their font settings and draws each
+  group's letters once, so all 110 screens take about 5 minutes; each screen has a 90 second limit and is named on
+  stderr as it starts. `ONLY=<screen names as a pattern>` and `THEME=paper|night` run a part of it.
+- `scripts/check-a11y.mjs`: names, focus, contrast in Day and Night, 44 px targets.
+- `scripts/check-impeccable.mjs`: impeccable's pattern detector over the source and the rendered library and reader,
+  in `npm run check:design`. It first proves itself on a known-bad page. One finding is judged right and listed in the
+  script with its reason: the author's spaced capitals above the title in the title tondo, flagged as a "kicker".

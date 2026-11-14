@@ -136,9 +136,11 @@
 .sayForm :global(.btn) { min-height: 36px; padding: var(--space-1) var(--space-4); }
 .sayForm :global(.text-btn):disabled { color: var(--ink-3); text-decoration: none; cursor: not-allowed; }
 
-/* Listen at the foot of a phone's screen (ListenButton): the ink button, at the right, above the safe area. On a wider window the bar has it. */
+/* Listen at the foot of a phone's screen (ListenButton): a quiet pill on the second surface with a hairline, at the right, above the
+   safe area; not a second filled button beside More about it (the critique of 2026-11-14). On a wider window the bar has it. */
 .listenFoot:global(.btn) {
   position: fixed; right: var(--gutter); bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); z-index: calc(var(--z-panel) - 1);
   display: none; padding-inline: var(--space-4);
+  background: var(--surface); color: var(--ink); border-color: var(--line);
 }
 @media (max-width: 600px) { .listenFoot:global(.btn) { display: inline-flex; } }

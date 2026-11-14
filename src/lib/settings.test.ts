@@ -29,8 +29,9 @@ describe("a size step", () => {
 });
 
 describe("a line-spacing step", () => {
-  it("starts from the design's 1.65 and moves a tenth at a time", () => {
-    expect(stepLeading("auto", 1)).toBe(1.75);
+  it("starts from the design's 1.8 (DESIGN.md, Type) and moves a tenth at a time", () => {
+    expect(stepLeading("auto", 1)).toBe(1.9);
+    expect(stepLeading("auto", -1)).toBe(1.7);
     expect(stepLeading(1.8, -1)).toBe(1.7);
   });
   it("stays within the limits", () => {

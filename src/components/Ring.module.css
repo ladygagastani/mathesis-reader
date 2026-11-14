@@ -1,0 +1,17 @@
+/* The ring of tongues (Ring.tsx; DESIGN.md, "Ornament"). The box sets the ring's size: the title's is a circle set by its
+   page, the word's grows with the word, and is at least as wide as it is tall, so a short word stands in a circle. */
+.ring { position: relative; display: inline-grid; place-items: center; isolation: isolate; color: var(--accent); }
+.inner { position: relative; z-index: 1; display: grid; place-items: center; text-align: center; color: var(--ink); }
+.art { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.hair { fill: none; stroke: var(--line); stroke-width: 1; }
+.tongue { stroke: currentColor; }
+.faint { opacity: 0.4; }
+.dots { fill: none; stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
+
+/* the word's ring: padding enough to clear the band, never narrower than tall */
+.ring[data-kind="word"] { padding: 26px 34px; min-width: calc(1lh + 52px); }
+/* arriving: a circle turns a little into place, a stadium settles; the word itself rises (DESIGN.md, "Motion") */
+.art[data-shape="circle"] { animation: ring-turn var(--dur-ring) var(--ease-out) 40ms backwards; }
+.art[data-shape="pill"] { animation: ring-settle var(--dur-ring) var(--ease-out) 40ms backwards; }
+@keyframes ring-turn { from { opacity: 0; rotate: -12deg; } }
+@keyframes ring-settle { from { opacity: 0; scale: 0.96; } }

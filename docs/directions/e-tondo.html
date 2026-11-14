@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction E · Tondo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;1,7..72,400&family=Noto+Serif+Display:ital,wght@0,300;0,400;1,300&family=Hanken+Grotesk:wght@400;500&display=block" rel="stylesheet">
+<style>
+/* Direction E, Tondo. A modern red-figure page. The inside of an Attic drinking cup (a kylix) has one painted circle at
+   its centre, the tondo, ringed by a band of tongues; here the title and every looked-up word are set in such a circle.
+   Black glaze with a faint lustre, clay-light ink, one terracotta, and hairlines in the colour of the clay. */
+:root {
+  --bg: #0f0c0a;
+  --surface: #17120f;
+  --ink: #eedcc6;
+  --ink-2: #c7ad92;
+  --ink-3: #97806a;
+  --clay: #d77b4a;
+  --line: rgb(215 123 74 / 0.32);
+  --rule: rgb(238 220 198 / 0.09);
+  --word-on: rgb(215 123 74 / 0.16);
+  --greek: "Literata", serif;
+  --display: "Noto Serif Display", serif;
+  --ui: "Hanken Grotesk", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font-family: var(--greek); -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(70% 45% at 38% 0%, rgb(238 220 198 / 0.075), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .8 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg.i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.bar { position: fixed; inset: 0 0 auto 0; height: 60px; display: flex; align-items: center; gap: 2px; padding: 0 22px; z-index: 5; font-family: var(--ui);
+  background: linear-gradient(rgb(15 12 10 / .92), rgb(15 12 10 / 0)); }
+.bar .btn { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; font-size: 15px; color: var(--ink-2); letter-spacing: 0.01em; }
+.bar .head { margin: 0 auto; display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--ink-3); }
+.bar .head .gr { font-family: var(--display); font-size: 17px; color: var(--ink-2); }
+.prog { display: flex; align-items: center; gap: 10px; }
+.prog svg { width: 22px; height: 22px; }
+
+main { display: flow-root; transition: transform 420ms cubic-bezier(.22,1,.36,1); }
+@media (min-width: 900px) { main { transform: translateX(-210px); } }
+
+/* the title tondo */
+.tondo { position: relative; width: 440px; height: 440px; margin: 92px auto 40px; display: grid; place-items: center; text-align: center; }
+.tondo svg.ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tondo .who { font-family: var(--ui); font-size: 12px; letter-spacing: 0.42em; color: var(--clay); margin: 0 0 18px; padding-left: 0.42em; }
+.tondo h1 { font-family: var(--display); font-weight: 300; font-size: 48px; line-height: 1.08; margin: 0; letter-spacing: -0.01em; }
+.tondo .lat { font-style: italic; font-size: 16px; color: var(--ink-3); margin: 18px 0 0; }
+
+.col { width: min(640px, 100% - 40px); margin: 0 auto; padding-bottom: 160px; position: relative; }
+.sec { position: relative; }
+.num { position: absolute; left: -76px; top: 0; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line);
+  display: grid; place-items: center; font-family: var(--display); font-size: 18px; color: var(--clay); }
+.num::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px dotted var(--line); }
+.greek { font-size: 22px; line-height: 1.85; margin: 0; }
+.st { font-family: var(--ui); font-size: 11px; color: var(--ink-3); vertical-align: 0.65em; margin: 0 3px; letter-spacing: 0.04em; }
+.w-on { color: #f6c9a6; background: var(--word-on); border-radius: 999px; padding: 2px 8px; margin: 0 -8px; box-shadow: inset 0 0 0 1px var(--line); }
+.eng { margin-top: 26px; height: 44px; font-family: var(--ui); font-size: 14px; letter-spacing: 0.02em; color: var(--ink-2); display: inline-flex; align-items: center; gap: 10px; }
+.eng::before { content: ""; width: 28px; border-top: 1px solid var(--clay); }
+
+/* the look-up */
+.look { position: fixed; top: 60px; right: 0; bottom: 0; width: 440px; z-index: 6; background: var(--surface); border-left: 1px solid var(--rule); overflow: auto;
+  padding: 36px 40px 40px; font-family: var(--ui); }
+.look .band { height: 12px; margin: -36px -40px 30px; background: var(--tongues) repeat-x; opacity: 0.9; }
+.look .close { position: absolute; top: 26px; right: 22px; width: 44px; height: 44px; display: grid; place-items: center; color: var(--ink-2); border-radius: 50%; }
+.lhead { display: flex; align-items: center; gap: 22px; }
+.medal { position: relative; flex: none; width: 148px; height: 148px; display: grid; place-items: center; }
+.medal svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.medal .lemma { font-family: var(--display); font-weight: 400; font-size: 40px; margin: 0; position: relative; color: var(--ink); }
+.lmeta .kind { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--clay); margin: 0; }
+.lmeta .parts { font-family: var(--greek); font-size: 17px; line-height: 1.5; color: var(--ink-2); margin: 8px 0 0; }
+.meaning { font-family: var(--display); font-weight: 300; font-size: 32px; line-height: 1.18; margin: 30px 0 0; }
+.meaning em { font-style: italic; color: var(--ink-2); }
+.why { font-family: var(--greek); font-size: 16px; line-height: 1.6; color: var(--ink-2); margin: 12px 0 0; }
+.parse { display: grid; grid-template-columns: repeat(3, 1fr); margin: 28px 0 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.parse div { padding: 14px 0 14px; }
+.parse div + div { padding-left: 14px; border-left: 1px solid var(--rule); }
+.parse dt { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.parse dd { margin: 6px 0 0; font-size: 15px; color: var(--ink); }
+.role { font-size: 15px; line-height: 1.55; color: var(--ink-2); margin: 16px 0 0; }
+.role b { font-weight: 500; color: var(--ink); }
+.acts { display: flex; gap: 8px; margin-top: 26px; }
+.acts button { height: 46px; padding: 0 18px; border-radius: 999px; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); }
+.acts .lsj { background: var(--clay); color: #1b0f08; box-shadow: none; font-weight: 500; margin-left: auto; }
+.foot { display: flex; justify-content: space-between; margin-top: 24px; font-size: 13px; color: var(--ink-3); }
+
+@media (max-width: 760px) {
+  .bar { height: 52px; padding: 0 4px; }
+  .bar .btn span, .bar .head .lat2, .prog span { display: none; }
+  .bar .btn { width: 44px; padding: 0; justify-content: center; }
+  .tondo { width: 300px; height: 300px; margin: 64px auto 28px; }
+  .tondo h1 { font-size: 32px; }
+  .tondo .who { margin-bottom: 12px; font-size: 11px; }
+  .tondo .lat { font-size: 14px; margin-top: 10px; }
+  .num { position: relative; left: 0; margin-bottom: 16px; width: 40px; height: 40px; font-size: 16px; }
+  .greek { font-size: 20px; line-height: 1.8; }
+  .col { padding-bottom: 70vh; }
+  .look { top: auto; left: 0; width: auto; height: 58%; border-left: 0; border-radius: 26px 26px 0 0; padding: 28px 22px 24px; }
+  .look .band { margin: -28px -22px 22px; border-radius: 26px 26px 0 0; }
+  .look .close { top: 18px; right: 10px; }
+  .medal { width: 112px; height: 112px; }
+  .medal .lemma { font-size: 32px; }
+  .lhead { gap: 16px; }
+  .meaning { font-size: 26px; margin-top: 20px; }
+  .parse { margin-top: 20px; }
+  .acts { margin-top: 20px; }
+  .acts button { padding: 0 16px; }
+  .foot { display: none; }
+}
+.who { font-family: var(--display) !important; font-weight: 500; }
+.g { font-family: var(--greek); font-size: 1.08em; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Library</span></button>
+  <div class="head"><span class="gr">Ἀπολογία</span><span class="lat2">Plato · 17a</span></div>
+  <span class="prog btn"><svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="none" stroke="rgb(238 220 198 / .18)" stroke-width="2"/><circle cx="11" cy="11" r="9" fill="none" stroke="#d77b4a" stroke-width="2" stroke-dasharray="2.3 60" transform="rotate(-90 11 11)" stroke-linecap="round"/></svg><span>4%</span></span>
+  <button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Notes</span></button>
+  <button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M4 18L9 6l5 12M6 14h6M15 18l3-7 3 7M16 16h4"/></svg><span>Text</span></button>
+</header>
+
+<main>
+  <div class="tondo">
+    <svg class="ring" id="ring" viewBox="0 0 440 440" aria-hidden="true"></svg>
+    <div>
+      <p class="who">ΠΛΑΤΩΝ</p>
+      <h1>Ἀπολογία<br>Σωκράτους</h1>
+      <p class="lat">The Apology of Socrates</p>
+    </div>
+  </div>
+  <div class="col">
+    <section class="sec">
+      <span class="num">17</span>
+      <p class="greek">ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ <span class="w-on" id="word">οἶδα</span>· ἐγὼ δʼ οὖν καὶ αὐτὸς ὑπʼ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην, οὕτω πιθανῶς ἔλεγον. καίτοι ἀληθές γε ὡς ἔπος εἰπεῖν οὐδὲν εἰρήκασιν. μάλιστα δὲ αὐτῶν ἓν ἐθαύμασα τῶν πολλῶν ὧν ἐψεύσαντο, τοῦτο ἐν ᾧ ἔλεγον ὡς χρῆν ὑμᾶς εὐλαβεῖσθαι μὴ ὑπʼ ἐμοῦ ἐξαπατηθῆτε <span class="st">17b</span> ὡς δεινοῦ ὄντος λέγειν. τὸ γὰρ μὴ αἰσχυνθῆναι ὅτι αὐτίκα ὑπʼ ἐμοῦ ἐξελεγχθήσονται ἔργῳ, ἐπειδὰν μηδʼ ὁπωστιοῦν φαίνωμαι δεινὸς λέγειν, τοῦτό μοι ἔδοξεν αὐτῶν ἀναισχυντότατον εἶναι, εἰ μὴ ἄρα δεινὸν καλοῦσιν οὗτοι λέγειν τὸν τἀληθῆ λέγοντα.</p>
+      <button class="eng">Show the English</button>
+    </section>
+  </div>
+</main>
+
+<aside class="look" aria-label="Look-up">
+  <div class="band"></div>
+  <button class="close" aria-label="Close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div class="lhead">
+    <div class="medal"><svg id="medal" viewBox="0 0 148 148" aria-hidden="true"></svg><h2 class="lemma">οἶδα</h2></div>
+    <div class="lmeta">
+      <p class="kind">Verb · irregular</p>
+      <p class="parts">εἰδέναι<br>ἴσθι · ᾔδειν</p>
+    </div>
+  </div>
+  <p class="meaning">I know</p>
+  <p class="why">A perfect in form, “I have seen”, with a present sense: to have seen a thing is to know it.</p>
+  <dl class="parse">
+    <div><dt>Tense</dt><dd>Perfect</dd></div>
+    <div><dt>Mood</dt><dd>Indicative</dd></div>
+    <div><dt>Person</dt><dd>1st singular</dd></div>
+  </dl>
+  <p class="role"><b>In this sentence</b> it is the main verb: <span class="g">οὐκ οἶδα</span>, “I do not know”.</p>
+  <div class="acts">
+    <button>Note</button><button>Save</button><button class="lsj">LSJ entry</button>
+  </div>
+  <div class="foot"><span>42 times in the Apology</span><span>No. 110 of the commonest words</span></div>
+</aside>
+
+<script>
+  // The ornaments are drawn here so their geometry is exact: a ring of tongues round the title, as on a cup's shoulder,
+  // and a finer ring of ticks round the looked-up word.
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+  function ring(svg, size, rOuter, rInner, n, opts) {
+    const c = size / 2;
+    el("circle", { cx: c, cy: c, r: rOuter + 6, fill: "none", stroke: "rgb(215 123 74 / .45)", "stroke-width": 1 }, svg);
+    el("circle", { cx: c, cy: c, r: rInner - 6, fill: "none", stroke: "rgb(215 123 74 / .45)", "stroke-width": 1 }, svg);
+    if (opts.dots) el("circle", { cx: c, cy: c, r: rInner - 13, fill: "none", stroke: "rgb(215 123 74 / .35)", "stroke-width": 1.2, "stroke-dasharray": "0.1 6", "stroke-linecap": "round" }, svg);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * 360, len = rOuter - rInner, w = opts.w;
+      const g = el("g", { transform: `rotate(${a} ${c} ${c})` }, svg);
+      el("rect", { x: c - w / 2, y: c - rOuter, width: w, height: len, rx: w / 2,
+        fill: i % 2 ? "rgb(215 123 74 / .9)" : "rgb(215 123 74 / .38)" }, g);
+    }
+  }
+  ring(document.getElementById("ring"), 440, 212, 192, 96, { w: 6.4, dots: true });
+  ring(document.getElementById("medal"), 148, 70, 61, 48, { w: 3.4 });
+  // the same tongues, flat, along the top of the look-up
+  const t = `<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><rect x='1.5' y='0' width='4' height='10' rx='2' fill='rgb(215 123 74 / .9)'/><rect x='7.5' y='0' width='4' height='10' rx='2' fill='rgb(215 123 74 / .38)'/></svg>`;
+  document.documentElement.style.setProperty("--tongues", `url("data:image/svg+xml,${encodeURIComponent(t)}")`);
+</script>
+</body>
+</html>

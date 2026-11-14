@@ -41,9 +41,10 @@ WORDS AND DICTIONARIES
 
 FONTS AND SOFTWARE
 
-- EB Garamond (Georg Duffner and Octavio Pardo), GFS Didot (Greek Font Society) and Gentium Book
-  Plus (SIL International). SIL Open Font License 1.1. The old site's copies of the arrows and signs
-  of EB Garamond and Gentium Book Plus are in src/fonts/, with their licences beside them.
+- Literata (TypeTogether), Noto Serif Display (the Noto Project Authors) and Hanken Grotesk (Alfredo
+  Marco Pradil). SIL Open Font License 1.1. Downloaded from Google Fonts at build time and served
+  from this app. (The printed-page look's sign fonts, EB Garamond's and Gentium Book Plus's, are in
+  _archive/fonts-printed-page with their licences.)
 - Next.js, React: MIT. saxes: ISC.
 - The icons on the buttons are Lucide's (https://lucide.dev), ISC License, Copyright (c) Lucide
   Contributors 2022, portions Copyright (c) Cole Bemis 2013-2022 as part of Feather (MIT); copied as

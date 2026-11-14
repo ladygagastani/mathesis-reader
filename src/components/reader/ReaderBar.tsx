@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { Found } from "@/lib/reader/find";
-import Icon from "@/components/Icon";
+import Icon, { type IconName } from "@/components/Icon";
 import { GREEK_SIZES, LEADINGS, setSettings, stepLeading, stepSize, type Columns, type Theme } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
 import type { Note } from "@/lib/notes/notes";
@@ -25,7 +25,7 @@ export interface TextOption { value: string; label: string }
 const KEYS: [keys: string[], what: string][] = [
   [["←", "→"], "The page before, the page after. With a word looked up: the word before, the word after."],
   [["g"], "Go to a passage, or find a word anywhere in the book."],
-  [["Tab"], "Into the text, then ← → from word to word, ↑ ↓ from line to line, Home and End to the first and last word."],
+  [["Tab"], "Into the text, then the left and right arrows from word to word, up and down from line to line, Home and End to the first and last word."],
   [["Enter"], "Look up the word."],
   [["Esc"], "Close the look-up or a menu."],
   [["/"], "Search the library, from any page."],
@@ -34,6 +34,9 @@ const KEYS: [keys: string[], what: string][] = [
   [["{", "}"], "While it reads: the passage before, the passage after."],
   [["?"], "These keys."],
 ];
+
+/** The arrow keys are drawn with the app's arrows: none of the three typefaces has "←" or "→", and the check found them in Arial. */
+const ARROWS: Record<string, [IconName, string]> = { "←": ["back", "Left arrow"], "→": ["next", "Right arrow"] };
 
 /** Go to: a passage by its reference, and a word anywhere in the book. */
 function GoTo({ example, goTo, find, onFound, onDone }: {
@@ -124,7 +127,30 @@ function Choice<T extends string>({ label, value, options, onChange, unavailable
   );
 }
 
-const THEMES: [Theme, string][] = [["auto", "Follow device"], ["paper", "Paper"], ["night", "Night"]];
+/** The bar's page marker (DESIGN.md, "Ornament"): a short row of tongues, one for each page, like the band at the top of the
+ *  look-up's panel; the pages up to this one are terracotta. (A ring was tried first, whole and then in pieces: either way it
+ *  read as something loading.) A book of more than 12 pages gets a plain line that fills instead, as the tongues would be too
+ *  thin to tell apart. */
+function PageRing({ page, pages }: { page: number; pages: number }) {
+  const n = Math.max(1, pages);
+  if (n > 12) {
+    const w = Math.max(2, Math.round(((page + 1) / n) * 36));
+    return (
+      <svg className={styles.rule} viewBox="0 0 36 12" width="36" height="12" aria-hidden="true" focusable="false">
+        <rect x="0" y="5" width="36" height="2" rx="1" className={styles.track} />
+        <rect x="0" y="5" width={w} height="2" rx="1" className={styles.mark} />
+      </svg>
+    );
+  }
+  const step = 6, width = n * step - 2;
+  return (
+    <svg className={styles.rule} viewBox={`0 0 ${width} 12`} width={width} height="12" aria-hidden="true" focusable="false">
+      {Array.from({ length: n }, (_, i) => <rect key={i} x={i * step} y="0" width="4" height="12" rx="2" className={i <= page ? styles.mark : styles.track} />)}
+    </svg>
+  );
+}
+
+const THEMES: [Theme, string][] = [["auto", "Follow device"], ["paper", "Day"], ["night", "Night"]];
 const COLUMNS: [Columns, string][] = [["greek", "Greek"], ["both", "Both"], ["trans", "English"]];
 
 /** The Greek's size as the page shows it now, in rem (for the first step from the device's own size). */
@@ -190,13 +216,14 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
         {showTitle ? <h1 className={styles.title}><button type="button" className={styles.top} onClick={onTop} title="To the top of the page">{title}</button></h1> : <span />}
 
         <nav className={styles.end} aria-label="The reader">
-          {/* where you are: the page's name, a thin rule with a short red mark at the place in the book, "page 1 of 5" */}
+          {/* where you are: the page's name, a short row of tongues, one to a page, the ones read so far in terracotta, and
+              "page 1 of 5" */}
           <div className={styles.slot}>
             <button ref={pagesBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.where}`} aria-expanded={open === "pages"} aria-haspopup="dialog"
               onClick={() => toggle("pages")}>
               <Icon name="goto" />
               <span className="visually-hidden">Go to: </span><span className={styles.part}>{where}</span><span className="visually-hidden">, </span>
-              <span className={styles.rule} aria-hidden="true"><span className={styles.mark} style={{ "--p": pages.length > 1 ? page / (pages.length - 1) : 0 } as React.CSSProperties} /></span>
+              <PageRing page={page} pages={pages.length} />
               <span className={styles.at}>{at}</span>
             </button>
             {open === "pages" && (
@@ -300,7 +327,7 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
                 <dl className={styles.keys}>
                   {KEYS.map(([keys, what]) => (
                     <div key={what} className={styles.keyRow}>
-                      <dt>{keys.map((k) => <kbd key={k}>{k}</kbd>)}</dt>
+                      <dt>{keys.map((k) => <kbd key={k}>{ARROWS[k] ? <Icon name={ARROWS[k][0]} label={ARROWS[k][1]} /> : k}</kbd>)}</dt>
                       <dd>{what}</dd>
                     </div>
                   ))}

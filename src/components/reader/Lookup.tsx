@@ -10,15 +10,17 @@
  */
 import Link from "next/link";
 import Icon from "@/components/Icon";
+import Ring from "@/components/Ring";
 import { useEffect, useRef, useState } from "react";
 import { candidates, fold, lookupForm } from "@/lib/greek";
-import { SOURCE_NAMES } from "@/lib/lookup/card";
+import { couldNotLoad, SOURCE_NAMES } from "@/lib/lookup/card";
+import { spellOut } from "@/lib/lookup/abbrev";
 import { classOf, fullHeading, rankLine } from "@/lib/lookup/core";
 import { certaintyNote } from "@/lib/lookup/certainty";
 import { creditsFor } from "@/lib/lookup/credits";
 import { lookUp, lookUpHeadword, type Looked, type WordAt } from "@/lib/lookup/lookup";
 import { citationHref, type LsjEntry, type Seg } from "@/lib/lookup/lsj";
-import { grammarParts, readTag } from "@/lib/lookup/postag";
+import { grammarPhrases, readTag } from "@/lib/lookup/postag";
 import { lookUpWiktionary, type WiktResult } from "@/lib/lookup/wiktionary";
 import { wordFamily, type WordFamily } from "@/lib/lookup/wiktionary-family";
 import { occursLine } from "@/lib/lookup/occurrences";
@@ -49,9 +51,14 @@ function Entry({ e }: { e: LsjEntry }) {
   ));
 }
 
-/** The grammar, one word to a part, each set apart (postag.ts, grammarParts). */
+/** The grammar, one phrase to a pill: "perfect active indicative", "1st person singular" (postag.ts, grammarPhrases). */
 function Parts({ parts }: { parts: string[] }) {
   return <ul className={styles.parts} aria-label="Grammar">{parts.map((p, i) => <li key={i}>{p}</li>)}</ul>;
+}
+
+/** A dictionary's line with its shorthand written out in full (lib/lookup/abbrev.ts). */
+function Spelled({ text }: { text: string }) {
+  return <>{spellOut(text)}</>;
 }
 
 /** Wiktionary's lines for one part of speech: the senses numbered, a line it indents (":") under its sense as an example. */
@@ -195,7 +202,7 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
   const kindLine = card?.kind ? [card.kind, cls].filter(Boolean).join(" · ") : null;
   const tapped = !!card && fold(lookupForm(at.word)) !== fold(head);
   const heading = card ? fullHeading(l!.core, card.lemma ?? head) : null;
-  const parts = l?.analysis ? grammarParts(l.analysis.tag) : [];
+  const parts = l?.analysis ? grammarPhrases(l.analysis.tag) : [];
   const facts = [occurs, l?.core ? rankLine(l.core.rank) : null].filter((x): x is string => !!x);
   // the word saved for later: by its dictionary form
   const words = useWords();
@@ -211,7 +218,7 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
 
   const meaning = card && (
     <>
-      {card.meaning.text}
+      <Spelled text={card.meaning.text} />
       {card.meaning.source && <span className="visually-hidden"> (from {SOURCE_NAMES[card.meaning.source]})</span>}
     </>
   );
@@ -229,12 +236,16 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
       <div className={styles.head}>
         {layer === 2 && !seen && <button type="button" className={`text-btn ${styles.back}`} onClick={back}><Icon name="back" />Back</button>}
         {from && <button type="button" className={`text-btn ${styles.back}`} onClick={back} aria-label={`Back to ${from}`}><Icon name="back" /><span lang="grc">{from}</span></button>}
-        <p className={styles.pw} lang="grc" style={{ "--chars": head.normalize("NFC").length } as React.CSSProperties}>{head}</p>
+        <p className={styles.pw} lang="grc" style={{ "--chars": head.normalize("NFC").length } as React.CSSProperties}><Ring kind="word" className={head.normalize("NFC").length <= 5 ? styles.round : undefined}>{head}</Ring></p>
         <button type="button" className={`icon-btn ${styles.x}`} onClick={onClose}><Icon name="close" label="Close the look-up" /></button>
       </div>
 
       {/* (the sheet's body scrolls by itself: it is in the Tab order, so a keyboard can scroll it) */}
-      <div className={styles.body} aria-live="polite" aria-busy={!l && !failed} tabIndex={place === "sheet" ? 0 : undefined}>
+      {/* what a screen reader hears when a word opens or the arrows step to the next: the word and its meaning, once. The card
+          itself is not a live region, so stepping word to word does not read the whole card again (the critique of 2026-11-14). */}
+      <p className="visually-hidden" aria-live="polite">{failed || (card && couldNotLoad(card.meaning.text, [l!.lsjError, l!.coreError])) ? `${at.word}: the dictionaries could not be loaded.`
+        : card && layer === 1 ? `${head}: ${spellOut(card.meaning.text)}` : ""}</p>
+      <div className={styles.body} aria-busy={!l && !failed} tabIndex={place === "sheet" ? 0 : undefined}>
         {!l && !failed && <p className="muted">Looking it up…</p>}
         {failed && <p className="muted">The look-up could not be loaded ({loadError}). Check your connection and try the word again.</p>}
 
@@ -244,8 +255,10 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
               {kindLine && <span className={styles.kindName}>{kindLine}</span>}
               {tapped && <span>{kindLine ? "you tapped " : "You tapped "}<span lang="grc" className={styles.tapped}>{at.word}</span></span>}
             </p>
-            {heading && <p className={styles.heading} lang="grc">{heading}</p>}
-            <p className={styles.meaning} title={card.meaning.source ? `From ${SOURCE_NAMES[card.meaning.source]}` : undefined}>{meaning}</p>
+            {heading && <p className={styles.heading} lang="grc"><Spelled text={heading} /></p>}
+            {couldNotLoad(card.meaning.text, [l!.lsjError, l!.coreError])
+              ? <p className={styles.unsure}>The dictionaries could not be loaded ({l!.lsjError ?? l!.coreError}). Check your connection and try the word again.</p>
+              : <p className={styles.meaning} data-long={spellOut(card.meaning.text).length > 34 || undefined} title={card.meaning.source ? `From ${SOURCE_NAMES[card.meaning.source]}` : undefined}>{meaning}</p>}
             {parts.length > 0 && <Parts parts={parts} />}
             {card.role && <p className={styles.role}>{card.role.lead}{card.role.governor && <> <span lang="grc" className={styles.gov}>{card.role.governor}</span></>}.</p>}
             {unsure(l!) && <p className={styles.unsure}>{unsure(l!)}</p>}
@@ -257,7 +270,7 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
           <div className={styles.second}>
             <div className={styles.recap}>
               {kindLine && <p className={styles.kind}><span className={styles.kindName}>{kindLine}</span></p>}
-              {heading && <p className={styles.heading} lang="grc">{heading}</p>}
+              {heading && <p className={styles.heading} lang="grc"><Spelled text={heading} /></p>}
               <p className={styles.recapMeaning}>{meaning}</p>
             </div>
             {from && <p className={styles.fine}>Related to <span lang="grc">{from}</span>. This word is not in the passage.</p>}
@@ -298,7 +311,7 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
             </section>
             {needWikt && (
               <section className={styles.sec}>
-                <h3 className="label">Wiktionary · live</h3>
+                <h3 className="label">Wiktionary</h3>
                 {!w && <p className="muted">Looking it up…</p>}
                 {w && !w.value && <p className="muted">{w.error ? `Wiktionary could not be reached (${w.error}).` : "No Wiktionary entry for this form."}</p>}
                 {w?.value && (
@@ -357,12 +370,14 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
 
       {layer === 1 && (
         <div className={styles.row}>
-          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(-1)} aria-label="Previous word"><Icon name="chevron-left" />Previous</button>
-          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(1)} aria-label="Next word">Next<Icon name="chevron-right" /></button>
-          <button type="button" className={`text-btn ${styles.step}`} onClick={onNote}><Icon name="note" />Note</button>
-          <button type="button" className={`text-btn ${styles.step} ${styles.keep}`} aria-pressed={!!saved} onClick={toggleSaved} disabled={!card}
-            title={saved ? "Saved: on the Saved page. Press to take it off." : "Keep this word on the Saved page"}><Icon name="keep" />{saved ? "Saved" : "Save word"}</button>
+          {/* More about it, the one filled pill, across the panel; under it Note and Save word, and the arrows to the word before
+              and after (the left and right keys do the same) */}
           <button type="button" className={`text-btn ${styles.more}`} onClick={() => onLayer(2)} disabled={!card}><Icon name="info" />More about it</button>
+          <button type="button" className={`text-btn ${styles.act}`} onClick={onNote}><Icon name="note" />Note</button>
+          <button type="button" className={`text-btn ${styles.act} ${styles.keep}`} aria-pressed={!!saved} onClick={toggleSaved} disabled={!card}
+            title={saved ? "Saved: on the Saved page. Press to take it off." : "Keep this word on the Saved page"}><Icon name="keep" />{saved ? "Saved" : "Save word"}</button>
+          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(-1)} aria-label="Previous word" title="Previous word (←)"><Icon name="chevron-left" /></button>
+          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(1)} aria-label="Next word" title="Next word (→)"><Icon name="chevron-right" /></button>
         </div>
       )}
     </aside>

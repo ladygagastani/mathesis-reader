@@ -52,11 +52,12 @@ the Android app, photographs, Listen, Echoes, Compare, Share.
 
 ## The look
 
-In [DESIGN.md](DESIGN.md) (12 Nov 2026), which keeps the old design's spirit (ADRs 0008 and 0009 of the old app) with
-its own type scale, colours, spacing and layouts. Paper and Night follow the device unless the site bar or Text sets
-one. Black ink, red for the chosen thing, hairline rules, square corners, no shadows. EB Garamond for English, GFS
-Didot for the title page, Gentium Book Plus for Greek, and no other typeface. One movement, the ink-in, off with reduced
-motion. Everything a finger presses is at least 44 px tall on a touch screen, 40 px with a mouse.
+In [DESIGN.md](DESIGN.md), Tondo (14 Nov 2026), chosen by the owner from six directions in [docs/directions](docs/directions):
+an Attic cup's black glaze and clay, with a ring of terracotta tongues round the book's title and round each word looked up.
+Night (red-figure) and Day (black-figure) follow the device unless the site bar or Text sets one. Literata for the Greek and
+English read, Noto Serif Display for titles and the looked-up word, Hanken Grotesk for the interface, and no other typeface;
+each face that sets Greek draws all of polytonic Greek. Motion only where a thing arrives, under 300 ms in the look-up, and a
+fade under reduced motion. Everything a finger presses is at least 44 px tall on a touch screen, 40 px with a mouse.
 
 ## Where the data comes from
 
