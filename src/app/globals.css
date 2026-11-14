@@ -9,7 +9,7 @@
 
 /* ---------------------------------------------------------------- base */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; background: var(--bg); transition: background-color 0.6s var(--ease); }
+html { -webkit-text-size-adjust: 100%; background: var(--bg); transition: background-color 0.6s var(--ease); -webkit-tap-highlight-color: transparent; }
 /* a wide screen sets the type a little larger, as a larger sheet is printed in a larger size */
 @media (min-width: 1600px) { html { font-size: var(--root-grow); } }
 /* nothing may nudge a phone's page sideways; clip makes no scroll box, so sticky things keep working */
@@ -81,6 +81,23 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 @media (hover: hover) { .segmented > button:hover:not([aria-checked="true"], :disabled) { color: var(--accent); } }
 .segmented > button[aria-checked="true"] { background: var(--sel-bg); color: var(--sel-fg); }
+
+/* ------------------------------------------------------------- pressing under a finger
+   The browser's own tap box (a blue or grey square) is off (html, above). In its place a pressed thing takes the looked-up
+   word's tint, terracotta at 16 %, at once, and lets it go over 240 ms when the finger lifts, as it sinks to 97 %: the same
+   mark the page puts on a word you tap. Only under a finger: a mouse has its hover colours. A component's own pressable
+   thing joins with data-press, or with its own :active rule on --press. */
+:root { --press: var(--word-on); }
+@media (pointer: coarse) {
+  .icon-btn, .text-btn, .btn.ghost, .btn.quiet, .segmented > button, [data-press] {
+    transition-property: color, background-color, border-color, box-shadow, scale; transition-duration: var(--dur); transition-timing-function: var(--ease);
+  }
+  .icon-btn:where(:not(:disabled)):active, .text-btn:where(:not(:disabled)):active, .btn.ghost:where(:not(:disabled)):active,
+  .btn.quiet:where(:not(:disabled)):active, .segmented > button:where(:not(:disabled, [aria-checked="true"])):active, [data-press]:active {
+    background-color: var(--press); transition-duration: 0s;
+  }
+  .btn:not(.ghost, .quiet):where(:not(:disabled)):active { background: color-mix(in srgb, var(--accent) 86%, var(--ink)); border-color: color-mix(in srgb, var(--accent) 86%, var(--ink)); }
+}
 .segmented > button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* fields: a line to write on, as on a printed form */

@@ -16,6 +16,13 @@
 }
 @media (hover: hover) { .link:hover { color: var(--accent); } }
 .link[aria-current="page"] { color: var(--ink); }
+/* pressed under a finger: a pill of the tapped word's tint behind the words (globals.css, "pressing") */
+.link { isolation: isolate; transition: color var(--dur-quick) var(--ease), scale var(--dur-press) var(--ease); }
+.link::before {
+  content: ""; position: absolute; inset: var(--space-1) 0; z-index: -1; border-radius: var(--pill); background: var(--press);
+  opacity: 0; transition: opacity var(--dur) var(--ease);
+}
+@media (pointer: coarse) { .link:active { scale: 0.97; } .link:active::before { opacity: 1; transition-duration: 0s; } }
 .link[aria-current="page"]::after { content: ""; position: absolute; left: var(--space-2); right: var(--space-2); bottom: 0; height: 2px; background: var(--accent); }
 /* the switch's room before the page knows the device's choice, so nothing moves when it appears */
 .themeSpace { display: inline-block; width: 5.5em; }

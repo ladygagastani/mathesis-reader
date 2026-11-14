@@ -41,10 +41,22 @@
    2026-11-14: at 78 % it covered the word) */
 .sheet[data-layer="2"] { height: 64dvh; max-height: none; }
 @keyframes sheet-up { from { translate: 0 100%; } }
-.sheet .head { padding: var(--space-3) var(--space-3) 0 var(--space-4); }
+.sheet .head { padding: var(--space-3) var(--space-2) 0 var(--space-4); }
 .sheet .card { gap: var(--space-1); }
-.sheet .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-1) var(--space-4) var(--space-3); }
-.sheet .row { flex: none; padding: 0 var(--space-4) calc(var(--space-1) + env(safe-area-inset-bottom, 0px)); box-shadow: var(--rule-over); }
+.sheet .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-2) var(--space-4) var(--space-3); }
+/* the sheet's buttons on a grid, so none is left alone on a line at a phone's width: the arrows either side of More about it,
+   then Note and Save word, a half each */
+.sheet .row {
+  flex: none; display: grid; grid-template-columns: 46px 1fr 1fr 46px; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); box-shadow: var(--rule-over);
+}
+.sheet .prev:global(.text-btn) { grid-area: 1 / 1; }
+.sheet .more:global(.text-btn) { grid-area: 1 / 2 / 2 / 4; }
+.sheet .next:global(.text-btn) { grid-area: 1 / 4; }
+.sheet .note:global(.text-btn) { grid-area: 2 / 1 / 3 / 3; }
+.sheet .keep:global(.text-btn) { grid-area: 2 / 3 / 3 / 5; }
+.sheet .step:global(.text-btn) { width: 46px; min-height: 46px; margin: 0; }
+.sheet .act:global(.text-btn) { padding-inline: var(--space-3); }
 .sheet[data-layer="2"] .body { padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); }
 /* a wide sheet keeps its lines to a reading measure, in the middle */
 @media (min-width: 761px) {
@@ -60,20 +72,21 @@
   font-size: max(var(--t-lead), calc(var(--t-title) * min(1, 7 / var(--chars, 1)))); line-height: 1.15;
 }
 .pw [lang="grc"], .pw { font-family: var(--f-title); }
-/* in the sheet the word is a size smaller, so the card's lines have the room */
-.sheet .pw { font-size: max(var(--t-body), calc(var(--t-lead) * min(1, 7 / var(--chars, 1)))); }
-.sheet .pw > span { padding: 20px 26px; }
+/* in the sheet the word has no ring: it stands on a terracotta line, drawn in from the left as the sheet rises (the ring's
+   turning, in a line), and a long word wraps rather than being cut */
+.sheet .pw { font-size: max(var(--t-lead), calc(var(--t-head) * min(1, 9 / var(--chars, 1)))); line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
+.under {
+  display: inline-block; max-width: 100%; padding-bottom: var(--space-1);
+  background: linear-gradient(var(--accent), var(--accent)) left bottom / 100% var(--hair-2) no-repeat;
+  animation: underline var(--dur-ring) var(--ease-out) 40ms backwards;
+}
+@keyframes underline { from { background-size: 0 var(--hair-2); } }
 .drawer[data-layer="2"] .pw { font-size: max(var(--t-body), calc(var(--t-head) * min(1, 7 / var(--chars, 1)))); }
 /* the word rises into its ring as the ring turns in (DESIGN.md, "Motion") */
 .pw > span > span:last-child { animation: ink var(--dur-word) var(--ease-out) 40ms backwards; }
 /* a word of five letters or fewer stands in a circle, as the title does */
 .round { aspect-ratio: 1; }
-/* a short screen (a phone on its side, a page zoomed to 200 %): the word without its ring, so the meaning comes first */
-@media (max-height: 520px) {
-  .sheet .pw > span { padding: 0; min-width: 0; aspect-ratio: auto; }
-  .sheet .pw svg { display: none; }
-  .sheet .head { padding-top: var(--space-2); }
-}
+@media (max-height: 520px) { .sheet .head { padding-top: var(--space-2); } }
 .x:global(.icon-btn) { flex: none; min-width: var(--tap); width: var(--tap); height: var(--tap); margin-left: auto; font-size: var(--t-body); }
 @media (pointer: coarse) { .x:global(.icon-btn) { width: 44px; height: 44px; } }
 .back:global(.text-btn) {
@@ -130,6 +143,8 @@
 .more:global(.text-btn) { flex: 1 0 100%; padding-inline: var(--space-5); border-radius: var(--pill); background: var(--btn-bg); color: var(--btn-ink); font-weight: 500; }
 @media (hover: hover) { .more:global(.text-btn):where(:not(:disabled)):hover { background: color-mix(in srgb, var(--accent) 86%, var(--ink)); } }
 .more:global(.text-btn):disabled { opacity: 0.45; cursor: default; }
+/* pressed under a finger, the filled pill goes a shade deeper, as under the mouse, and never takes the light tint the others do */
+.row .more:global(.text-btn):where(:not(:disabled)):active { background: color-mix(in srgb, var(--accent) 86%, var(--ink)); }
 
 /* layer two: the word's kind and meaning a size smaller under a hairline, then each part under a small-capitals heading and a hairline */
 .second { display: grid; gap: var(--space-3); animation: ink var(--dur) var(--ease) backwards; }

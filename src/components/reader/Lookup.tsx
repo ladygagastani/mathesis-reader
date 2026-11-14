@@ -236,7 +236,13 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
       <div className={styles.head}>
         {layer === 2 && !seen && <button type="button" className={`text-btn ${styles.back}`} onClick={back}><Icon name="back" />Back</button>}
         {from && <button type="button" className={`text-btn ${styles.back}`} onClick={back} aria-label={`Back to ${from}`}><Icon name="back" /><span lang="grc">{from}</span></button>}
-        <p className={styles.pw} lang="grc" style={{ "--chars": head.normalize("NFC").length } as React.CSSProperties}><Ring kind="word" className={head.normalize("NFC").length <= 5 ? styles.round : undefined}>{head}</Ring></p>
+        {/* the panel stands the word in its ring; the phone's sheet, short of room, sets it on a terracotta line instead, so the
+            meaning and the buttons keep the sheet's height (owner's note, 2026-11-14) */}
+        <p className={styles.pw} lang="grc" style={{ "--chars": head.normalize("NFC").length } as React.CSSProperties}>
+          {place === "sheet"
+            ? <span className={styles.under}><span>{head}</span></span>
+            : <Ring kind="word" className={head.normalize("NFC").length <= 5 ? styles.round : undefined}>{head}</Ring>}
+        </p>
         <button type="button" className={`icon-btn ${styles.x}`} onClick={onClose}><Icon name="close" label="Close the look-up" /></button>
       </div>
 
@@ -373,11 +379,11 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
           {/* More about it, the one filled pill, across the panel; under it Note and Save word, and the arrows to the word before
               and after (the left and right keys do the same) */}
           <button type="button" className={`text-btn ${styles.more}`} onClick={() => onLayer(2)} disabled={!card}><Icon name="info" />More about it</button>
-          <button type="button" className={`text-btn ${styles.act}`} onClick={onNote}><Icon name="note" />Note</button>
+          <button type="button" className={`text-btn ${styles.act} ${styles.note}`} onClick={onNote}><Icon name="note" />Note</button>
           <button type="button" className={`text-btn ${styles.act} ${styles.keep}`} aria-pressed={!!saved} onClick={toggleSaved} disabled={!card}
             title={saved ? "Saved: on the Saved page. Press to take it off." : "Keep this word on the Saved page"}><Icon name="keep" />{saved ? "Saved" : "Save word"}</button>
-          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(-1)} aria-label="Previous word" title="Previous word (←)"><Icon name="chevron-left" /></button>
-          <button type="button" className={`text-btn ${styles.step}`} onClick={() => onStep(1)} aria-label="Next word" title="Next word (→)"><Icon name="chevron-right" /></button>
+          <button type="button" className={`text-btn ${styles.step} ${styles.prev}`} onClick={() => onStep(-1)} aria-label="Previous word" title="Previous word (←)"><Icon name="chevron-left" /></button>
+          <button type="button" className={`text-btn ${styles.step} ${styles.next}`} onClick={() => onStep(1)} aria-label="Next word" title="Next word (→)"><Icon name="chevron-right" /></button>
         </div>
       )}
     </aside>

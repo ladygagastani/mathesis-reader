@@ -232,7 +232,7 @@ export default function Library() {
         </div>
         <div className={styles.control}>
           <span className="label" id="order-label">Order</span>
-          <div className="segmented" role="radiogroup" aria-labelledby="order-label">
+          <div className={`segmented ${styles.order}`} role="radiogroup" aria-labelledby="order-label">
             {SORTS.map(([s, label]) => <button key={s} type="button" role="radio" aria-checked={sort === s} onClick={() => setParam({ sort: s })}>{label}</button>)}
           </div>
         </div>

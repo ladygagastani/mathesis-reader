@@ -26,6 +26,13 @@
 @media (hover: hover) { .quiet:hover { color: var(--accent); } }
 .quiet[aria-expanded="true"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
 .quiet:where(:not(:disabled)):active { scale: 0.97; }
+/* pressed under a finger: a pill of the tapped word's tint behind the words, inside the bar's height (globals.css, "pressing") */
+.quiet { position: relative; isolation: isolate; }
+.quiet::before {
+  content: ""; position: absolute; inset: var(--space-2) 0; z-index: -1; border-radius: var(--pill); background: var(--press);
+  opacity: 0; transition: opacity var(--dur) var(--ease);
+}
+@media (pointer: coarse) { .quiet:active::before { opacity: 1; transition-duration: 0s; } }
 .back { margin-left: calc(-1 * var(--space-2)); }
 .end { display: flex; align-items: center; gap: var(--space-2); margin-right: calc(-1 * var(--space-2)); }
 .slot { position: relative; }
@@ -62,6 +69,12 @@
   animation: ink var(--dur) var(--ease) backwards;
 }
 .menu:focus { outline: none; }
+/* a phone: a menu hung from its own button ran off the left edge of the screen, so each one hangs from the whole bar instead,
+   a small margin in from either side (the bar is sticky, so the menu is placed against it once the slot lets go) */
+@media (max-width: 600px) {
+  .slot { position: static; }
+  .menu { left: var(--space-2); right: var(--space-2); width: auto; max-height: calc(100dvh - var(--bar-h) - var(--space-5)); }
+}
 .aaMenu { width: min(24rem, calc(100vw - 2 * var(--gutter))); }
 .pagesMenu { width: min(28rem, calc(100vw - 2 * var(--gutter))); }
 .keysMenu { width: min(30rem, calc(100vw - 2 * var(--gutter))); }
@@ -106,7 +119,13 @@
 .keyRow kbd { display: inline-block; min-width: 1.8em; padding: 0 var(--space-2); box-shadow: var(--rule-box); border-radius: 6px; font: 400 var(--t-small) / 1.6 var(--f-body); text-align: center; color: var(--ink); }
 .pageBtn {
   width: 100%; min-height: var(--tap); padding: var(--space-2) 0; border: 0; background: none; box-shadow: var(--rule-under);
-  text-align: left; color: var(--ink); font: 400 var(--t-ui) / 1.35 var(--f-body); transition: color var(--dur-quick) var(--ease);
+  text-align: left; color: var(--ink); font: 400 var(--t-ui) / 1.35 var(--f-body); transition: color var(--dur-quick) var(--ease), background-color var(--dur) var(--ease);
+}
+/* a row pressed under a finger takes the tint across its width, the corners rounded a little, and lets it go */
+@media (pointer: coarse) {
+  .pageBtn { border-radius: 6px; outline: var(--space-2) solid transparent; outline-offset: 0; transition-property: color, background-color, outline-color; }
+  .pageBtn:active { background-color: var(--press); outline-color: var(--press); transition-duration: 0s; }
+  .pageBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }
 .pages li:last-child .pageBtn { box-shadow: none; }
 @media (hover: hover) { .pageBtn:hover { color: var(--accent); } }

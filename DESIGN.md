@@ -102,8 +102,9 @@ round it. A square box gets a circle; a wider one a stadium (a pill). Every orna
   in Noto Serif Display, the English title in italic.
 - **The word's ring.** In the look-up the dictionary form stands in a smaller ring of the same tongues: a circle for a
   word of five letters or fewer, a stadium for a longer one. A long word is set smaller down to 24 px, then the ring
-  grows, so a word is never cut or broken. On a short screen (under 520 px tall) the sheet drops the ring so the
-  meaning comes first.
+  grows, so a word is never cut or broken. The phone's sheet has no ring: the word stands on a 2 px terracotta line that
+  draws in from the left as the sheet rises, so the meaning, the grammar and the buttons keep the sheet's height (the
+  owner's note of 2026-11-14: the ring took half the sheet and left a sliver to scroll).
 - **The tongue band.** A strip of tongues 10 px tall along the top edge of the look-up's panel and sheet.
 - **The page marker.** In the bar, beside "page 1 of 5", a short row of tongues, one for each page, the pages up to this
   one in terracotta. A book of more than 12 pages gets a thin line that fills instead. (A ring was tried first, whole
@@ -128,7 +129,10 @@ Motion says where a thing came from, then stops. Nothing moves while you read.
   (`--ease-drawer`, cubic-bezier(0.32, 0.72, 0, 1)); on a phone the sheet rises from the foot in 320 ms. The word's ring
   turns 12° into place and fades in over 280 ms, starting 40 ms in; the dictionary form rises 6 px over 200 ms. Opening
   another word changes only the contents, so stepping from word to word, a keyboard action, never animates.
-- **Pressing:** a button sinks to 97 % of its size while pressed (100 ms).
+- **Pressing:** a button sinks to 97 % of its size while pressed (100 ms). Under a finger the browser's own tap box (a
+  blue or grey square) is off; a pressed thing takes the looked-up word's tint (`--press`, which is `--word-on`) at once
+  and lets it go over 240 ms. The bar's words take it as a pill inside the bar's height, a list row across its width.
+  The filled button goes a shade deeper instead.
 - **Hover:** colour only, 150 ms. Nothing lifts.
 - **Arriving:** a menu or a second layer rises 6 px and fades in over 240 ms. The old ink-in blur is gone.
 - **Reduced motion:** nothing moves. Each arrival becomes a 150 ms fade in place, colour changes stay gradual, and a
@@ -168,6 +172,10 @@ The structure of the 12 November design stays; only the look above changes.
 
 The bar at the top, the text in one column with the number's ring above each passage, and the look-up as a sheet
 rising over the lower 58 % with the tongue band along its rounded top. The text scrolls so the word stays above it.
+The sheet's buttons stand on a grid: the arrows either side of "More about it", then Note and Save word a half each.
+
+The bar's menus (Go to, Notes, Text) hang from the whole bar, 8 px in from either side, not from their own buttons,
+which left them off the left edge. In the library the four orders stand two by two and the filters one under another.
 
 ## Words in the look-up
 

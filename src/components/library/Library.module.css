@@ -113,9 +113,35 @@
 /* the search's letters, marked in a title or a name */
 .library mark { background: var(--word-on); color: inherit; }
 
-/* a narrow window (phones come later): the author over their works, no rail */
+/* a narrow window: the author over their works, no rail */
 @media (max-width: 760px) {
   .author { grid-template-columns: minmax(0, 1fr); }
   .withRail { grid-template-columns: minmax(0, 1fr); }
   .rail { display: none; }
+}
+
+/* a phone. The search's line kept to the page (its grid track took the field's own width and ran past the edge), and no "/"
+   key, which a phone has no use for; the four orders two by two, as one row of them ran off the right; the filters one under
+   another, each the page's width, instead of three widths set by their longest choice. */
+.field { grid-template-columns: minmax(0, 1fr); }
+@media (pointer: coarse), (max-width: 760px) { .key { display: none; } }
+@media (max-width: 600px) {
+  .field input { font-size: var(--t-body); }
+  .controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .control { min-width: 0; }
+  .control > :global(.segmented) > button { flex: 1 1 auto; }
+  .order:global(.segmented) { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--radius-sheet); }
+  .selects { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .selects select { width: 100%; max-width: none; }
+  .selects :global(.text-btn) { justify-self: start; }
+}
+
+/* pressed under a finger (globals.css, "pressing"): a work's row and a book you are reading take the tapped word's tint */
+@media (pointer: coarse) {
+  .work, .readingLink, .begin summary {
+    border-radius: 6px; outline: var(--space-2) solid transparent; outline-offset: 0;
+    transition: background-color var(--dur) var(--ease), outline-color var(--dur) var(--ease);
+  }
+  .work:active, .readingLink:active, .begin summary:active { background-color: var(--press); outline-color: var(--press); transition-duration: 0s; }
+  .work:focus-visible, .readingLink:focus-visible, .begin summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }
