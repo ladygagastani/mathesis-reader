@@ -147,6 +147,20 @@
   .ref { font-size: var(--t-small); padding: 0.25em var(--space-3) 0 0; }
   .refBtn { min-width: 34px; height: 34px; }
 }
+/* a phone: the number's ring above its passage, and the text the whole width (DESIGN.md, "Reader on a phone"). In a rail at the
+   left it took a sixth of the screen, and broke nearly every line of Homer in two. What stands beside the ring (where you stopped,
+   the narrator's bar) follows it on the same line. */
+@media (max-width: 600px) {
+  .row, .reader[data-cols] .row { grid-template-columns: minmax(0, 1fr); padding-block: var(--space-3) var(--space-5); }
+  .tr, .reader[data-cols="both"] .tr { grid-column: 1; }
+  .ref { display: flex; align-items: center; gap: var(--space-3); padding: 0 0 var(--space-2); }
+  .resumed { margin-top: 0; text-align: left; }
+  .row[data-voice] .ref::after { margin: 0; }
+  .hint { padding-left: 0; }
+  /* a line of verse keeps its number's column, narrower, so a hexameter has the room */
+  .line { grid-template-columns: 1.8em minmax(0, 1fr); }
+  .ln { padding-right: 0.5em; }
+}
 
 /* the English's heading takes the Greek heading's size and leading, so the two columns start level */
 .tr .head { font-size: calc(1.4 * var(--greek-size)); line-height: var(--reading-leading); }

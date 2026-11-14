@@ -8,15 +8,16 @@
  * letter. The address keeps the search, the order and the filters (/?q=plato&sort=kind&period=…), so Back returns to the same list.
  */
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useSearchParams } from "next/navigation";
+import { memo, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { flushSync } from "react-dom";
 import Icon from "@/components/Icon";
 import { FIND_KEY } from "@/components/site/SlashSearch";
 import { loadAuthorNames, type AuthorNames } from "@/lib/authors";
 import { greekEditions, hasTranslation, loadCatalog, type CatalogIndex, type CatAuthor, type CatWork } from "@/lib/catalog";
 import { bcAd } from "@/lib/library/bc-ad";
 import { AZ_OTHER } from "@/lib/library/az";
-import { beginnings, bestShelf, byKind, byLetter, byPeriod, byTitle, shelves, type Shelf, type Show, type TitlePart } from "@/lib/library/catalogue";
+import { beginnings, bestShelf, byKind, byLetter, byPeriod, byTitle, shelves, type Part, type Shelf, type Show, type TitlePart } from "@/lib/library/catalogue";
 import { centuries, commonShare, dialects, length, loadDifficulty, passes, PERIODS, UNDATED, VOCAB, vocabOf, type Filters, type WorkFacts } from "@/lib/library/facts";
 import { loadAuthorsMeta, loadWorksMeta, workKinds, type AuthorMeta } from "@/lib/library/kinds";
 import { shown as notRemoved } from "@/lib/notes/notes";
@@ -33,6 +34,8 @@ const LETTERS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", AZ_OTHER];
 /** an author shows this many works until "All n works" is pressed */
 const FIRST = 6;
 const BEGIN_KEY = "mathesis-reader:library-begin";
+/** a new list is drawn this many rows (an author, or a title) at a time: the first at once, the rest in the background */
+const CHUNK = 40;
 const n = (x: number) => x.toLocaleString("en-GB");
 const GREEK = /[Ͱ-Ͽἀ-῿]/;
 
@@ -66,14 +69,15 @@ function Vocab({ pct }: { pct: number }) {
 }
 
 /** A work: its title and Greek title (the search's letters marked), then what it is, when, how long, and its words. */
-function WorkLine({ w, d, q, by }: { w: CatWork; d: Loaded; q: string; by?: CatAuthor }) {
+// (memo: a choice re-draws the page at once with the old list, and only the deferred pass should touch the rows)
+const WorkLine = memo(function WorkLine({ w, d, q, by }: { w: CatWork; d: Loaded; q: string; by?: CatAuthor }) {
   const grc = greekEditions(w)[0]?.label;
   const greek = grc && GREEK.test(grc) && grc !== w.title ? drawableGreek(grc) : null;
   const m = d.meta[w.id];
   const pct = commonShare(d.diff[w.id]);
   const facts = [d.kinds.get(w.id), centuries(m?.from, m?.to), length(m?.tokens)].filter(Boolean).join(" · ");
   return (
-    <Link className={styles.work} href={`/read?w=${w.id}`}>
+    <Link className={styles.work} href={`/read?w=${w.id}`} prefetch={false}>
       <span className={styles.workName}>
         <span className={styles.workTitle}><Marked text={w.title} q={q} /></span>
         {greek && <span lang="grc" className={styles.workGr}><Marked text={greek} q={q} /></span>}
@@ -87,10 +91,10 @@ function WorkLine({ w, d, q, by }: { w: CatWork; d: Loaded; q: string; by?: CatA
       <Icon name="next" className={styles.go} />
     </Link>
   );
-}
+});
 
 /** An author: their names and who they were at the left, their works at the right. */
-function AuthorRow({ s, d, q }: { s: Shelf; d: Loaded; q: string }) {
+const AuthorRow = memo(function AuthorRow({ s, d, q }: { s: Shelf; d: Loaded; q: string }) {
   const [all, setAll] = useState(false);
   const grc = d.names[s.author.id]?.grc;
   const desc = d.who[s.author.id]?.desc;
@@ -112,10 +116,10 @@ function AuthorRow({ s, d, q }: { s: Shelf; d: Loaded; q: string }) {
       </div>
     </li>
   );
-}
+});
 
 /** The rail of letters beside an A to Z list: a letter jumps to its part; the letter you are reading under is marked. */
-function Rail({ keys }: { keys: string[] }) {
+function Rail({ keys, whole, onWhole }: { keys: string[]; whole: boolean; onWhole: () => void }) {
   const [here, setHere] = useState("");
   useEffect(() => {
     const heads = keys.map((k) => document.getElementById(`part-${k}`)).filter((x): x is HTMLElement => !!x);
@@ -125,23 +129,111 @@ function Rail({ keys }: { keys: string[] }) {
     }, { rootMargin: "-56px 0px -70% 0px" });
     heads.forEach((h) => watch.observe(h));
     return () => watch.disconnect();
-  }, [keys]);
+  }, [keys, whole]);
+  // a letter whose part is not drawn yet (the list is still coming in): the rest is drawn at once, then the jump
+  const jump = (e: React.MouseEvent, l: string) => {
+    if (document.getElementById(`part-${l}`)) return;
+    e.preventDefault();
+    flushSync(onWhole);
+    document.getElementById(`part-${l}`)?.scrollIntoView();
+    if (location.hash !== `#part-${l}`) window.history.pushState(window.history.state, "", `#part-${l}`);
+  };
   return (
     <nav className={styles.rail} aria-label="Letters">
       {LETTERS.map((l) => keys.includes(l)
-        ? <a key={l} href={`#part-${l}`} aria-current={l === here ? "true" : undefined}>{l}</a>
+        ? <a key={l} href={`#part-${l}`} aria-current={l === here ? "true" : undefined} onClick={(e) => jump(e, l)}>{l}</a>
         : <span key={l} aria-hidden="true">{l}</span>)}
     </nav>
   );
 }
 
+type Choices = { show: Show; sort: Sort } & Filters;
+
+/** Each part's rows, as many as n rows in all reach, in order; a part not reached is null. */
+function upTo<T>(lists: T[][], n: number): (T[] | null)[] {
+  let left = n;
+  return lists.map((xs) => {
+    if (left <= 0) return null;
+    const some = xs.slice(0, left);
+    left -= some.length;
+    return some;
+  });
+}
+
+/** Every work, under its parts, with the rail of letters beside an A to Z list. A new list is drawn a piece at a time: the first
+ *  CHUNK rows at once, then the rest a CHUNK at a time in the background, so no single step lays out 1,500 rows (at a quarter of a
+ *  computer's speed that held the page for up to 1.7 s). Only this part of the page draws again for each piece. The finished page
+ *  is the same as before. */
+const Listing = memo(function Listing({ parts, titleParts, sort, best, d, q }: {
+  parts: Part[]; titleParts: TitlePart[]; sort: Sort; best: Shelf | null; d: Loaded; q: string;
+}) {
+  const railKeys = sort === "az" ? parts.map((p) => p.key) : sort === "titles" ? titleParts.map((p) => p.key) : [];
+  const shelvesOf = sort === "titles" ? titleParts : parts;
+  const rows = useMemo(() => (sort === "titles" ? titleParts.reduce((k, p) => k + p.rows.length, 0) : parts.reduce((k, p) => k + p.shelves.length, 0)), [sort, parts, titleParts]);
+  const [grown, setGrown] = useState<{ of: unknown; n: number }>({ of: null, n: CHUNK });
+  const drawn = grown.of === shelvesOf ? grown.n : CHUNK;
+  useEffect(() => {
+    if (drawn >= rows) return;
+    // when the browser is idle, so a scroll's frames come first (Safari has no requestIdleCallback: a frame's wait instead)
+    const grow = () => startTransition(() => setGrown({ of: shelvesOf, n: drawn + CHUNK }));
+    if ("requestIdleCallback" in window) { const id = requestIdleCallback(grow, { timeout: 500 }); return () => cancelIdleCallback(id); }
+    const t = setTimeout(grow, 16);
+    return () => clearTimeout(t);
+  }, [drawn, rows, shelvesOf]);
+  const whole = () => setGrown({ of: shelvesOf, n: Infinity });
+  // each part with as many of its rows as the pieces drawn so far reach; a part not reached yet is left out
+  const partRows = upTo(parts.map((p) => p.shelves), drawn);
+  const titleRows = upTo(titleParts.map((p) => p.rows), drawn);
+  return (
+    <div className={railKeys.length ? styles.withRail : undefined}>
+      {railKeys.length > 0 && <Rail keys={railKeys} whole={drawn >= rows} onWhole={whole} />}
+      <div className={styles.listCol}>
+        {best && (
+          <section className={styles.part} aria-label="Best match">
+            <div className={styles.partHead}><h3 className={styles.partName}>Best match</h3></div>
+            <ul className={styles.authors}><AuthorRow s={best} d={d} q={q} /></ul>
+          </section>
+        )}
+        {parts.map((p, i) => {
+          const some = partRows[i];
+          return some && (
+            <section key={p.key} className={styles.part} aria-labelledby={`part-${p.key}`}>
+              <div className={styles.partHead}>
+                <h3 id={`part-${p.key}`} className={styles.partName}>{p.label}</h3>
+                <span className={styles.partCount}>{n(p.works)} {p.works === 1 ? "work" : "works"} · {n(p.shelves.length)} {p.shelves.length === 1 ? "author" : "authors"}</span>
+              </div>
+              <ul className={styles.authors}>{some.map((s) => <AuthorRow key={s.author.id} s={s} d={d} q={q} />)}</ul>
+            </section>
+          );
+        })}
+        {titleParts.map((p, i) => {
+          const some = titleRows[i];
+          return some && (
+            <section key={p.key} className={styles.part} aria-labelledby={`part-${p.key}`}>
+              <div className={styles.partHead}>
+                <h3 id={`part-${p.key}`} className={styles.partName}>{p.label}</h3>
+                <span className={styles.partCount}>{n(p.works)} {p.works === 1 ? "work" : "works"}</span>
+              </div>
+              <ul className={styles.titles}>{some.map((r) => <li key={r.work.id}><WorkLine w={r.work} d={d} q={q} by={r.author} /></li>)}</ul>
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
 export default function Library() {
   const params = useSearchParams();
-  const router = useRouter();
   const [query, setQuery] = useState(params.get("q") ?? "");
-  const show = (SHOWS.find(([s]) => s === params.get("show"))?.[0] ?? "all") as Show;
-  const sort = (SORTS.find(([s]) => s === params.get("sort"))?.[0] ?? "az") as Sort;
-  const filters: Filters = { period: params.get("period") ?? "", dialect: params.get("dialect") ?? "", vocab: params.get("vocab") ?? "" };
+  // the choices live in the page, read from the address once as it opens, so a choice changes the list in place
+  const [choice, setChoice] = useState<Choices>(() => ({
+    show: (SHOWS.find(([s]) => s === params.get("show"))?.[0] ?? "all") as Show,
+    sort: (SORTS.find(([s]) => s === params.get("sort"))?.[0] ?? "az") as Sort,
+    period: params.get("period") ?? "", dialect: params.get("dialect") ?? "", vocab: params.get("vocab") ?? "",
+  }));
+  const { show, sort } = choice;
+  const filters: Filters = { period: choice.period, dialect: choice.dialect, vocab: choice.vocab };
   const filtersOn = !!(filters.period || filters.dialect || filters.vocab);
   const [got, setGot] = useState<{ data?: Loaded; error?: string }>({});
   const field = useRef<HTMLInputElement>(null);
@@ -159,17 +251,22 @@ export default function Library() {
     try { if (sessionStorage.getItem(FIND_KEY)) { sessionStorage.removeItem(FIND_KEY); field.current?.focus(); } } catch { /* storage blocked */ }
   }, []);
 
-  /** the address follows the search, the order and the filters, replaced rather than added to, so Back leaves the library */
-  const setParam = (patch: Record<string, string>) => {
-    const q = new URLSearchParams(params);
-    for (const [k, v] of Object.entries(patch)) { if (v && v !== "all" && v !== "az") q.set(k, v); else q.delete(k); }
-    router.replace(q.size ? `/?${q}` : "/", { scroll: false });
-  };
+  const setParam = (patch: Partial<Choices>) => setChoice((c) => ({ ...c, ...patch }));
+  const clearAll = () => { setQuery(""); setChoice((c) => ({ ...c, show: "all", period: "", dialect: "", vocab: "" })); };
+  /** The address follows the search, the order and the filters, so a link or a reload opens the same list. It is replaced, not
+   *  added to, so Back leaves the library, and written with the browser's own history call, not the router's: the router asked
+   *  GitHub Pages for the library's data at "/mathesis-reader.txt", found nothing and loaded the whole page again at every choice
+   *  (owner's note, 2026-11-14). The search is written once the typing pauses. */
   useEffect(() => {
-    const t = setTimeout(() => { if ((params.get("q") ?? "") !== query.trim()) setParam({ q: query.trim() }); }, 300);
+    const t = setTimeout(() => {
+      const q = new URLSearchParams();
+      const all = { q: query.trim(), ...choice };
+      for (const [k, v] of Object.entries(all)) if (v && v !== "all" && v !== "az") q.set(k, v);
+      const want = q.size ? `${location.pathname}?${q}` : location.pathname;
+      if (want !== location.pathname + location.search) window.history.replaceState(window.history.state, "", want);
+    }, 300);
     return () => clearTimeout(t);
-  });
-  const clearAll = () => { setQuery(""); router.replace(sort === "az" ? "/" : `/?sort=${sort}`, { scroll: false }); };
+  }, [query, choice]);
 
   const d = got.data;
   const keep = useMemo(() => (d && filtersOn ? (w: CatWork) => passes(w.id, filters, d.meta, d.diff) : undefined),
@@ -179,7 +276,7 @@ export default function Library() {
   const all = useMemo(() => (d ? shelves(d.idx.catalog.authors, d.names, "", "all") : []), [d]);
   const parts = useMemo(() => (!d ? [] : sort === "az" ? byLetter(list) : sort === "kind" ? byKind(list, d.kinds) : sort === "period" ? byPeriod(list, d.meta) : []), [d, list, sort]);
   const titleParts: TitlePart[] = useMemo(() => (d && sort === "titles" ? byTitle(list) : []), [d, list, sort]);
-  const best = d && sort !== "titles" ? bestShelf(list, d.names, query) : null;
+  const best = useMemo(() => (d && sort !== "titles" ? bestShelf(list, d.names, query) : null), [d, sort, list, query]);
   const total = all.reduce((k, s) => k + s.works.length, 0);
   const english = all.reduce((k, s) => k + s.works.filter(hasTranslation).length, 0);
   const shown = list.reduce((k, s) => k + s.works.length, 0);
@@ -198,8 +295,13 @@ export default function Library() {
   const allNotes = useNotes();
   const saved = useMemo(() => notRemoved(allNotes).filter((n) => n.anchor.kind === "book").sort((a, b) => a.book.localeCompare(b.book)), [allNotes]);
   const beginOpen = useStored(BEGIN_KEY) === "open";
-  const railKeys = sort === "az" ? parts.map((p) => p.key) : sort === "titles" ? titleParts.map((p) => p.key) : [];
   const q = query.trim();
+  // The list's rows follow a moment behind. The list itself (which works, how many) changes at once, but its 1,822 rows drawn
+  // at once held a phone for a second or more after each tap. Deferred, React draws them in the background and gives way to any
+  // tap meanwhile, and the old rows dim until the new ones stand (Library.module.css, data-stale).
+  const drawnNow = useMemo(() => ({ parts, titleParts, sort, best, q }), [parts, titleParts, sort, best, q]);
+  const view = useDeferredValue(drawnNow);
+  const stale = view !== drawnNow;
 
   return (
     <main id="main" className={`wrap ${styles.library}`}>
@@ -298,7 +400,7 @@ export default function Library() {
         </details>
       )}
 
-      <section className={styles.all} aria-labelledby="every-work">
+      <section className={styles.all} aria-labelledby="every-work" data-stale={stale || undefined}>
         <div className={styles.allHead}>
           <h2 id="every-work">Every work in the library</h2>
           {d && <p className={styles.count} aria-live="polite">{shown === total ? `${n(total)} works` : `${n(shown)} of ${n(total)} works`}</p>}
@@ -313,35 +415,7 @@ export default function Library() {
           </div>
         )}
 
-        <div className={railKeys.length ? styles.withRail : undefined}>
-          {railKeys.length > 0 && <Rail keys={railKeys} />}
-          <div className={styles.listCol}>
-            {d && best && (
-              <section className={styles.part} aria-label="Best match">
-                <div className={styles.partHead}><h3 className={styles.partName}>Best match</h3></div>
-                <ul className={styles.authors}><AuthorRow s={best} d={d} q={q} /></ul>
-              </section>
-            )}
-            {d && parts.map((p) => (
-              <section key={p.key} className={styles.part} aria-labelledby={`part-${p.key}`}>
-                <div className={styles.partHead}>
-                  <h3 id={`part-${p.key}`} className={styles.partName}>{p.label}</h3>
-                  <span className={styles.partCount}>{n(p.works)} {p.works === 1 ? "work" : "works"} · {n(p.shelves.length)} {p.shelves.length === 1 ? "author" : "authors"}</span>
-                </div>
-                <ul className={styles.authors}>{p.shelves.map((s) => <AuthorRow key={s.author.id} s={s} d={d} q={q} />)}</ul>
-              </section>
-            ))}
-            {d && titleParts.map((p) => (
-              <section key={p.key} className={styles.part} aria-labelledby={`part-${p.key}`}>
-                <div className={styles.partHead}>
-                  <h3 id={`part-${p.key}`} className={styles.partName}>{p.label}</h3>
-                  <span className={styles.partCount}>{n(p.works)} {p.works === 1 ? "work" : "works"}</span>
-                </div>
-                <ul className={styles.titles}>{p.rows.map((r) => <li key={r.work.id}><WorkLine w={r.work} d={d} q={q} by={r.author} /></li>)}</ul>
-              </section>
-            ))}
-          </div>
-        </div>
+        {d && <Listing parts={view.parts} titleParts={view.titleParts} sort={view.sort} best={view.best} d={d} q={view.q} />}
       </section>
     </main>
   );

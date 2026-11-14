@@ -59,6 +59,11 @@
   .end { gap: 0; }
   .quiet { gap: var(--space-1); padding-inline: 6px; font-size: var(--t-small); }
 }
+/* the narrowest phones (320 px): the four still ran 40 px past the edge, so the words stay and the signs beside them go, all but
+   Library's arrow */
+@media (max-width: 380px) {
+  .quiet:not(.back) > svg:first-child { display: none; }
+}
 
 /* the menus: a leaf dropping from its button, its right edge under the button's */
 .menu {

@@ -174,8 +174,20 @@ The bar at the top, the text in one column with the number's ring above each pas
 rising over the lower 58 % with the tongue band along its rounded top. The text scrolls so the word stays above it.
 The sheet's buttons stand on a grid: the arrows either side of "More about it", then Note and Save word a half each.
 
+Under 600 px the number's ring stands above its passage and the text takes the whole width; in a rail at the left it
+took a sixth of the screen and broke nearly every line of Homer in two. At 380 px and under, the bar keeps its words and
+drops the signs beside them, all but Library's arrow, so its four controls fit a 320 px phone.
+
 The bar's menus (Go to, Notes, Text) hang from the whole bar, 8 px in from either side, not from their own buttons,
 which left them off the left edge. In the library the four orders stand two by two and the filters one under another.
+
+### The library's choices
+
+A choice (Show, Order, a filter, the search) changes the list in place: the page never loads again. The chosen pill
+changes at once; the list's rows are drawn in the background, 40 at a time when the browser is idle, while the old rows
+dim to 45 %. The address follows the choices with the browser's history call, so a reload or a link opens the same
+list. (The router's own call made GitHub Pages load the whole page again, and drawing all 1,822 works at once held a
+phone for a second or more.)
 
 ## Words in the look-up
 
