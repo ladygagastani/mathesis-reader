@@ -411,6 +411,16 @@ export default function Reader() {
     return () => watch.disconnect();
   }, [word, layer, place]);
 
+  const movesAside = (!!word || !!edit) && place === "drawer" && shift;
+  // When the text moves aside (or back), it slides under a mouse that has not moved, and the word now under the pointer turned
+  // terracotta, louder than the word being looked up (the critique of 2026-11-14). The hover colour waits for the mouse to move.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-still-pointer", "");
+    const moved = (e: PointerEvent) => { if (Math.abs(e.movementX) + Math.abs(e.movementY) > 1) root.removeAttribute("data-still-pointer"); };
+    addEventListener("pointermove", moved);
+    return () => { removeEventListener("pointermove", moved); root.removeAttribute("data-still-pointer"); };
+  }, [movesAside]);
   if (!workId) {
     return (
       <main id="main" className={`wrap ${styles.status}`}>

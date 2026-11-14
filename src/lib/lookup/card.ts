@@ -43,10 +43,10 @@ export interface Card {
   grammar: string | null;
 }
 
-/** "Here it is the object of ἄειδε.": the words before the governor, and the governor (none for the main verb). */
+/** "Here, it is the object of ἄειδε.": the words before the governor, and the governor (none for the main verb). */
 export interface Role {
   text: string;
-  /** "Here it is the object of" */
+  /** "Here, it is the object of" */
   lead: string;
   governor: string | null;
 }
@@ -61,7 +61,7 @@ export const couldNotLoad = (meaning: string, errors: (string | undefined)[]) =>
 export const NO_SHORT = "LSJ has no short definition for it. See More about it.";
 
 /**
- * The treebank's relations in plain words (after ROLES in lib/syntax.ts), written to follow "Here it is …" and the word
+ * The treebank's relations in plain words (after ROLES in lib/syntax.ts), written to follow "Here, it is …" and the word
  * the relation hangs on: the article, then the phrase. A relation not listed here (a vocative, a particle, a comma…)
  * shows no role, rather than a guess.
  */
@@ -81,18 +81,27 @@ function roleIn(tree: InSentence): Role | null {
   if (!s.nodes[at]) return null;
   const { g, rel } = governor(s, at);
   // the main verb hangs on nothing
-  if (g < 0) return rel === "PRED" ? { text: "main verb of the sentence", lead: "Here it is the main verb of the sentence", governor: null } : null;
+  if (g < 0) return rel === "PRED" ? { text: "main verb of the sentence", lead: "Here, it is the main verb of the sentence", governor: null } : null;
   const on = s.nodes[g]?.form;
   const words = RELATIONS[rel];
   if (!on || !words) return null;   // a supplied word has no name to give; an unlisted relation is not guessed
   const [article, phrase] = words;
-  return { text: `${phrase} ${on}`, lead: ["Here it is", article, phrase].filter(Boolean).join(" "), governor: on };
+  return { text: `${phrase} ${on}`, lead: ["Here, it is", article, phrase].filter(Boolean).join(" "), governor: on };
+}
+
+/**
+ * LSJ's short definition without a dangling end. The short definitions were cut out of the entries by a program, and some stop
+ * on a word that only led into the next phrase: ἐξαπατάω's is "deceive, beguile, deceive thoroughly, seduce, in", where the entry
+ * goes on "in a thing". A last phrase of one such word (a preposition, an article, "or", "and") is dropped; nothing is added.
+ */
+export function trimShort(s: string): string {
+  return s.replace(/[,;:]\s*(?:in|of|to|with|by|for|from|on|at|into|upon|as|a|an|the|or|and)\s*$/i, "").trim();
 }
 
 /** One meaning: the core list's definition, otherwise LSJ's short definition; or a plain statement that there is none. */
 function meaningOf(core: CardInput["core"], lsj: CardInput["lsj"]): Card["meaning"] {
   if (core?.def) return { text: core.def, source: "core" };
-  if (lsj?.entries.length) return lsj.entries[0].s ? { text: lsj.entries[0].s, source: "lsj" } : { text: NO_SHORT, source: null };
+  if (lsj?.entries.length) return lsj.entries[0].s ? { text: trimShort(lsj.entries[0].s), source: "lsj" } : { text: NO_SHORT, source: null };
   return { text: NO_ENTRY, source: null };
 }
 

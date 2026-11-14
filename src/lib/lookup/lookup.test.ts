@@ -48,7 +48,7 @@ describe("looking up a word", () => {
     const r = await lookUp(at("μῆνιν", "1.1", 0));
     expect(r.card.lemma).toBe("μῆνις");
     expect(r.card.meaning).toEqual({ text: "wrath, revengeful temper", source: "lsj" });
-    expect(r.card.role?.lead).toBe("Here it is the object of");
+    expect(r.card.role?.lead).toBe("Here, it is the object of");
     expect(r.card.grammar).toBe("Accusative singular");
     expect(r.occurs).toBe(1);
     expect(r.lsj?.head).toBe("μῆνις");

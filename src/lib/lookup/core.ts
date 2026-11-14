@@ -10,15 +10,21 @@ export const CORE_CREDIT = "Dickinson College Commentaries Greek Core Vocabulary
 
 let pending: Promise<{ exact: Map<string, CoreEntry>; folded: Map<string, CoreEntry> }> | null = null;
 
+// A list that is not there (404) is an empty list. A failed load is said (lookup.ts keeps it as coreError, and the look-up offers
+// Try again) and is not kept: before, it was kept as an empty list, so the core meanings were gone, unsaid, until a reload.
 function load() {
-  pending ??= fetch(CORE_URL).then((r) => (r.ok ? r.json() : { words: {} })).then((d: { words: Record<string, CoreEntry[]> }) => {
+  pending ??= fetch(CORE_URL).then((r) => {
+    if (r.status === 404) return { words: {} };
+    if (!r.ok) throw new Error(`core vocabulary unavailable (${r.status})`);
+    return r.json();
+  }).then((d: { words: Record<string, CoreEntry[]> }) => {
     const exact = new Map<string, CoreEntry>(), folded = new Map<string, CoreEntry>();
     for (const [k, v] of Object.entries(d.words)) {
       exact.set(k.normalize("NFC"), v[0]);
       if (!folded.has(fold(k))) folded.set(fold(k), v[0]);
     }
     return { exact, folded };
-  }).catch(() => ({ exact: new Map(), folded: new Map() }));
+  }).catch((e) => { pending = null; throw e; });
   return pending;
 }
 

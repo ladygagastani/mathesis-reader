@@ -55,11 +55,11 @@ time. Figures are lining and tabular in counts and passage numbers, old-style in
 | `--t-body` | 19 px | 1.6 | English prose, the English beside or under the Greek (Literata) |
 | `--t-lead` | 24 px | 1.25 | A part's heading; the meaning in the phone's sheet; a long meaning in the panel |
 | `--t-head` | 32 px | 1.15 | The meaning in the panel (Noto Serif Display 300 in Night, 400 in Day), a page's second heading |
-
-A meaning of more than 34 letters steps down one size (32 px to 24 px in the panel, 24 px to 19 px in the sheet), so the
-look-up's first line never runs past three lines.
 | `--t-title` | 40 px | 1.1 | A page's title; the dictionary form (Noto Serif Display 400) |
 | `--t-display` | 48 px | 1.08 | The book's title inside the title tondo |
+
+A meaning of more than 34 letters steps down one size (32 px to 24 px in the panel, 24 px to 19 px in the sheet), so the
+look-up's meaning never runs past three lines.
 
 The Greek being read is 22 px on a computer (Literata's x-height is large; 22 px reads as Gentium's 24) with a line
 height of 1.8, and falls to 19 px on a phone. Text still sets 18 to 34 px and 1.4 to 2.0.
@@ -115,7 +115,7 @@ Tongues alternate full terracotta and terracotta at 40 %. Hairlines are `--line`
 
 ## Shape and space
 
-Spacing steps of 4, 8, 12, 16, 24, 32, 48 and 64 px, as before. Corners: buttons, the grammar's parts and the looked-up
+Spacing steps of 4, 8, 12, 16, 24, 32, 48 and 64 px, as before. Corners: buttons and the looked-up
 word's tint are pills (`--pill`); menus and the phone's sheet are rounded 12 px and 24 px (`--radius`); the panel and the
 bar are square, edge to edge. No shadows: the panel and menus are `--surface` with a hairline edge. The bar is the page
 ground at 90 % over a 12 px blur, with a hairline under it.
@@ -164,8 +164,8 @@ The structure of the 12 November design stays; only the look above changes.
 |                                                                  |
 |   (17)  ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε    | ▮▯▮▯▮▯▮▯▮▯▮▯▮▯▮ |
 |         ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ (οἶδα)· ἐγὼ δʼ οὖν | ( οἶδα )  ×     |
-|         ...                                           | VERB · IRREGULAR|
-|         ── Show the English                           | to know         |
+|         ...                                           | to know ...     |
+|         ── Show the English                           | οἶδα  perfect...|
 ```
 
 ### Reader on a phone
@@ -179,6 +179,11 @@ bar in the hairline's ink under the band of tongues is its handle, and the head 
 full screen to the low sheet, down from the low sheet to close it, up from the low sheet to More about it. Down follows
 the finger and up gives a little against a spring; a short fast flick does as a long drag does, and a sheet let go
 short of either slides back. Back, × and Escape do the same from the keyboard.
+
+A swipe down anywhere in the sheet's words does what the handle does, once they are scrolled to their top: from More
+about it it brings back the low sheet, and from the low sheet it closes it (the owner's note of 2026-11-14). Lower down,
+a swipe scrolls; a swipe up always scrolls, and one more across than down is left to the text. On a short phone the
+sheet's words fade at their foot while more is under them, so the fold reads as "scroll", not as the end.
 
 Under 600 px the number's ring stands above its passage and the text takes the whole width; in a rail at the left it
 took a sixth of the screen and broke nearly every line of Homer in two. At 380 px and under, the bar keeps its words and
@@ -207,6 +212,35 @@ dim to 45 % (not while the catalogue first arrives, and they stand in full ink a
 list. (The router's own call made GitHub Pages load the whole page again, and drawing all 1,822 works at once held a
 phone for a second or more.)
 
+## The look-up, in order
+
+The order answers a learner's questions in turn (the critique of 2026-11-14, which found the meaning six lines down on
+some words):
+
+1. **The word**, its dictionary form, in its ring (on a phone, on its terracotta line), with × beside it.
+2. **The meaning**, the largest English on the screen.
+3. **The word here**: the form as the text writes it in Literata, its grammar after it in words parted by middle dots
+   ("ἄνδρες  vocative plural"), what it does in the sentence ("Here, it is the object of εὐλαβεῖσθαι."), and a plain
+   warning when the analysis is not of this very word, with the grammar set fainter. The grammar is not in pills: they
+   looked like the buttons under them and did nothing.
+4. **The entry**, quiet in the second ink: the rest of the dictionary's heading ("ἀνδρός, ὁ"; the form itself is in
+   the ring above), then the kind of word in plain words ("Noun, masculine · 3rd declension irregular"). The kind used
+   to stand in terracotta capitals between the word and its meaning.
+5. **How common** it is, under a hairline, its dots in the faint ink.
+6. **The buttons**: More about it, the one filled pill; Note and Save word; the arrows.
+
+While it loads, faint still lines hold the meaning's and the grammar's places, and More about it is an outline in the
+faint ink (a faded fill read as a muddy brown). When the dictionaries cannot be loaded, the look-up says so in plain
+words at the reading size ("The dictionaries could not be loaded: the connection failed."), never the browser's own
+message, with a Try again pill; More about it waits.
+
+**More about it** keeps the word where it stood. Back, Save word and × stand on a line of their own above it, and only
+that line stays as the panel scrolls, with a hairline under it and the panel's ground under the band of tongues. Then:
+the meaning a size smaller, the entry and how common; the word in this passage; its meanings in plain English from
+Wiktionary; LSJ, where a "v. εἴδω" is written "see εἴδω" and opens εἴδω in the look-up; the word's family, its
+relatives before its roots, the etymology in the second ink; the other dictionaries, which leave the site; how sure the
+analysis is, with the credits, last. Section headings are h2 under the page's h1.
+
 ## Words in the look-up
 
 The dictionaries' shorthand is written out in full: "to know (pf. in pres. sense)" is shown as "to know (perfect in
@@ -216,12 +250,20 @@ line was tried first; at 32 px the dotted lines were the loudest thing in the pa
 A screen reader hears the word and its meaning once when a word opens or the arrows step to the next ("οἶδα: to know
 ..."), from one hidden live line. The card itself is not live, so it is not read out again at every step.
 
+LSJ's short definitions were cut out of the entries by a program, and some stop on a word that only led into the next
+phrase ("deceive, beguile, deceive thoroughly, seduce, in"). A last phrase of one such word, after a comma, is dropped
+(`trimShort`, `lib/lookup/card.ts`); nothing is added.
+
+When the text moves aside for the panel, it slides under a mouse that has not moved; the word that lands under the
+pointer does not turn terracotta until the mouse moves (`data-still-pointer`), so the word being looked up stays the
+one that stands out.
+
 ## Checks
 
 - `scripts/check-design.mjs`: only the three typefaces, only the type steps, only the role colours, one filled button
   (a quiet button on the second surface also passes). It groups the words by their font settings and draws each
   group's letters once, so all 110 screens take about 5 minutes; each screen has a 90 second limit and is named on
-  stderr as it starts. `ONLY=<screen names as a pattern>` and `THEME=paper|night` run a part of it.
+  stderr as it starts. `ONLY=<screen names as a pattern>` and `THEME=paper|night` run a part of it; `ONLY` works for check-a11y.mjs too.
 - `scripts/check-a11y.mjs`: names, focus, contrast in Day and Night, 44 px targets.
 - `scripts/check-impeccable.mjs`: impeccable's pattern detector over the source and the rendered library and reader,
   in `npm run check:design`. It first proves itself on a known-bad page. One finding is judged right and listed in the

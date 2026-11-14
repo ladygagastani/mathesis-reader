@@ -17,10 +17,11 @@ the sentence.
 2. **The look-up.** Clicking or tapping a Greek word, or pressing Enter on it, opens the look-up. On a wide
    window it is a panel that slides in from the right, and the text moves aside so the panel never covers the Greek.
    Where there is no room for that, it is a low sheet over about a quarter of the screen, and the text scrolls so the word stays above it. Layer one shows the
-   dictionary form, the kind of word, one meaning line with its source, what the word does in the sentence (only
-   where the treebank says) and the grammar in plain words. "More about it" opens layer two: the full LSJ entry and
-   every analysis the data gives, Wiktionary's senses and word family, and links to Logeion and Perseus. An uncertain
-   parsing says so. Escape or the close button shuts it and puts the focus back on the word.
+   dictionary form, one meaning line with its source, the word as the text writes it with its grammar in plain words
+   and what it does in the sentence (only where the treebank says), then the kind of word. "More about it" opens layer
+   two: every analysis the data gives, Wiktionary's senses, the full LSJ entry, the word family, and links to Logeion
+   and Perseus. An uncertain parsing says so. Escape or the close button shuts it and puts the focus back on the word;
+   on a phone, a swipe down brings More about it back to the low sheet, and the low sheet away.
 3. **The library.** A search field first: an author, a title, or a Greek word in a title. Then the books you are
    reading, and, folded, where to begin. Under them the catalogue, always opening as one list of authors A to Z, each
    with their works beside them; it can also list titles A to Z, or group by kind of writing or by period, and filter by

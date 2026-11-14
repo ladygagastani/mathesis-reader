@@ -18,7 +18,7 @@ const browser = await chromium.launch();
 const found = [];
 
 for (const [w, h, phone, theme] of [[1440, 900, false, "paper"], [1440, 900, false, "night"], [390, 844, true, "paper"], [390, 844, true, "night"]]) {
-  for (const s of SCREENS.filter(forWidth(w))) {
+  for (const s of SCREENS.filter(forWidth(w)).filter((s) => !process.env.ONLY || new RegExp(process.env.ONLY).test(s.name))) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: phone, isMobile: phone, reducedMotion: "reduce" });
     await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes, words: s.words, reading: s.reading });
     if (process.env.PROVE_CSS) await ctx.addInitScript((c) => addEventListener("load", () => document.head.append(Object.assign(document.createElement("style"), { textContent: c }))), process.env.PROVE_CSS);

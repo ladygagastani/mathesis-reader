@@ -94,6 +94,8 @@
    it is found again at a glance after reading its entry. The pill reaches past the word without moving a letter. */
 .w { cursor: pointer; border-radius: var(--pill); transition: color var(--dur-quick) var(--ease), background-color var(--dur-quick) var(--ease); }
 @media (hover: hover) { .w:hover { color: var(--accent); } }
+/* not while the text has just slid under a still mouse (Reader.tsx, data-still-pointer) */
+@media (hover: hover) { :global(html[data-still-pointer]) .w:hover:not([aria-current="true"]) { color: inherit; } }
 .w:focus-visible { color: var(--accent); outline: 2px solid var(--accent); outline-offset: 3px; }
 .w[aria-current="true"] { color: var(--ink); background: var(--word-on); box-shadow: 0 0 0 0.22em var(--word-on), 0 0 0 calc(0.22em + 1px) var(--line); }
 

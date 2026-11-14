@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { couldNotLoad, lookupCard, NO_ENTRY, NO_SHORT, treeAt, type CardInput } from "./card";
+import { couldNotLoad, lookupCard, NO_ENTRY, NO_SHORT, treeAt, trimShort, type CardInput } from "./card";
 
 describe("couldNotLoad", () => {
   it("tells a dictionary that failed to load from a word it lacks", () => {
@@ -53,7 +53,7 @@ describe("the look-up card for μῆνιν, Iliad 1.1", () => {
   });
   it("gives the grammar in plain words", () => expect(c.grammar).toBe("Accusative singular"));
   it("says what it does in the sentence, from the treebank", () => {
-    expect(c.role).toEqual({ text: "object of ἄειδε", lead: "Here it is the object of", governor: "ἄειδε" });
+    expect(c.role).toEqual({ text: "object of ἄειδε", lead: "Here, it is the object of", governor: "ἄειδε" });
   });
 });
 
@@ -62,7 +62,7 @@ describe("the role in the sentence", () => {
     const c = card("1.1", 1);   // ἄειδε
     expect(c.kind).toBe("verb");
     expect(c.grammar).toBe("Present active imperative, 2nd person singular");
-    expect(c.role).toEqual({ text: "main verb of the sentence", lead: "Here it is the main verb of the sentence", governor: null });
+    expect(c.role).toEqual({ text: "main verb of the sentence", lead: "Here, it is the main verb of the sentence", governor: null });
   });
   it("reaches the word a genitive describes", () => {
     expect(card("1.1", 3).role?.text).toBe("attribute of Ἀχιλῆος");   // Πηληϊάδεω
@@ -113,13 +113,20 @@ describe("the meaning line", () => {
     expect(lsj["Ἀχιλλεύς"].entries[0].s).toBe("");
     expect(c.meaning).toEqual({ text: NO_SHORT, source: null });
   });
+  it("drops a short definition's dangling last word, and nothing else", () => {
+    expect(trimShort("deceive, beguile, deceive thoroughly, seduce, in")).toBe("deceive, beguile, deceive thoroughly, seduce");
+    expect(trimShort("wrath; of")).toBe("wrath");
+    expect(trimShort("to know (+ infinitive)")).toBe("to know (+ infinitive)");
+    expect(trimShort("give in")).toBe("give in");   // a phrasal verb, not a cut: no comma before it
+    expect(trimShort("the")).toBe("the");
+  });
   it("never makes one up: every meaning is a core definition or LSJ's short definition, word for word", () => {
     let n = 0;
     for (const u of pack.units) words(u[0][0]).forEach((_, i) => {
       const inp = input(u[0][0], i), m = lookupCard(inp).meaning;
       n++;
       if (m.source === "core") expect(m.text).toBe(inp.core!.def);
-      else if (m.source === "lsj") expect(m.text).toBe(inp.lsj!.entries[0].s);
+      else if (m.source === "lsj") expect(m.text).toBe(trimShort(inp.lsj!.entries[0].s));
       else expect([NO_ENTRY, NO_SHORT]).toContain(m.text);
       // and the statement is only ever made where it is true
       if (m.text === NO_ENTRY) expect(inp.core?.def || inp.lsj?.entries.length).toBeFalsy();
