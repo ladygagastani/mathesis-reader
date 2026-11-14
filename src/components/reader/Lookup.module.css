@@ -33,15 +33,27 @@
 .sheet {
   left: 0; right: 0; bottom: 0; min-height: clamp(180px, 25dvh, 400px); max-height: 58dvh;
   background: var(--surface); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; overflow: hidden;
-  box-shadow: 0 -1px 0 var(--rule);
+  /* a hairline along its top; and under it, the sheet's own ground carried far below the screen, so no gap shows beneath it
+     while it slides up from lower down (Lookup.tsx, goLayer). The ground starts below the rounded corners, so they stay round. */
+  box-shadow: 0 -1px 0 var(--rule), 0 calc(100vh + var(--radius-sheet)) 0 100vh var(--surface);
   animation: sheet-up var(--dur-sheet) var(--ease-drawer) backwards;
 }
 .sheet::before { margin-inline: 0; }
-/* the second layer stands taller, but never so tall that the word's line has no room under a phone's bar (the critique of
-   2026-11-14: at 78 % it covered the word) */
-.sheet[data-layer="2"] { height: 64dvh; max-height: none; }
+/* the second layer fills the screen, over the reader's bar, and hides the text (the owner, 2026-11-14: "take up the remaining
+   visual space"); its handle drags it back down to the low sheet. (Before, it stood at 64 % so the word stayed in sight.) */
+.sheet[data-layer="2"] {
+  top: 0; max-height: none; z-index: var(--z-menu); border-radius: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+/* the handle: a short bar in the hairline's ink, under the band of tongues; the head beside it drags too (Lookup.tsx, drag) */
+.grab {
+  position: absolute; top: calc(var(--space-4) + env(safe-area-inset-top, 0px)); left: 50%; z-index: 3;
+  width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--rule-strong); pointer-events: none;
+}
+.sheet:not([data-layer="2"]) .grab { top: var(--space-4); }
+.sheet .head { touch-action: none; cursor: grab; }
 @keyframes sheet-up { from { translate: 0 100%; } }
-.sheet .head { padding: var(--space-3) var(--space-2) 0 var(--space-4); }
+.sheet .head { padding: var(--space-5) var(--space-2) 0 var(--space-4); }
 .sheet .card { gap: var(--space-1); }
 .sheet .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-2) var(--space-4) var(--space-3); }
 /* the sheet's buttons on a grid, so none is left alone on a line at a phone's width: the arrows either side of More about it,

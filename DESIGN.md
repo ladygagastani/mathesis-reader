@@ -174,6 +174,12 @@ The bar at the top, the text in one column with the number's ring above each pas
 rising over the lower 58 % with the tongue band along its rounded top. The text scrolls so the word stays above it.
 The sheet's buttons stand on a grid: the arrows either side of "More about it", then Note and Save word a half each.
 
+"More about it" fills the screen, over the bar, and hides the text; the sheet slides up from where it stood. A short
+bar in the hairline's ink under the band of tongues is its handle, and the head beside it drags too: down from the
+full screen to the low sheet, down from the low sheet to close it, up from the low sheet to More about it. Down follows
+the finger and up gives a little against a spring; a short fast flick does as a long drag does, and a sheet let go
+short of either slides back. Back, × and Escape do the same from the keyboard.
+
 Under 600 px the number's ring stands above its passage and the text takes the whole width; in a rail at the left it
 took a sixth of the screen and broke nearly every line of Homer in two. At 380 px and under, the bar keeps its words and
 drops the signs beside them, all but Library's arrow, so its four controls fit a 320 px phone.
@@ -181,11 +187,23 @@ drops the signs beside them, all but Library's arrow, so its four controls fit a
 The bar's menus (Go to, Notes, Text) hang from the whole bar, 8 px in from either side, not from their own buttons,
 which left them off the left edge. In the library the four orders stand two by two and the filters one under another.
 
+### The site on a phone
+
+The start page and the library are two pages: Home (/) holds Continue reading, the saved books and Where to begin at
+the top, and the library (/library) holds the search, the choices and every work. The logo stands on the start page
+alone, as its masthead, with the name at a page title's size; the site bar carries none. On a phone Saved, Sync and
+Day/Night stand spaced evenly across a slim bar that scrolls away, and Home, Library and Reading stand
+in a bar fixed to the foot, each its sign over its name, the page you are on in terracotta with a short rule along the
+top edge. Reading opens the book read last where it stopped, or Where to begin before any. The reader has no foot bar:
+the sheet and Listen use the foot of the screen there. On a computer the same three stand at the left of the site bar.
+
+The keyboard's Search key in the library's search puts the keyboard away and brings the list into view.
+
 ### The library's choices
 
 A choice (Show, Order, a filter, the search) changes the list in place: the page never loads again. The chosen pill
 changes at once; the list's rows are drawn in the background, 40 at a time when the browser is idle, while the old rows
-dim to 45 %. The address follows the choices with the browser's history call, so a reload or a link opens the same
+dim to 45 % (not while the catalogue first arrives, and they stand in full ink again at once). The address follows the choices with the browser's history call, so a reload or a link opens the same
 list. (The router's own call made GitHub Pages load the whole page again, and drawing all 1,822 works at once held a
 phone for a second or more.)
 

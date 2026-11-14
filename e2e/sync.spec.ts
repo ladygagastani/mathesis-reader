@@ -6,7 +6,7 @@ import { CODE, CODE_KEY, NEW, fakeSupabase } from "../scripts/fake-supabase.mjs"
 
 test("a device with no sync code never contacts Supabase", async ({ page }) => {
   const asked = await fakeSupabase(page);
-  await page.goto("/");
+  await page.goto("/library");
   await page.locator("main h3").first().waitFor({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: "Sync", exact: true })).toBeVisible();
   await expect(page.getByText("Your private texts")).toHaveCount(0);
@@ -101,7 +101,7 @@ test("making a new code: shown once, for a password manager and as a file; it op
   expect(text).toContain(shown);
 
   await page.getByRole("button", { name: "Done" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/library$/);
   await page.locator("main h3").first().waitFor({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: "Synced" })).toBeVisible();
   await expect(page.getByText("Your private texts")).toHaveCount(0);

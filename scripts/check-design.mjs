@@ -157,7 +157,7 @@ for (const theme of (process.env.THEME ? [process.env.THEME] : ["paper", "night"
   for (const [w, h] of [[1440, 900], [390, 844]]) {
     for (const s of SCREENS.filter(forWidth(w)).filter((s) => !process.env.ONLY || new RegExp(process.env.ONLY).test(s.name))) {
       const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: "reduce", hasTouch: w < 500, isMobile: w < 500 });
-      await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes, words: s.words });
+      await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes, words: s.words, reading: s.reading });
       if (process.env.PROVE_CSS) await ctx.addInitScript((c) => addEventListener("load", () => document.head.append(Object.assign(document.createElement("style"), { textContent: c }))), process.env.PROVE_CSS);
       const page = await ctx.newPage();
       const at = `${s.name} ${w}px ${theme}`;

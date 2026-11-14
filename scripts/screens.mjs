@@ -10,12 +10,14 @@ const NOTES = [
   { id: "n4", work: "tlg0012.tlg001", book: "Homer, Iliad", anchor: { kind: "line", unit: "1.1", line: 0, lines: 1 }, colour: "red", text: "Wrath, the first word of the poem.", updated: 1 },
 ];
 export const SCREENS = [
-  { name: "library", path: "/" },
-  { name: "library, search", path: "/?q=plato" },
-  { name: "library, an author opened", path: "/?q=plato", act: "author" },
-  { name: "library, by kind", path: "/?sort=kind" },
-  { name: "library, titles", path: "/?sort=titles" },
-  { name: "library, by period", path: "/?sort=period&vocab=familiar" },
+  { name: "home", path: "/" },
+  { name: "home, reading", path: "/", notes: true, reading: true },
+  { name: "library", path: "/library" },
+  { name: "library, search", path: "/library?q=plato" },
+  { name: "library, an author opened", path: "/library?q=plato", act: "author" },
+  { name: "library, by kind", path: "/library?sort=kind" },
+  { name: "library, titles", path: "/library?sort=titles" },
+  { name: "library, by period", path: "/library?sort=period&vocab=familiar" },
   { name: "reader", path: "/read?w=tlg0059.tlg002" },
   { name: "reader, English shown", path: "/read?w=tlg0059.tlg002", act: "english" },
   { name: "reader, Both", path: "/read?w=tlg0059.tlg002", columns: "both" },
@@ -28,7 +30,7 @@ export const SCREENS = [
   { name: "credits", path: "/credits" },
   { name: "sync", path: "/sync" },
   { name: "sync, synced", path: "/sync", synced: true },
-  { name: "library, synced", path: "/", synced: true },
+  { name: "library, synced", path: "/library", synced: true },
   { name: "your private texts", path: "/", synced: true, act: "private" },
   { name: "private text", path: "/read?w=mine:placeholder-work", synced: true },
   { name: "sync, new code", path: "/sync", act: "make" },
@@ -49,7 +51,7 @@ const WORDS = [
   { id: "w-3", type: "word", lemma: "μῆνις", form: "μῆνιν", kind: "noun, feminine · 3rd declension", meaning: "wrath", work: "tlg0012.tlg001", book: "Homer, Iliad", unit: "1.1", updated: 1 },
 ];
 
-export async function prepare(ctx, { theme = "auto", columns = "greek", synced: sync = false, notes = false, words = false } = {}) {
+export async function prepare(ctx, { theme = "auto", columns = "greek", synced: sync = false, notes = false, words = false, reading = false } = {}) {
   await ctx.addInitScript(([theme, columns]) => {
     localStorage.setItem("mathesis-reader:settings", JSON.stringify({ theme, columns, greekSize: "auto" }));
     localStorage.setItem("mathesis-reader:opened", JSON.stringify(["tlg0059.tlg002"]));
@@ -58,6 +60,8 @@ export async function prepare(ctx, { theme = "auto", columns = "greek", synced: 
   if (sync) await synced(ctx);
   if (notes) await withNotes(ctx, NOTES);
   if (words) await ctx.addInitScript((w) => localStorage.setItem("mathesis-reader:words", JSON.stringify(w)), WORDS);
+  // a book being read, for the start page's Continue reading and the bar's Reading
+  if (reading) await ctx.addInitScript(() => localStorage.setItem("mathesis-reader:places", JSON.stringify({ "tlg0059.tlg002": { at: "29", where: "Sections 29–34", book: "Plato, Apology", t: 5 } })));
 }
 
 /** Run one screen's work, but give up on it after a while: a page that never settles (or a browser call that never returns) is
@@ -81,7 +85,12 @@ export async function open(page, base, s) {
   if (s.path.startsWith("/read")) await page.locator("[role=button]").first().waitFor({ timeout: 30_000 });
   else if (s.path.startsWith("/sync")) await page.locator("main form, main .btn").first().waitFor({ timeout: 30_000 });
   else if (s.path.startsWith("/credits") || s.path.startsWith("/saved") || s.path.startsWith("/no-such")) await page.locator("main h1").waitFor({ timeout: 30_000 });
-  else await page.locator("main h3").first().waitFor({ timeout: 30_000 });
+  else if (s.path === "/") await page.locator("#begin ul a").first().waitFor({ timeout: 30_000 });
+  else {
+    // the library: its list drawn whole (it comes in a piece at a time, Library.tsx, Listing)
+    await page.locator("main h3").first().waitFor({ timeout: 30_000 });
+    await page.locator("[data-drawn]").waitFor({ timeout: 30_000 });
+  }
   if (s.act === "author") await page.locator("main button[aria-expanded]").first().click();
   await page.evaluate(() => document.fonts.ready);
   if (s.act === "english") await page.getByRole("button", { name: "Show the English" }).first().click();

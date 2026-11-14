@@ -212,7 +212,7 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
   return (
     <header className={styles.bar} data-reader-bar="">
       <div className={styles.in}>
-        <Link href="/" className={`${styles.quiet} ${styles.back}`}><Icon name="back" />Library</Link>
+        <Link href="/library" className={`${styles.quiet} ${styles.back}`}><Icon name="back" />Library</Link>
         {showTitle ? <h1 className={styles.title}><button type="button" className={styles.top} onClick={onTop} title="To the top of the page">{title}</button></h1> : <span />}
 
         <nav className={styles.end} aria-label="The reader">

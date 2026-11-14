@@ -19,10 +19,10 @@ export default function SlashSearch() {
       const t = e.target as HTMLElement;
       if (!k && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
       e.preventDefault();
-      const field = document.querySelector<HTMLInputElement>("main search input[type=search]");
-      if (path === "/" && field) { field.focus(); field.select(); return; }
+      const field = document.querySelector<HTMLInputElement>("main [role=search] input[type=search]");
+      if (path === "/library" && field) { field.focus(); field.select(); return; }
       try { sessionStorage.setItem(FIND_KEY, "1"); } catch { /* storage blocked: the library opens all the same */ }
-      router.push("/");
+      router.push("/library");
     };
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);

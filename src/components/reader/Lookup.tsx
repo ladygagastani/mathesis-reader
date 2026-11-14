@@ -11,7 +11,7 @@
 import Link from "next/link";
 import Icon from "@/components/Icon";
 import Ring from "@/components/Ring";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { candidates, fold, lookupForm } from "@/lib/greek";
 import { couldNotLoad, SOURCE_NAMES } from "@/lib/lookup/card";
 import { spellOut } from "@/lib/lookup/abbrev";
@@ -126,9 +126,62 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
   const followed = trail.key === key ? trail.words : [];
   const seen = layer === 2 && followed.length > 0 ? followed[followed.length - 1] : null;
   const follow = (w: string) => setTrail({ key, words: [...followed, w] });
+  // On a phone the sheet's second layer fills the screen (the owner, 2026-11-14), and the sheet slides between its heights: a
+  // change of layer remembers where the sheet stood, and it slides from there once it has its new height. (Never on a computer's
+  // panel, and not under reduced motion.)
+  const slideFrom = useRef<number | null>(null);
+  const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const goLayer = (to: 1 | 2) => {
+    if (place === "sheet" && ref.current) slideFrom.current = ref.current.getBoundingClientRect().top;
+    onLayer(to);
+  };
+  useLayoutEffect(() => {
+    const el = ref.current, from = slideFrom.current;
+    slideFrom.current = null;
+    if (!el || from === null || place !== "sheet" || still()) return;
+    const by = from - el.getBoundingClientRect().top;
+    if (Math.abs(by) > 1) el.animate([{ transform: `translateY(${by}px)` }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(0.32, 0.72, 0, 1)" });
+  }, [layer, place]);
+  // Its head and handle drag it: down from the full screen back to the low sheet, down from the low sheet to close it, up from
+  // the low sheet to More about it. Down follows the finger; up gives a little, against a spring. A short fast flick does as a
+  // long drag does. Let go short of either, and it slides back.
+  const drag = useRef<{ y: number; dy: number; t: number; v: number; id: number } | null>(null);
+  const dragStart = (e: React.PointerEvent<HTMLElement>) => {
+    const el = ref.current;
+    if (place !== "sheet" || !el || e.button !== 0 || drag.current) return;
+    const t = e.target as Element;
+    const onHandle = t.closest("[data-drag]") || (t === el && e.clientY - el.getBoundingClientRect().top < 48);
+    if (!onHandle || t.closest("button, a")) return;
+    drag.current = { y: e.clientY, dy: 0, t: e.timeStamp, v: 0, id: e.pointerId };
+    el.setPointerCapture(e.pointerId);
+  };
+  const dragMove = (e: React.PointerEvent<HTMLElement>) => {
+    const d = drag.current, el = ref.current;
+    if (!d || !el || e.pointerId !== d.id) return;
+    const dy = e.clientY - d.y;
+    d.v = (dy - d.dy) / Math.max(1, e.timeStamp - d.t); d.dy = dy; d.t = e.timeStamp;
+    el.style.transform = `translateY(${dy >= 0 ? dy : layer === 1 ? dy / 3 : 0}px)`;
+  };
+  const dragEnd = (e: React.PointerEvent<HTMLElement>, cancelled = false) => {
+    const d = drag.current, el = ref.current;
+    if (!d || !el || e.pointerId !== d.id) return;
+    drag.current = null;
+    const down = !cancelled && (d.dy > 96 || (d.dy > 24 && d.v > 0.5));
+    const up = !cancelled && layer === 1 && !!card && (d.dy < -48 || (d.dy < -16 && d.v < -0.5));
+    const at = el.style.transform;
+    if (down && layer === 2) { goLayer(1); el.style.transform = ""; return; }
+    if (up) { goLayer(2); el.style.transform = ""; return; }
+    if (down) {
+      if (still()) { onClose(); return; }
+      el.animate([{ transform: at }, { transform: "translateY(100%)" }], { duration: 200, easing: "cubic-bezier(0.32, 0.72, 0, 1)", fill: "forwards" }).finished.then(onClose, onClose);
+      return;
+    }
+    el.style.transform = "";
+    if (at && !still()) el.animate([{ transform: at }, { transform: "none" }], { duration: 240, easing: "cubic-bezier(0.32, 0.72, 0, 1)" });
+  };
   const back = () => {
     if (followed.length) setTrail({ key, words: followed.slice(0, -1) });
-    else onLayer(1);
+    else goLayer(1);
   };
   const lkey = seen ? `${key}|${seen}` : key;
   const [other, setOther] = useState<{ word: string; value: Looked | null; error?: string }>({ word: "", value: null });
@@ -227,13 +280,16 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
     <aside
       ref={ref} tabIndex={-1} data-lookup={place} data-layer={layer} aria-label={`Look-up: ${at.word}`}
       className={`${styles.lookup} ${place === "sheet" ? styles.sheet : styles.drawer}`}
+      onPointerDown={dragStart} onPointerMove={dragMove} onPointerUp={(e) => dragEnd(e)} onPointerCancel={(e) => dragEnd(e, true)}
       onKeyDown={(e) => {
         if (e.key !== "Escape") return;
         e.stopPropagation();
         if (layer === 2) back(); else onClose();
       }}
     >
-      <div className={styles.head}>
+      {/* the sheet's handle, to drag it up or down (the buttons do the same: More about it, Back, ×) */}
+      {place === "sheet" && <span className={styles.grab} data-drag="" aria-hidden="true" />}
+      <div className={styles.head} data-drag={place === "sheet" ? "" : undefined}>
         {layer === 2 && !seen && <button type="button" className={`text-btn ${styles.back}`} onClick={back}><Icon name="back" />Back</button>}
         {from && <button type="button" className={`text-btn ${styles.back}`} onClick={back} aria-label={`Back to ${from}`}><Icon name="back" /><span lang="grc">{from}</span></button>}
         {/* the panel stands the word in its ring; the phone's sheet, short of room, sets it on a terracotta line instead, so the
@@ -378,7 +434,7 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
         <div className={styles.row}>
           {/* More about it, the one filled pill, across the panel; under it Note and Save word, and the arrows to the word before
               and after (the left and right keys do the same) */}
-          <button type="button" className={`text-btn ${styles.more}`} onClick={() => onLayer(2)} disabled={!card}><Icon name="info" />More about it</button>
+          <button type="button" className={`text-btn ${styles.more}`} onClick={() => goLayer(2)} disabled={!card}><Icon name="info" />More about it</button>
           <button type="button" className={`text-btn ${styles.act} ${styles.note}`} onClick={onNote}><Icon name="note" />Note</button>
           <button type="button" className={`text-btn ${styles.act} ${styles.keep}`} aria-pressed={!!saved} onClick={toggleSaved} disabled={!card}
             title={saved ? "Saved: on the Saved page. Press to take it off." : "Keep this word on the Saved page"}><Icon name="keep" />{saved ? "Saved" : "Save word"}</button>

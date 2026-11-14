@@ -391,14 +391,16 @@ export default function Reader() {
   }, [rows, columns, greekSize]);
 
   // the word stays in sight, never under the look-up: above the sheet (as the sheet grows when its words arrive, too), or, beside
-  // the panel, inside the screen below the bar
+  // the panel, inside the screen below the bar. The sheet's second layer fills the screen and hides the text on purpose, so the
+  // page is left where it is under it. (The sheet's top is taken from its height at rest, not where it is drawn: it slides
+  // between its heights, and is dragged.)
   useLayoutEffect(() => {
     const panel = document.querySelector<HTMLElement>("[data-lookup]");
-    if (!word || !panel) return;
+    if (!word || !panel || (place === "sheet" && layer === 2)) return;
     const keepClear = () => {
       const r = word.el.getBoundingClientRect();
       const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
-      const bottom = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight;
+      const bottom = place === "sheet" ? innerHeight - panel.offsetHeight : innerHeight;
       const room = 16;
       if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + (place === "sheet" ? r.height : 0) });
       else if (r.top < bar + room) window.scrollBy({ top: r.top - bar - room * 4 });
@@ -413,7 +415,7 @@ export default function Reader() {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
         <p>No book is chosen.</p>
-        <Link className="btn" href="/">Go to the library</Link>
+        <Link className="btn" href="/library">Go to the library</Link>
       </main>
     );
   }
@@ -429,7 +431,7 @@ export default function Reader() {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
         <p>This book could not be opened. {got.error}</p>
-        <div><button type="button" className="btn" onClick={() => location.reload()}>Try again</button> <Link className="btn ghost" href="/">Library</Link></div>
+        <div><button type="button" className="btn" onClick={() => location.reload()}>Try again</button> <Link className="btn ghost" href="/library">Library</Link></div>
       </main>
     );
   }

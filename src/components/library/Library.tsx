@@ -1,30 +1,24 @@
 "use client";
 /**
- * The library (SPEC.md, "The library"; DESIGN.md, "Library"): a short head, the search, then every work. Above the list: the books
- * you are reading (lib/reader/place.ts), the books you saved (the reader's Notes) and, folded, where to begin. The list opens as one A to Z list of authors (the owner,
- * 2026-11-12), each author a row with their works beside them; it can also list the titles A to Z, or group the authors by kind of
- * writing or by period. With English or Greek only, a period, a dialect and how familiar the words are narrow it. Each work says
- * its Greek title, kind, date, length and vocabulary (lib/library/facts.ts). A rail of letters beside an A to Z list jumps to a
- * letter. The address keeps the search, the order and the filters (/?q=plato&sort=kind&period=…), so Back returns to the same list.
+ * The library (SPEC.md, "The library"; DESIGN.md, "Library"), at /library: a short head, the search, then every work. (The books
+ * you are reading, the books you saved and where to begin are on the start page, Home.tsx.) The list opens as one A to Z list of
+ * authors (the owner, 2026-11-12), each author a row with their works beside them; it can also list the titles A to Z, or group
+ * the authors by kind of writing or by period. With English or Greek only, a period, a dialect and how familiar the words are
+ * narrow it. Each work says its Greek title, kind, date, length and vocabulary (lib/library/facts.ts). A rail of letters beside an
+ * A to Z list jumps to a letter. The address keeps the search, the order and the filters (/library?q=plato&sort=kind&period=…),
+ * so a reload or a link opens the same list.
  */
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { memo, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import Icon from "@/components/Icon";
 import { FIND_KEY } from "@/components/site/SlashSearch";
-import { loadAuthorNames, type AuthorNames } from "@/lib/authors";
-import { greekEditions, hasTranslation, loadCatalog, type CatalogIndex, type CatAuthor, type CatWork } from "@/lib/catalog";
+import { hasTranslation, type CatWork } from "@/lib/catalog";
 import { bcAd } from "@/lib/library/bc-ad";
 import { AZ_OTHER } from "@/lib/library/az";
-import { beginnings, bestShelf, byKind, byLetter, byPeriod, byTitle, shelves, type Part, type Shelf, type Show, type TitlePart } from "@/lib/library/catalogue";
-import { centuries, commonShare, dialects, length, loadDifficulty, passes, PERIODS, UNDATED, VOCAB, vocabOf, type Filters, type WorkFacts } from "@/lib/library/facts";
-import { loadAuthorsMeta, loadWorksMeta, workKinds, type AuthorMeta } from "@/lib/library/kinds";
-import { shown as notRemoved } from "@/lib/notes/notes";
-import { useNotes } from "@/lib/notes/store";
-import { PLACES_KEY, type Place } from "@/lib/reader/place";
-import { drawableGreek } from "@/lib/greek";
-import { splitMatches } from "@/lib/text-match";
+import { bestShelf, byKind, byLetter, byPeriod, byTitle, shelves, type Part, type Shelf, type Show, type TitlePart } from "@/lib/library/catalogue";
+import { dialects, passes, PERIODS, UNDATED, VOCAB, type Filters } from "@/lib/library/facts";
+import { Marked, n, useCatalogue, WorkLine, type Loaded } from "./shared";
 import styles from "./Library.module.css";
 
 type Sort = "az" | "titles" | "kind" | "period";
@@ -33,66 +27,8 @@ const SORTS: [Sort, string][] = [["az", "Authors A–Z"], ["titles", "Titles A�
 const LETTERS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", AZ_OTHER];
 /** an author shows this many works until "All n works" is pressed */
 const FIRST = 6;
-const BEGIN_KEY = "mathesis-reader:library-begin";
 /** a new list is drawn this many rows (an author, or a title) at a time: the first at once, the rest in the background */
 const CHUNK = 40;
-const n = (x: number) => x.toLocaleString("en-GB");
-const GREEK = /[Ͱ-Ͽἀ-῿]/;
-
-interface Loaded {
-  idx: CatalogIndex; names: Record<string, AuthorNames>; who: Record<string, AuthorMeta>; kinds: Map<string, string>;
-  meta: Record<string, WorkFacts>; diff: Record<string, [number, number]>;
-}
-
-/** This device's storage, read as the page runs (nothing on the server: the list is drawn without it, then with it). */
-const noSubscribe = () => () => {};
-function useStored(key: string): string {
-  return useSyncExternalStore(noSubscribe, () => { try { return localStorage.getItem(key) ?? ""; } catch { return ""; } }, () => "");
-}
-
-/** The text with what the search matches marked, accents and capitals aside. */
-function Marked({ text, q }: { text: string; q: string }) {
-  if (!q.trim()) return <>{text}</>;
-  return <>{splitMatches(text, q).map((p, i) => (p.hit ? <mark key={i}>{p.text}</mark> : <span key={i}>{p.text}</span>))}</>;
-}
-
-/** How familiar a work's words are: three marks, as many filled as the band, and the share. */
-function Vocab({ pct }: { pct: number }) {
-  const band = vocabOf(pct);
-  const on = band === "familiar" ? 3 : band === "mixed" ? 2 : 1;
-  return (
-    <span className={styles.vocab} title={`${pct}% of its running words are among the 516 commonest words in Greek`}>
-      <span className={styles.bars} aria-hidden="true">{[1, 2, 3].map((k) => <span key={k} data-on={k <= on || undefined} />)}</span>
-      {pct}% common words
-    </span>
-  );
-}
-
-/** A work: its title and Greek title (the search's letters marked), then what it is, when, how long, and its words. */
-// (memo: a choice re-draws the page at once with the old list, and only the deferred pass should touch the rows)
-const WorkLine = memo(function WorkLine({ w, d, q, by }: { w: CatWork; d: Loaded; q: string; by?: CatAuthor }) {
-  const grc = greekEditions(w)[0]?.label;
-  const greek = grc && GREEK.test(grc) && grc !== w.title ? drawableGreek(grc) : null;
-  const m = d.meta[w.id];
-  const pct = commonShare(d.diff[w.id]);
-  const facts = [d.kinds.get(w.id), centuries(m?.from, m?.to), length(m?.tokens)].filter(Boolean).join(" · ");
-  return (
-    <Link className={styles.work} href={`/read?w=${w.id}`} prefetch={false}>
-      <span className={styles.workName}>
-        <span className={styles.workTitle}><Marked text={w.title} q={q} /></span>
-        {greek && <span lang="grc" className={styles.workGr}><Marked text={greek} q={q} /></span>}
-        {by && <span className={styles.by}><Marked text={by.name} q={q} /></span>}
-      </span>
-      <span className={styles.facts}>
-        {facts && <span>{facts}</span>}
-        {pct !== null && <Vocab pct={pct} />}
-        <span className={hasTranslation(w) ? styles.english : styles.greekOnly}>{hasTranslation(w) ? "With English" : "Greek only"}</span>
-      </span>
-      <Icon name="next" className={styles.go} />
-    </Link>
-  );
-});
-
 /** An author: their names and who they were at the left, their works at the right. */
 const AuthorRow = memo(function AuthorRow({ s, d, q }: { s: Shelf; d: Loaded; q: string }) {
   const [all, setAll] = useState(false);
@@ -185,7 +121,8 @@ const Listing = memo(function Listing({ parts, titleParts, sort, best, d, q }: {
   const partRows = upTo(parts.map((p) => p.shelves), drawn);
   const titleRows = upTo(titleParts.map((p) => p.rows), drawn);
   return (
-    <div className={railKeys.length ? styles.withRail : undefined}>
+    // (data-drawn once every row stands: the checks wait for it, rather than measure rows still coming in)
+    <div className={railKeys.length ? styles.withRail : undefined} data-drawn={drawn >= rows || undefined}>
       {railKeys.length > 0 && <Rail keys={railKeys} whole={drawn >= rows} onWhole={whole} />}
       <div className={styles.listCol}>
         {best && (
@@ -235,16 +172,8 @@ export default function Library() {
   const { show, sort } = choice;
   const filters: Filters = { period: choice.period, dialect: choice.dialect, vocab: choice.vocab };
   const filtersOn = !!(filters.period || filters.dialect || filters.vocab);
-  const [got, setGot] = useState<{ data?: Loaded; error?: string }>({});
+  const got = useCatalogue();
   const field = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    let live = true;
-    Promise.all([loadCatalog(), loadAuthorNames(), loadWorksMeta(), loadAuthorsMeta(), loadDifficulty()])
-      .then(([idx, names, meta, who, diff]) => { if (live) setGot({ data: { idx, names, who, meta, diff, kinds: workKinds(idx.catalog.authors, meta, who) } }); })
-      .catch((e: Error) => { if (live) setGot({ error: e.message }); });
-    return () => { live = false; };
-  }, []);
 
   // "/" on another page brought you here to search
   useEffect(() => {
@@ -280,28 +209,16 @@ export default function Library() {
   const total = all.reduce((k, s) => k + s.works.length, 0);
   const english = all.reduce((k, s) => k + s.works.filter(hasTranslation).length, 0);
   const shown = list.reduce((k, s) => k + s.works.length, 0);
-  const begin = useMemo(() => (d ? beginnings(all, d.diff) : []), [d, all]);
   const dialectList = useMemo(() => (d ? dialects(d.meta) : []), [d]);
 
-  // the books you are reading, newest first
-  const placesRaw = useStored(PLACES_KEY);
-  const reading = useMemo(() => {
-    try {
-      const all = JSON.parse(placesRaw || "{}") as Record<string, Place>;
-      return Object.entries(all).filter(([, p]) => p && typeof p.at === "string" && typeof p.t === "number").sort((a, b) => b[1].t - a[1].t).slice(0, 4);
-    } catch { return []; }
-  }, [placesRaw]);
-  // the books saved from the reader's Notes (lib/notes), A to Z
-  const allNotes = useNotes();
-  const saved = useMemo(() => notRemoved(allNotes).filter((n) => n.anchor.kind === "book").sort((a, b) => a.book.localeCompare(b.book)), [allNotes]);
-  const beginOpen = useStored(BEGIN_KEY) === "open";
   const q = query.trim();
   // The list's rows follow a moment behind. The list itself (which works, how many) changes at once, but its 1,822 rows drawn
   // at once held a phone for a second or more after each tap. Deferred, React draws them in the background and gives way to any
   // tap meanwhile, and the old rows dim until the new ones stand (Library.module.css, data-stale).
   const drawnNow = useMemo(() => ({ parts, titleParts, sort, best, q }), [parts, titleParts, sort, best, q]);
   const view = useDeferredValue(drawnNow);
-  const stale = view !== drawnNow;
+  // (dimmed only where there are old rows to dim: not while the catalogue first arrives)
+  const stale = view !== drawnNow && (view.parts.length > 0 || view.titleParts.length > 0 || !!view.best);
 
   return (
     <main id="main" className={`wrap ${styles.library}`}>
@@ -313,17 +230,24 @@ export default function Library() {
         </p>
       </header>
 
-      <search className={styles.find}>
+      {/* a form, so the keyboard's Search key (Enter) closes the keyboard and brings the list into view; the list follows the
+          letters as they are typed, so nothing else is sent */}
+      <form role="search" className={styles.find} onSubmit={(e) => {
+        e.preventDefault();
+        field.current?.blur();
+        const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        document.getElementById("every-work")?.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+      }}>
         <label className={styles.field}>
           <span className="label">Search the library</span>
           <span className={styles.fieldRow}>
             <Icon name="search" className={styles.fieldSign} />
             <input ref={field} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="an author or a title, in English or Greek"
-              autoComplete="off" spellCheck={false} aria-describedby="find-key" />
+              enterKeyHint="search" autoComplete="off" spellCheck={false} aria-describedby="find-key" />
             <kbd id="find-key" className={styles.key} title="Press / on any page to search the library">/</kbd>
           </span>
         </label>
-      </search>
+      </form>
 
       <div className={styles.controls}>
         <div className={styles.control}>
@@ -357,48 +281,6 @@ export default function Library() {
           </div>
         </div>
       </div>
-
-      {reading.length > 0 && !q && (
-        <section className={styles.reading} aria-labelledby="reading-h">
-          <h2 id="reading-h" className="label">Continue reading</h2>
-          <ul>
-            {reading.map(([w, p]) => (
-              <li key={w}>
-                <Link href={`/read?w=${encodeURIComponent(w)}`} className={styles.readingLink}>
-                  <span className={styles.readingBook}>{p.book}</span>
-                  <span className={styles.readingAt}>{p.where} · at {p.at}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {saved.length > 0 && !q && (
-        <section className={styles.reading} aria-labelledby="saved-h">
-          <h2 id="saved-h" className="label">Saved books</h2>
-          <ul>
-            {saved.map((n) => (
-              <li key={n.id}>
-                <Link href={`/read?w=${encodeURIComponent(n.work)}`} className={styles.readingLink} style={{ "--accent": `var(--note-${n.colour})` } as React.CSSProperties}>
-                  <span className={styles.readingBook}>{n.book}</span>
-                  {n.text && <span className={styles.readingAt}>{n.text.length > 80 ? `${n.text.slice(0, 79)}…` : n.text}</span>}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {d && begin.length > 0 && !q && (
-        <details className={styles.begin} open={beginOpen} onToggle={(e) => { try { localStorage.setItem(BEGIN_KEY, e.currentTarget.open ? "open" : "shut"); } catch { /* blocked */ } }}>
-          <summary><span className={styles.beginName}>Where to begin</span> <span className={styles.beginWhy}>Works with English whose words are the most familiar</span></summary>
-          <div className={styles.beginBody}>
-            <p className={styles.note}>The share of a text&apos;s running words that are among the 516 commonest words in Greek (the Dickinson College Commentaries core list, counted over the GLAUx analysis). It measures the words only, not the grammar or the ideas.</p>
-            <ul className={styles.titles}>{begin.map((b) => <li key={b.work.id}><WorkLine w={b.work} d={d} q="" by={b.author} /></li>)}</ul>
-          </div>
-        </details>
-      )}
 
       <section className={styles.all} aria-labelledby="every-work" data-stale={stale || undefined}>
         <div className={styles.allHead}>

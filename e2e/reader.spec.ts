@@ -73,19 +73,21 @@ test("the look-up gives the meaning and the form, and never covers the word", as
   await expect(lookup(page)).toContainText("Here it is");
 });
 
-test("More about it, Back, Previous, Next and Escape", async ({ page }) => {
+test("More about it, Back, Previous, Next and Escape", async ({ page, isMobile }) => {
   await openBook(page);
   const ws = words(page);
   await lookUp(page, ws.nth(14));
   await page.getByRole("button", { name: "More about it" }).click();
   await expect(lookup(page)).toContainText("Dictionary · LSJ");
   await expect(lookup(page)).toContainText("How sure");
-  await clear(page, ws.nth(14));
+  // (on a phone the second layer fills the screen and hides the text on purpose: the word is in sight again after Back)
+  if (!isMobile) await clear(page, ws.nth(14));
   // οἶδα's LSJ entry is two short lines: all of it shows, with nothing more to open
   await expect(lookup(page)).toContainText("v. Εἴδω B.");
   await expect(page.getByRole("button", { name: "The whole entry" })).toHaveCount(0);
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.getByRole("button", { name: "More about it" })).toBeVisible();
+  await clear(page, ws.nth(14));
   await page.getByRole("button", { name: "Next word" }).click();
   await expect(ws.nth(15)).toHaveAttribute("aria-current", "true");
   await page.getByRole("button", { name: "Previous word" }).click();
@@ -169,7 +171,40 @@ test("pages: the menu, Continue and the way back, and the Library", async ({ pag
   await page.goto(`${APOLOGY}&at=29`);
   await expect(page.locator("#p-29")).toBeInViewport();
   await page.getByRole("link", { name: "Library" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/library$/);
+});
+
+test("on a phone, More about it fills the screen; the handle drags it back to the low sheet, up again, and away", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the phone's sheet");
+  await openBook(page);
+  await lookUp(page, words(page).nth(5));
+  const sheet = lookup(page);
+  const vh = page.viewportSize()!.height;
+  // drag from the sheet's handle, at the middle of its top edge
+  const drag = async (dy: number) => {
+    const b = (await sheet.boundingBox())!;
+    const x = b.x + b.width / 2, y = b.y + 22;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x, y + dy, { steps: 10 });
+    await page.mouse.up();
+  };
+  await sheet.getByRole("button", { name: "More about it" }).click();
+  await expect(sheet).toHaveAttribute("data-layer", "2");
+  await expect.poll(async () => (await sheet.boundingBox())!.y).toBe(0);
+  expect(Math.round((await sheet.boundingBox())!.height)).toBe(vh);
+  await drag(220);
+  await expect(sheet).toHaveAttribute("data-layer", "1");
+  expect((await sheet.boundingBox())!.y).toBeGreaterThan(vh / 3);
+  await drag(-120);
+  await expect(sheet).toHaveAttribute("data-layer", "2");
+  await drag(220);
+  await expect(sheet).toHaveAttribute("data-layer", "1");
+  // a short drag that lets go early slides back, and leaves it as it was
+  await drag(30);
+  await expect(sheet).toHaveAttribute("data-layer", "1");
+  await drag(220);
+  await expect(sheet).toHaveCount(0);
 });
 
 test("nothing scrolls sideways", async ({ page }) => {

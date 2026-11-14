@@ -1,15 +1,14 @@
-import { Suspense } from "react";
 import Colophon from "@/components/Colophon";
 import SiteBar from "@/components/site/SiteBar";
-import Library from "@/components/library/Library";
+import Home from "@/components/home/Home";
 
-export const metadata = { title: { absolute: "The library · Mathesis Reader" } };
+export const metadata = { title: { absolute: "Mathesis Reader" } };
 
-export default function Home() {
+export default function HomePage() {
   return (
     <>
       <SiteBar />
-      <Suspense fallback={null}><Library /></Suspense>
+      <Home />
       <Colophon />
     </>
   );

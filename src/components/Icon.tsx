@@ -81,6 +81,10 @@ const ICONS = {
   "follow": [["line", {x1: "2", x2: "5", y1: "12", y2: "12"}], ["line", {x1: "19", x2: "22", y1: "12", y2: "12"}], ["line", {x1: "12", x2: "12", y1: "2", y2: "5"}], ["line", {x1: "12", x2: "12", y1: "19", y2: "22"}], ["circle", {cx: "12", cy: "12", r: "7"}], ["circle", {cx: "12", cy: "12", r: "3"}]],
   // opens on another site (Lucide "external-link")
   "outside": [["path", {d: "M15 3h6v6"}], ["path", {d: "M10 14 21 3"}], ["path", {d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"}]],
+  // the start page: what you are reading, what you saved, where to begin (Lucide "house")
+  "home": [["path", {d: "M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"}], ["path", {d: "M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"}]],
+  // the book you read last, opened where you stopped (Lucide "book-open")
+  "reading": [["path", {d: "M12 7v14"}], ["path", {d: "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"}]],
 } satisfies Record<string, Drawing>;
 
 export type IconName = keyof typeof ICONS;

@@ -14,7 +14,7 @@ import { spawnSync } from "node:child_process";
 const VERSION = "4.9.0";
 const base = (process.argv[2] ?? "http://localhost:3300").replace(/\/$/, "");
 const PLANTED = ["side-tab", "gradient-text", "overused-font", "ai-color-palette", "dark-glow"];
-const PAGES = ["/", "/read?w=tlg0059.tlg002"];
+const PAGES = ["/", "/library", "/read?w=tlg0059.tlg002"];
 const VIEWPORTS = ["1280x800", "390x844"];
 const JUDGED = [
   {

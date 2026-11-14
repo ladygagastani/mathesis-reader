@@ -17,14 +17,14 @@ export default function NotFound() {
       <main id="main" className={`wrap ${styles.page}`}>
         <h1 className={styles.title}>This page is not here</h1>
         <p className={styles.what}>The address may be mistyped, or the page may have moved. Search the library for the book you wanted.</p>
-        <form className={styles.find} action="/" method="get" role="search">
+        <form className={styles.find} action={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/library`} method="get" role="search">
           <label className={styles.field}>
             <span className="label">Search the library</span>
             <input type="search" name="q" placeholder="an author or a title, in English or Greek" autoComplete="off" spellCheck={false} />
           </label>
           <button type="submit" className="btn"><Icon name="search" />Search</button>
         </form>
-        <p><Link className="btn ghost" href="/"><Icon name="library" />Go to the library</Link></p>
+        <p><Link className="btn ghost" href="/library"><Icon name="library" />Go to the library</Link></p>
       </main>
       <Colophon />
     </>

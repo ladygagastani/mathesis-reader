@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 const ready = async (page: Page) => { await page.locator("main h3").first().waitFor({ timeout: 30_000 }); };
 
 test("the catalogue opens as one A to Z list of authors, and By kind groups it", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/library");
   await ready(page);
   await expect(page.locator("main h1")).toContainText("The library");
   await expect(page.getByText(/Greek works by \d+ authors/)).toBeVisible();
@@ -18,13 +18,13 @@ test("the catalogue opens as one A to Z list of authors, and By kind groups it",
   await expect(page.locator("main h3").first()).toHaveText("A");
   // a fresh visit opens on A to Z again, whatever was chosen before
   await page.getByRole("radio", { name: "By kind" }).click();
-  await page.goto("/");
+  await page.goto("/library");
   await ready(page);
   await expect(page.locator("main h3").first()).toHaveText("A");
 });
 
 test("the search finds an author by an English or Greek name, and a work by its title", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/library");
   await ready(page);
   const search = page.getByRole("searchbox");
   await search.fill("Πλάτων");
@@ -38,7 +38,7 @@ test("the search finds an author by an English or Greek name, and a work by its 
 });
 
 test("With English and Greek only narrow the list", async ({ page }) => {
-  await page.goto("/?q=plato");
+  await page.goto("/library?q=plato");
   await ready(page);
   const count = async () => Number((await page.getByText(/ of [\d,]+ works$/).textContent())!.split(" ")[0].replace(/,/g, ""));
   const all = await count();
@@ -57,7 +57,7 @@ test("With English and Greek only narrow the list", async ({ page }) => {
 });
 
 test("an author opens to their works, and a work opens in the reader", async ({ page }) => {
-  await page.goto("/?q=plato");
+  await page.goto("/library?q=plato");
   await ready(page);
   const plato = page.getByRole("region", { name: "Best match" }).getByRole("button");
   await plato.click();
@@ -70,12 +70,16 @@ test("an author opens to their works, and a work opens in the reader", async ({ 
   await expect(page.getByRole("searchbox")).toHaveValue("plato");
 });
 
-test("the device at the head of the page leads home, and nothing scrolls sideways", async ({ page }) => {
-  await page.goto("/?q=homer");
+test("Home in the site bar leads to the start page, which alone carries the logo; nothing scrolls sideways", async ({ page }) => {
+  await page.goto("/library?q=homer");
   await ready(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
-  await page.getByRole("link", { name: /Mathesis Stoicheion, the library/ }).click();
+  await expect(page.locator("svg[viewBox='0 0 100 100']")).toHaveCount(0);
+  // (on a phone Home stands in the bar at the foot)
+  await page.getByRole("navigation", { name: "The site" }).getByRole("link", { name: "Home" }).click();
   await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator("main h1")).toContainText("Μάθησις Στοιχείων");
+  await expect(page.locator("main h1 svg")).toHaveCount(1);
 });
 
 test("the credits name every source with its licence", async ({ page }) => {
@@ -91,7 +95,7 @@ test("the site bar: the way to the library from every page, and Day or Night", a
   await page.goto("/credits");
   const bar = page.getByRole("navigation", { name: "The site" });
   await bar.getByRole("link", { name: "Library" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/library$/);
   await expect(bar.getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
   await page.getByRole("button", { name: "Switch to the night page" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "night");
@@ -107,12 +111,12 @@ test("an address that leads nowhere says so, and its search goes to the library"
   await expect(page.locator("main h1")).toHaveText("This page is not here");
   await page.getByRole("searchbox").fill("plato");
   await page.getByRole("button", { name: "Search" }).click();
-  await expect(page).toHaveURL(/\/\?q=plato$/);
+  await expect(page).toHaveURL(/\/library\?q=plato$/);
   await expect(page.getByRole("searchbox")).toHaveValue("plato");
 });
 
 test("Titles A to Z and By period; a filter narrows the list and says so; the letters jump", async ({ page, isMobile }) => {
-  await page.goto("/");
+  await page.goto("/library");
   await ready(page);
   const count = async () => Number((await page.locator("main p[aria-live]").textContent())!.split(" ")[0].replace(/,/g, ""));
   const total = await count();
@@ -137,21 +141,33 @@ test("Titles A to Z and By period; a filter narrows the list and says so; the le
   }
 });
 
-test("the books you are reading come first; where to begin opens, and stays open", async ({ page }) => {
+test("the start page: the books you are reading, then where to begin; Reading opens the last book where it stopped", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("mathesis-reader:places", JSON.stringify({ "tlg0059.tlg002": { at: "29", where: "Sections 29–34", book: "Plato, Apology", t: 5 } })));
   await page.goto("/");
-  await ready(page);
   const reading = page.getByRole("region", { name: "Continue reading" });
   await expect(reading).toContainText("Plato, Apology");
   await expect(reading).toContainText("Sections 29–34 · at 29");
-  await page.getByText("Where to begin").click();
-  await expect(page.locator("details[open]")).toContainText(/\d+% common words/);
-  await page.reload();
-  await ready(page);
-  await expect(page.locator("details[open]")).toHaveCount(1);
-  await reading.getByRole("link").click();
+  await expect(page.getByRole("region", { name: "Where to begin" })).toContainText(/\d+% common words/, { timeout: 30_000 });
+  // Reading, in the site bar (on a phone, the bar at the foot), opens the book you read last where you stopped
+  await page.getByRole("navigation", { name: "The site" }).getByRole("link", { name: "Reading" }).click();
   await expect(page).toHaveURL(/w=tlg0059\.tlg002/);
   await expect(page).toHaveURL(/at=29/);
+  // and the start page's way into every work
+  await page.goto("/");
+  await page.getByRole("link", { name: /^Every work in the library/ }).click();
+  await expect(page).toHaveURL(/\/library$/);
+  await ready(page);
+});
+
+test("the keyboard's Search key puts the keyboard away and brings the list into view", async ({ page }) => {
+  await page.goto("/library");
+  await ready(page);
+  const search = page.getByRole("searchbox");
+  await search.fill("aristotle");
+  await search.press("Enter");
+  await expect(search).not.toBeFocused();
+  await expect(page).toHaveURL(/\/library\?q=aristotle$/);
+  await expect(page.locator("#every-work")).toBeInViewport();
 });
 
 test("/ searches the library from any page", async ({ page, isMobile }) => {
@@ -160,7 +176,7 @@ test("/ searches the library from any page", async ({ page, isMobile }) => {
   // (the switch appears once the page's scripts run, and with them the key)
   await page.getByRole("button", { name: /^Switch to the/ }).waitFor();
   await page.keyboard.press("/");
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/library$/);
   await expect(page.getByRole("searchbox")).toBeFocused();
   await page.keyboard.type("hom");
   await expect(page.getByRole("searchbox")).toHaveValue("hom");

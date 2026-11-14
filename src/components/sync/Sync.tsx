@@ -68,7 +68,7 @@ export default function Sync() {
   const code = useSyncCode();
   const router = useRouter();
   const asked = useSearchParams().get("next");
-  const next = asked && asked.startsWith("/") && !asked.startsWith("//") ? asked : "/";
+  const next = asked && asked.startsWith("/") && !asked.startsWith("//") ? asked : "/library";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [made, setMade] = useState(false);

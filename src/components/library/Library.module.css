@@ -40,28 +40,18 @@
 @media (hover: hover) { .readingLink:hover .readingBook { color: var(--accent); } }
 .readingLink:focus-visible .readingBook { color: var(--accent); }
 
-/* where to begin: folded to one line */
-.begin { box-shadow: var(--rule-over); }
-.begin summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); min-height: var(--tap); padding-block: var(--space-3); cursor: pointer; list-style: none; }
-.begin summary::-webkit-details-marker { display: none; }
-.begin summary::before { content: ""; align-self: center; width: var(--tri-size); height: var(--tri-size); background: var(--accent); clip-path: var(--tri-right); }
-.begin[open] summary::before { clip-path: var(--tri-down); }
-.beginName { font-size: var(--t-body); }
-.beginWhy { font-size: var(--t-small); color: var(--ink-2); }
-@media (hover: hover) { .begin summary:hover .beginName { color: var(--accent); } }
-.beginBody { display: grid; gap: var(--space-3); padding-bottom: var(--space-4); }
+/* (where to begin is on the start page now: Home.module.css) */
 .note { max-width: 46em; font-size: var(--t-small); line-height: 1.5; color: var(--ink-2); }
 
 /* every work: a part under a strong rule with room above it */
 .all { display: grid; gap: var(--space-2); margin-top: var(--space-5); padding-top: var(--space-5); box-shadow: inset 0 1px 0 var(--rule-strong); }
 /* a choice made, the new list still being drawn: the old one dims after a beat (so a quick change never flickers), and the new
-   one comes up to full ink as it stands (Library.tsx, useDeferredValue) */
-.all { transition: opacity var(--dur) var(--ease); }
-.all[data-stale] { opacity: 0.45; transition-delay: 80ms; }
+   one stands in full ink at once, so it is never read half-faded (Library.tsx, useDeferredValue) */
+.all[data-stale] { opacity: 0.45; transition: opacity var(--dur) var(--ease) 80ms; }
 /* (content-visibility: auto on the rows was tried, 2026-11-14: it cut a choice's layout from 800 ms to 5 ms at a quarter of the
    speed, but with the deferred list, leaving the library sometimes took 5 to 7 s instead of 2) */
 .allHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); }
-.allHead h2 { font-size: var(--t-head); }
+.allHead h2 { font-size: var(--t-head); scroll-margin-top: calc(var(--bar-h) + var(--space-4)); }
 .count, .partCount { font-size: var(--t-small); color: var(--ink-2); font-variant-numeric: lining-nums; }
 .status { display: grid; gap: var(--space-2); padding-block: var(--space-5); }
 
@@ -144,10 +134,10 @@
 
 /* pressed under a finger (globals.css, "pressing"): a work's row and a book you are reading take the tapped word's tint */
 @media (pointer: coarse) {
-  .work, .readingLink, .begin summary {
+  .work, .readingLink {
     border-radius: 6px; outline: var(--space-2) solid transparent; outline-offset: 0;
     transition: background-color var(--dur) var(--ease), outline-color var(--dur) var(--ease);
   }
-  .work:active, .readingLink:active, .begin summary:active { background-color: var(--press); outline-color: var(--press); transition-duration: 0s; }
-  .work:focus-visible, .readingLink:focus-visible, .begin summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .work:active, .readingLink:active { background-color: var(--press); outline-color: var(--press); transition-duration: 0s; }
+  .work:focus-visible, .readingLink:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }

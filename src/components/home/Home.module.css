@@ -1,0 +1,18 @@
+/* The start page (Home.tsx): the logo as its masthead, then what you are reading, what you saved and where to begin, each under a
+   hairline, and the way into the library at the foot. The rows are the library's own (Library.module.css). */
+.home { padding-bottom: var(--space-8); }
+
+.head { display: grid; gap: var(--space-2); padding-block: var(--space-6) var(--space-5); }
+.title { margin-bottom: var(--space-2); }
+.purpose { max-width: 36em; font-size: var(--t-ui); line-height: 1.5; color: var(--ink-2); }
+
+/* where to begin: a part's heading, the works under it, and how the share is counted */
+.begin { display: grid; gap: var(--space-3); padding-block: var(--space-4) var(--space-5); box-shadow: var(--rule-over); scroll-margin-top: calc(var(--bar-h) + var(--space-4)); }
+.beginHead { display: grid; gap: var(--space-1); }
+.beginName { font: 400 var(--t-lead) / 1.2 var(--f-body); color: var(--accent); }
+.beginWhy { font-size: var(--t-small); color: var(--ink-2); }
+/* how the share is counted: kept to a reading measure (about 75 letters), always in view here */
+.measure { max-width: 36em; }
+
+.all { padding-top: var(--space-5); box-shadow: inset 0 1px 0 var(--rule-strong); }
+.all :global(.btn) { max-width: 100%; text-align: left; }
