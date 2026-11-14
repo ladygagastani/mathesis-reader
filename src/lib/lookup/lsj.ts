@@ -34,8 +34,9 @@ export async function lsjEntries(headword: string): Promise<{ head: string; entr
   const data = await loadShard(shardOf(h));
   if (!data) return null;
   if (data[h]) return { head: h, entries: data[h] };
-  const f = fold(h);
-  const key = Object.keys(data).find((k) => fold(k) === f);
+  // the same letters ignoring accents, but a name only ever finds a name: Ἀδείμαντος, the man, is not ἀδείμαντος, "fearless"
+  const f = fold(h), capital = (w: string) => /^\p{Lu}/u.test(w);
+  const key = Object.keys(data).find((k) => fold(k) === f && (!capital(h) || capital(k)));
   return key ? { head: key, entries: data[key] } : null;
 }
 

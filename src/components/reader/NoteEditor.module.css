@@ -28,5 +28,13 @@
 .text:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
 .row { display: flex; flex-wrap: wrap; gap: var(--space-2); flex: none; padding-block: var(--space-2) var(--space-4); }
 :global([data-lookup="sheet"]) .row { padding: var(--space-2) var(--space-4) calc(var(--space-2) + env(safe-area-inset-bottom, 0px)); box-shadow: var(--rule-over); }
+/* a phone with its keyboard up (NoteEditor.tsx sets data-keyboard, --kb and --vvh): the sheet stands on the keyboard, and the
+   box to write in is three lines. Where the screen above the keyboard is short, the sheet rises over the reader's bar, as More
+   about it does, so its head, the colours, the box and Save all show (on a 390 x 844 phone it stood under the bar, its head hidden) */
+.editor[data-keyboard] {
+  bottom: var(--kb); z-index: var(--z-menu); min-height: 0; max-height: calc(var(--vvh) - env(safe-area-inset-top, 0px));
+}
+.editor[data-keyboard] .text { height: calc(3 * 1.55em + 2 * var(--space-3)); }
+.editor[data-keyboard] .row { padding-bottom: var(--space-2); }
 
 .kept { margin: calc(-1 * var(--space-2)) 0 0; font-size: var(--t-small); color: var(--ink-3); }

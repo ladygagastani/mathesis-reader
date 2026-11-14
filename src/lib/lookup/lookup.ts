@@ -7,12 +7,13 @@
 import { candidates, lookupForm } from "@/lib/greek";
 import { loadSyntax } from "@/lib/syntax";
 import type { TeiDoc } from "@/lib/tei/types";
-import { lookupCard, treeAt, type Card, type InSentence } from "./card";
+import { isName, lookupCard, treeAt, type Card, type InSentence } from "./card";
 import { coreEntry, type CoreEntry } from "./core";
 import { formReading } from "./forms";
 import { lsjEntries, type LsjEntry } from "./lsj";
 import { parserReading } from "./morpheus";
 import { countLemma } from "./occurrences";
+import { lookUpWiktionary, type WiktSense } from "./wiktionary";
 import { analyse, loadWordPack, type Analysis } from "./words";
 
 /** A word as it stands on the page. */
@@ -65,16 +66,31 @@ export async function lookUp(at: WordAt): Promise<Looked> {
   try {
     // a reading from outside the work (the form index, the parser) may name a dictionary form LSJ files otherwise: then the word's own spellings
     const guessed = analysis?.where === "corpus" || analysis?.where === "parser";
-    for (const h of analysis ? [analysis.lemma, ...(guessed ? candidates(at.word) : [])] : candidates(at.word)) {
+    // (a name's own spellings only: Ἀδείμαντος, the man, is not ἀδείμαντος, "fearless")
+    const name = isName(analysis?.lemma);
+    const spellings = guessed ? candidates(at.word).filter((c) => !name || isName(c)) : [];
+    for (const h of analysis ? [analysis.lemma, ...spellings] : candidates(at.word)) {
       lsj = await lsjEntries(h);
       if (lsj) break;
     }
   } catch (e) { lsjError = message(e); }
   let coreError: string | undefined;
   const core = await coreEntry(analysis?.lemma ?? lookupForm(at.word)).catch((e) => { coreError = message(e); return null; });
+  const wikt = await nameSenses(analysis?.lemma ?? lsj?.head ?? null, core, lsj);
 
-  const card = lookupCard({ analysis, tree, core, lsj });
+  const card = lookupCard({ analysis, tree, core, lsj, wikt });
   return { card, analysis, analysisError, tree, occurs, lsj, lsjError, coreError, core };
+}
+
+/**
+ * Wiktionary's senses for a proper name neither dictionary gives a meaning, so the card can say what it names ("Glaucon, a man's
+ * name"); null for any other word, or when Wiktionary cannot be reached (the card then says it is a name, and no more). Only the
+ * name is sent, as in More about it.
+ */
+async function nameSenses(lemma: string | null, core: CoreEntry | null, lsj: Looked["lsj"]): Promise<WiktSense[] | null> {
+  if (!lemma || !isName(lemma) || core?.def || lsj?.entries[0]?.s) return null;
+  const found = await lookUpWiktionary([lemma]).catch(() => null);
+  return found?.senses ?? null;
 }
 
 /**
@@ -91,6 +107,7 @@ export async function lookUpHeadword(word: string): Promise<Looked> {
   } catch (e) { lsjError = message(e); }
   let coreError: string | undefined;
   const core = await coreEntry(lsj?.head ?? lookupForm(word)).catch((e) => { coreError = message(e); return null; });
-  const card = lookupCard({ analysis: null, tree: null, core, lsj });
+  const wikt = await nameSenses(lsj?.head ?? lookupForm(word), core, lsj);
+  const card = lookupCard({ analysis: null, tree: null, core, lsj, wikt });
   return { card, analysis: null, tree: null, occurs: null, lsj, lsjError, coreError, core };
 }

@@ -33,10 +33,11 @@
 .drawer[data-layer="2"] .head { position: static; margin-top: 0; padding-top: var(--space-2); }
 .drawer .row { padding-top: var(--space-3); margin-top: var(--space-3); box-shadow: var(--rule-over); }
 
-/* a phone or a narrower window: a low sheet, about a quarter of the screen and as tall as its first layer needs (at most 45%), so
-   the meaning and the form both show without scrolling; a hairline along its top; "More about it" makes it tall */
+/* a phone or a narrower window: a low sheet, as tall as its first layer needs, up to 72 % of the screen, so the whole card shows
+   without scrolling: the meaning, this word here, the entry and how common it is (the owner, 2026-11-14: at 58 % the entry and
+   the counts were cut off on most words); a hairline along its top; "More about it" makes it tall */
 .sheet {
-  left: 0; right: 0; bottom: 0; min-height: clamp(180px, 25dvh, 400px); max-height: 58dvh;
+  left: 0; right: 0; bottom: 0; min-height: clamp(180px, 25dvh, 400px); max-height: 72dvh;
   background: var(--surface); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; overflow: hidden;
   /* a hairline along its top; and under it, the sheet's own ground carried far below the screen, so no gap shows beneath it
      while it slides up from lower down (Lookup.tsx, goLayer). The ground starts below the rounded corners, so they stay round. */
@@ -144,8 +145,9 @@
 .heading { font-family: var(--f-greek); font-size: var(--t-ui); line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; }
 .kind { font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
 .kind::first-letter { text-transform: uppercase; }
-/* the meaning: the largest English on the screen, in the display face's light weight, never smaller than the Greek it explains */
-.meaning { font: var(--display-light, 300) var(--t-head) / 1.18 var(--f-title); color: var(--ink); overflow-wrap: anywhere; }
+/* the meaning: the largest English on the screen, never smaller than the Greek it explains; in Literata, the face made for
+   reading, at its regular weight (the owner, 2026-11-14: in Noto Serif Display's light weight it was too thin to read) */
+.meaning { font: 400 var(--t-head) / 1.22 var(--f-prose); color: var(--ink); overflow-wrap: anywhere; }
 /* this word where it stands: the form as the text writes it, its grammar after it in words, then its part in the sentence */
 .here { display: grid; gap: var(--space-1); }
 .formLine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-3); }
@@ -210,7 +212,7 @@
 .second { display: grid; gap: var(--space-3); animation: ink var(--dur) var(--ease) backwards; }
 .second > * + * { padding-top: var(--space-4); box-shadow: var(--rule-over); }
 .recap { display: grid; gap: var(--space-2); }
-.recapMeaning { font: var(--display-light, 300) var(--t-lead) / 1.2 var(--f-title); color: var(--ink); overflow-wrap: anywhere; }
+.recapMeaning { font: 400 var(--t-lead) / 1.25 var(--f-prose); color: var(--ink); overflow-wrap: anywhere; }
 .sec { display: grid; gap: var(--space-2); }
 .sec :global(h2.label) { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.14em; color: var(--accent); }
 .lsj { display: grid; gap: var(--space-2); line-height: 1.55; font-family: var(--f-prose); }

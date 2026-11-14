@@ -38,8 +38,8 @@ Arial. A character none of the three has, such as "←", is drawn as an icon ins
 
 | Face | Role | Weights |
 |---|---|---|
-| **Literata** | The Greek being read, the English beside or under it, the look-up's Greek | 400, 500; italic 400 |
-| **Noto Serif Display** | The book's title, the dictionary form in the look-up, the meaning, passage numbers | 300, 400 |
+| **Literata** | The Greek being read, the English beside or under it, the look-up's Greek and its meaning | 400, 500; italic 400 |
+| **Noto Serif Display** | The book's title, the dictionary form in the look-up, passage numbers | 300, 400 |
 | **Hanken Grotesk** | The bar, buttons, menus, labels, counts | 400, 500 |
 
 Three and no more. All three are SIL Open Font License, served from the app (next/font), never from Google at reading
@@ -54,7 +54,7 @@ time. Figures are lining and tabular in counts and passage numbers, old-style in
 | `--t-ui` | 16 px | 1.4 | The bar, buttons, menus, list rows |
 | `--t-body` | 19 px | 1.6 | English prose, the English beside or under the Greek (Literata) |
 | `--t-lead` | 24 px | 1.25 | A part's heading; the meaning in the phone's sheet; a long meaning in the panel |
-| `--t-head` | 32 px | 1.15 | The meaning in the panel (Noto Serif Display 300 in Night, 400 in Day), a page's second heading |
+| `--t-head` | 32 px | 1.15 | The meaning in the panel (Literata 400), a page's second heading |
 | `--t-title` | 40 px | 1.1 | A page's title; the dictionary form (Noto Serif Display 400) |
 | `--t-display` | 48 px | 1.08 | The book's title inside the title tondo |
 
@@ -171,7 +171,9 @@ The structure of the 12 November design stays; only the look above changes.
 ### Reader on a phone
 
 The bar at the top, the text in one column with the number's ring above each passage, and the look-up as a sheet
-rising over the lower 58 % with the tongue band along its rounded top. The text scrolls so the word stays above it.
+rising from the foot with the tongue band along its rounded top, as tall as its card needs, up to 72 % of the screen, so
+the whole card shows without scrolling (at 58 % the entry and the counts were cut off on most words). The text scrolls so
+the word stays above it.
 The sheet's buttons stand on a grid: the arrows either side of "More about it", then Note and Save word a half each.
 
 "More about it" fills the screen, over the bar, and hides the text; the sheet slides up from where it stood. A short
@@ -184,6 +186,10 @@ A swipe down anywhere in the sheet's words does what the handle does, once they 
 about it it brings back the low sheet, and from the low sheet it closes it (the owner's note of 2026-11-14). Lower down,
 a swipe scrolls; a swipe up always scrolls, and one more across than down is left to the text. On a short phone the
 sheet's words fade at their foot while more is under them, so the fold reads as "scroll", not as the end.
+
+A note is written in the same sheet. While the keyboard is up, the sheet stands on top of the keyboard, not behind it. Its
+box to write in shrinks to three lines. Where the screen above the keyboard is short, the sheet rises over the bar, so its
+head, the colours, the box and Save all show.
 
 Under 600 px the number's ring stands above its passage and the text takes the whole width; in a rail at the left it
 took a sixth of the screen and broke nearly every line of Homer in two. At 380 px and under, the bar keeps its words and
@@ -218,7 +224,12 @@ The order answers a learner's questions in turn (the critique of 2026-11-14, whi
 some words):
 
 1. **The word**, its dictionary form, in its ring (on a phone, on its terracotta line), with × beside it.
-2. **The meaning**, the largest English on the screen.
+2. **The meaning**, the largest English on the screen, in Literata 400. (It was Noto Serif Display's light weight, which
+   the owner found too thin to read.) A short definition that gives a gloss twice gives it once (`trimShort`). A proper
+   name neither dictionary explains is said for what it is, from Wiktionary: "Glaucon, a man’s name", "Athens, a city",
+   "Clazomenae, a place"; where Wiktionary says nothing either, "A proper name, not in the dictionaries this site uses."
+   Its kind is "Proper noun, masculine". A name never takes a common word's entry (Ἀδείμαντος is not ἀδείμαντος,
+   "fearless").
 3. **The word here**: the form as the text writes it in Literata, its grammar after it in words parted by middle dots
    ("ἄνδρες  vocative plural"), what it does in the sentence ("Here, it is the object of εὐλαβεῖσθαι."), and a plain
    warning when the analysis is not of this very word, with the grammar set fainter. The grammar is not in pills: they

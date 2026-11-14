@@ -34,6 +34,39 @@ export default function NoteEditor({ editing, work, book, place, onClose }: {
   const timer = useRef(0);
   useEffect(() => () => clearTimeout(timer.current), []);
 
+  // On a phone the keyboard shrinks only what is seen (the visual viewport), not the page the sheet is fixed to, so the sheet
+  // would stay at the foot of the screen behind the keyboard. While the keyboard is up the sheet stands on it, no taller than
+  // the screen above it, and the box being written in is scrolled into sight inside the sheet.
+  const box = useRef<HTMLElement>(null);
+  const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const vv = window.visualViewport, el = box.current;
+    if (place !== "sheet" || !vv || !el) return;
+    let frame = 0;
+    const fit = () => {
+      const kb = Math.round(innerHeight - vv.height - vv.offsetTop);
+      if (kb < 80) { // no keyboard (a browser's own bar coming and going moves it by less)
+        delete el.dataset.keyboard; el.style.removeProperty("--kb"); el.style.removeProperty("--vvh");
+        return;
+      }
+      el.dataset.keyboard = "";
+      el.style.setProperty("--kb", `${kb}px`);
+      el.style.setProperty("--vvh", `${Math.round(vv.height)}px`);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const t = text.current, b = body.current;
+        if (!t || !b || document.activeElement !== t) return;
+        const tr = t.getBoundingClientRect(), br = b.getBoundingClientRect();
+        if (tr.bottom > br.bottom) b.scrollTop += tr.bottom - br.bottom + 12;
+        else if (tr.top < br.top) b.scrollTop -= br.top - tr.top + 12;
+      });
+    };
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => { cancelAnimationFrame(frame); vv.removeEventListener("resize", fit); vv.removeEventListener("scroll", fit); };
+  }, [place]);
+
   const anchor = anchors[kind];
   /**
    * Keep the note as it stands now, if its words, its colour or its place changed. A note with no words is kept only where it may
@@ -61,7 +94,7 @@ export default function NoteEditor({ editing, work, book, place, onClose }: {
   const hint = kept ? "Kept as you write." : bareOk ? `Words are optional: Save keeps ${what} without them.` : "Kept as you write, once it has words.";
 
   return (
-    <aside data-lookup={place} aria-label={old ? `Your note on ${placeName(anchor)}` : "A new note"}
+    <aside ref={box} data-lookup={place} aria-label={old ? `Your note on ${placeName(anchor)}` : "A new note"}
       className={`${look.lookup} ${place === "sheet" ? look.sheet : look.drawer} ${styles.editor}`}
       onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); close(true); } }}>
       <form className={styles.form} onSubmit={save}>
@@ -69,7 +102,7 @@ export default function NoteEditor({ editing, work, book, place, onClose }: {
           <h2 className={styles.title}>{title}<span className={styles.where}>{title === "Saved" ? ": " : " on "}{placeName(anchor)}</span></h2>
           <button type="button" className={`icon-btn ${look.x}`} onClick={() => close(true)}><Icon name="close" label="Close the note" /></button>
         </div>
-        <div className={styles.body}>
+        <div ref={body} className={styles.body}>
           {anchors.length > 1 && (
             <div className={styles.field}>
               <span className="label" id="note-on">On</span>

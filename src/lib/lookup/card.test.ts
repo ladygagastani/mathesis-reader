@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { couldNotLoad, lookupCard, NO_ENTRY, NO_SHORT, treeAt, trimShort, type CardInput } from "./card";
+import { couldNotLoad, lookupCard, NAME_NO_ENTRY, NAME_NO_SHORT, nameMeaning, NO_ENTRY, NO_SHORT, treeAt, trimShort, type CardInput } from "./card";
 
 describe("couldNotLoad", () => {
   it("tells a dictionary that failed to load from a word it lacks", () => {
@@ -102,16 +102,44 @@ describe("the meaning line", () => {
     expect(lsj["ψυχή"].entries[0].s).not.toBe("breath, life, soul");   // LSJ's own short definition is a different one
     expect(c.grammar).toBe("Accusative plural");
   });
-  it("says plainly when neither dictionary has the word", () => {
+  it("says plainly when neither dictionary has the word, and that a name is a name", () => {
     const c = card("1.1", 3);   // Πηληϊάδεω: Πηληϊάδης is in neither
     expect(c.lemma).toBe("Πηληϊάδης");
-    expect(c.meaning).toEqual({ text: NO_ENTRY, source: null });
+    expect(c.meaning).toEqual({ text: NAME_NO_ENTRY, source: null });
+    expect(c.kind).toMatch(/^proper noun/);
+    expect(lookupCard({ ...input("1.1", 3), analysis: { lemma: "πηληϊάδης", tag: "n-s---mg-" } }).meaning).toEqual({ text: NO_ENTRY, source: null });
     expect(NO_ENTRY).toBe("Not in the dictionaries this site uses.");
   });
   it("says plainly when LSJ has an entry but no short definition", () => {
     const c = card("1.1", 4);   // Ἀχιλῆος: LSJ's Ἀχιλλεύς has no short definition
     expect(lsj["Ἀχιλλεύς"].entries[0].s).toBe("");
-    expect(c.meaning).toEqual({ text: NO_SHORT, source: null });
+    expect(c.meaning).toEqual({ text: NAME_NO_SHORT, source: null });
+    expect(lookupCard({ ...input("1.1", 4), analysis: { lemma: "ἀχιλλεύς", tag: "n-s---mg-" } }).meaning).toEqual({ text: NO_SHORT, source: null });
+  });
+  it("says what a name names, from Wiktionary, where neither dictionary does", () => {
+    const sense = (pos: string, line: string) => [{ pos, lines: [line], lemma: null }];
+    const said = (line: string, pos = "Proper noun") => nameMeaning(sense(pos, line));
+    expect(said("a male given name, equivalent to English Adeimantus")).toBe("Adeimantus, a man’s name");
+    expect(said("a male given name, Parmenides, notably borne by the pre-Socratic philosopher Parmenides of Elea")).toBe("Parmenides, a man’s name");
+    expect(said("a female given name, equivalent to English Phaedra")).toBe("Phaedra, a woman’s name");
+    expect(said("Athens (the largest city in Attica, Greece)")).toBe("Athens, a city");
+    expect(said("the river Scamander; the river Karamenderes")).toBe("Scamander, a river");
+    expect(said("Olympus (a mountain in Greece)")).toBe("Olympus, a mountain");
+    expect(said("Clazomenae; Klazomenai; Kilizman, Turkey")).toBe("Clazomenae, a place");
+    expect(said("Homer")).toBe("Homer, a proper name");
+    expect(said("to Athens", "Adverb")).toBe("to Athens");
+    expect(nameMeaning(null)).toBeNull();
+    const c = lookupCard({ ...input("1.1", 3), wikt: sense("Proper noun", "a male given name, Peleides") });
+    expect(c.meaning).toEqual({ text: "Peleides, a man’s name", source: "wikt" });
+    // a common word is never given Wiktionary's line: the card says the dictionaries lack it
+    expect(lookupCard({ ...input("1.1", 3), analysis: { lemma: "πηληϊάδης", tag: "n-s---mg-" }, wikt: sense("Noun", "x") }).meaning.source).toBeNull();
+  });
+  it("gives each gloss once, where it first stands, and keeps LSJ's semicolons between senses", () => {
+    expect(trimShort("appearing, appearance, appearing, appearance, presentation, appearance")).toBe("appearing, appearance, presentation");
+    expect(trimShort("every, all; whole (with article)")).toBe("every, all; whole (with article)");
+    expect(trimShort("loose, free; free, set free; at large")).toBe("loose, free; set free; at large");
+    expect(trimShort("a (with gen., or dat.), b (with gen., or dat.)")).toBe("a (with gen., or dat.), b (with gen., or dat.)");
+    expect(trimShort("Speak, speak")).toBe("Speak");
   });
   it("drops a short definition's dangling last word, and nothing else", () => {
     expect(trimShort("deceive, beguile, deceive thoroughly, seduce, in")).toBe("deceive, beguile, deceive thoroughly, seduce");
@@ -120,23 +148,23 @@ describe("the meaning line", () => {
     expect(trimShort("give in")).toBe("give in");   // a phrasal verb, not a cut: no comma before it
     expect(trimShort("the")).toBe("the");
   });
-  it("never makes one up: every meaning is a core definition or LSJ's short definition, word for word", () => {
+  it("never makes one up: every meaning is a core definition or LSJ's short definition, tidied by trimShort", () => {
     let n = 0;
     for (const u of pack.units) words(u[0][0]).forEach((_, i) => {
       const inp = input(u[0][0], i), m = lookupCard(inp).meaning;
       n++;
-      if (m.source === "core") expect(m.text).toBe(inp.core!.def);
+      if (m.source === "core") expect(m.text).toBe(trimShort(inp.core!.def));
       else if (m.source === "lsj") expect(m.text).toBe(trimShort(inp.lsj!.entries[0].s));
-      else expect([NO_ENTRY, NO_SHORT]).toContain(m.text);
+      else expect([NO_ENTRY, NO_SHORT, NAME_NO_ENTRY, NAME_NO_SHORT]).toContain(m.text);
       // and the statement is only ever made where it is true
-      if (m.text === NO_ENTRY) expect(inp.core?.def || inp.lsj?.entries.length).toBeFalsy();
-      if (m.text === NO_SHORT) expect(inp.lsj!.entries[0].s).toBe("");
+      if (m.text === NO_ENTRY || m.text === NAME_NO_ENTRY) expect(inp.core?.def || inp.lsj?.entries.length).toBeFalsy();
+      if (m.text === NO_SHORT || m.text === NAME_NO_SHORT) expect(inp.lsj!.entries[0].s).toBe("");
     });
     expect(n).toBe(44 - pack.units.filter((u) => u[2].includes(".")).length);
   });
   it("falls back to LSJ when the core list lacks the word, and to the plain statement when LSJ does too", () => {
     const base = input("1.3", 3);
-    expect(lookupCard({ ...base, core: null }).meaning).toEqual({ text: lsj["ψυχή"].entries[0].s, source: "lsj" });
+    expect(lookupCard({ ...base, core: null }).meaning).toEqual({ text: trimShort(lsj["ψυχή"].entries[0].s), source: "lsj" });
     expect(lookupCard({ ...base, core: null, lsj: null }).meaning).toEqual({ text: NO_ENTRY, source: null });
   });
 });
