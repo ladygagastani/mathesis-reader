@@ -14,7 +14,7 @@ import Icon from "@/components/Icon";
 import Ring from "@/components/Ring";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { candidates, fold, lookupForm } from "@/lib/greek";
-import { couldNotLoad, SOURCE_NAMES, trimShort } from "@/lib/lookup/card";
+import { couldNotLoad, SOURCE_NAMES, SOURCE_SHORT, trimShort, type Card } from "@/lib/lookup/card";
 import { spellOut } from "@/lib/lookup/abbrev";
 import { classOf, fullHeading, rankLine } from "@/lib/lookup/core";
 import { certaintyNote } from "@/lib/lookup/certainty";
@@ -158,6 +158,21 @@ function plainFailure(error: string | undefined): string {
 
 /** The look-up could not be loaded: what happened, in plain words, and a button to try again (the critique of 2026-11-14: it
  *  showed "(Failed to fetch)" in the italic of an uncertain note, with no way to try again but to tap the word once more). */
+/**
+ * Where a meaning beyond the core list and LSJ comes from, in a quiet line under it: "From the Middle Liddell", "From
+ * Wiktionary", or, for a meaning a dictionary gives under another word, "Under ἐπεί in LSJ". The core list's and LSJ's own
+ * meanings need no line: they are the look-up's usual sources, named in the credits.
+ */
+function From({ meaning }: { meaning: Card["meaning"] }) {
+  const { source, under } = meaning;
+  if (!source || (!under && (source === "core" || source === "lsj"))) return null;
+  return (
+    <p className={styles.from}>
+      {under ? <>Under <span lang="grc">{under}</span> in {SOURCE_SHORT[source]}</> : <>From {SOURCE_SHORT[source]}</>}
+    </p>
+  );
+}
+
 function Failure({ what, error, onRetry }: { what: string; error: string | undefined; onRetry: () => void }) {
   return (
     <div className={styles.failure} role="status">
@@ -388,13 +403,14 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
   const failed = !l && (seen ? other.word === seen : got.key === key);
   const card = l?.card ?? null;
   // the dictionaries could not be loaded, though the word's analysis was: the card says so, and More about it waits
-  const dictsDown = !!card && couldNotLoad(card.meaning.text, [l!.lsjError, l!.coreError]);
+  const dictsDown = !!card && couldNotLoad(card.meaning.text, [l!.lsjError, l!.coreError, l!.listError]);
   const retry = () => { setGot({ key: "", value: null }); setOther({ word: "", value: null }); setTries((n) => n + 1); };
   const head = seen ? seen : layer === 2 && l ? card?.lemma ?? l.lsj?.head ?? lookupForm(word) : card ? card.lemma ?? lookupForm(word) : at.word;
   const shownMeaning = card?.meaning.source ? card.meaning.text : null;
   const lsjShort = l?.lsj ? otherDefinitions(l.lsj.entries, shownMeaning) : [];
   const full = whole === lkey;
-  const credits = l ? creditsFor({ glaux: (!!l.analysis && l.analysis.where !== "parser") || !!l.tree, parser: l.analysis?.where === "parser", lsj: !!l.lsj, core: !!l.core }) : [];
+  const credits = l ? creditsFor({ glaux: (!!l.analysis && l.analysis.where !== "parser") || !!l.tree, parser: l.analysis?.where === "parser", lsj: !!l.lsj, core: !!l.core,
+    ml: l.card.meaning.source === "ml", wikt: l.card.meaning.source === "wikt" }) : [];
   const occurs = l ? occursLine(l.occurs, workTitle) : null;
   // the kind of word with the core list's class ("noun, masculine · 2nd declension"); the list's full heading and the part of it
   // after the dictionary form; the grammar one phrase to a part; and how common the word is
@@ -462,7 +478,7 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
       {/* (the sheet's body scrolls by itself: it is in the Tab order, so a keyboard can scroll it) */}
       {/* what a screen reader hears when a word opens or the arrows step to the next: the word and its meaning, once. The card
           itself is not a live region, so stepping word to word does not read the whole card again (the critique of 2026-11-14). */}
-      <p className="visually-hidden" aria-live="polite">{failed || (card && couldNotLoad(card.meaning.text, [l!.lsjError, l!.coreError])) ? `${at.word}: the dictionaries could not be loaded.`
+      <p className="visually-hidden" aria-live="polite">{failed || (card && couldNotLoad(card.meaning.text, [l!.lsjError, l!.coreError, l!.listError])) ? `${at.word}: the dictionaries could not be loaded.`
         : card && layer === 1 ? `${head}: ${spellOut(card.meaning.text)}` : ""}</p>
       <div ref={bodyRef} className={styles.body} aria-busy={!l && !failed} tabIndex={place === "sheet" ? 0 : undefined}>
         {/* while it loads, the card's shape in faint lines where the meaning and the grammar will stand, so nothing jumps when
@@ -483,8 +499,11 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
         {card && layer === 1 && (
           <section className={styles.card}>
             {dictsDown
-              ? <Failure what="The dictionaries" error={l!.lsjError ?? l!.coreError} onRetry={retry} />
-              : <p className={styles.meaning} data-long={spellOut(card.meaning.text).length > 34 || undefined} title={card.meaning.source ? `From ${SOURCE_NAMES[card.meaning.source]}` : undefined}>{meaning}</p>}
+              ? <Failure what="The dictionaries" error={l!.lsjError ?? l!.coreError ?? l!.listError} onRetry={retry} />
+              : <div className={styles.said}>
+                  <p className={styles.meaning} data-long={spellOut(card.meaning.text).length > 34 || undefined} title={card.meaning.source ? `From ${SOURCE_NAMES[card.meaning.source]}` : undefined}>{meaning}</p>
+                  <From meaning={card.meaning} />
+                </div>}
             <Here form={at.word} parts={parts} role={card.role} unsure={unsure(l!)} />
             <Entry1 rest={rest} kindLine={kindLine} />
             {facts.length > 0 && <p className={styles.facts}>{facts.map((f, i) => <span key={i}>{f}</span>)}</p>}
@@ -497,7 +516,7 @@ export default function Lookup({ at, place, layer, onLayer, onStep, onClose, wor
         {card && layer === 2 && (
           <div className={styles.second}>
             <div className={styles.recap}>
-              <p className={styles.recapMeaning}>{meaning}</p>
+              <div className={styles.said}><p className={styles.recapMeaning}>{meaning}</p><From meaning={card.meaning} /></div>
               <Entry1 rest={rest} kindLine={kindLine} />
               {facts.length > 0 && <p className={styles.facts}>{facts.map((f, i) => <span key={i}>{f}</span>)}</p>}
             </div>

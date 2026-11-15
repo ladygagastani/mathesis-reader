@@ -230,6 +230,14 @@ some words):
    "Clazomenae, a place"; where Wiktionary says nothing either, "A proper name, not in the dictionaries this site uses."
    Its kind is "Proper noun, masculine". A name never takes a common word's entry (Ἀδείμαντος is not ἀδείμαντος,
    "fearless").
+   A word the core list and LSJ's short definitions leave without a meaning takes the meaning list's
+   (`public/meanings`, `scripts/build-meanings.mjs`, the owner's note of 2026-11-15: "Don't invent any meanings"). The
+   list's meanings are other dictionaries' own words: the Middle Liddell's ("φυλακή: a watching or guarding, watch,
+   guard, ward"), Wiktionary's ("ἐπειδή: after, since"), or LSJ's under the word its entry sends the reader to ("ἐπειδή …
+   v. ἐπεί"). Such a meaning has a line under it in the second ink, at the small size, naming where it is from: "From
+   the Middle Liddell", "From Wiktionary", "Under ἐπεί in LSJ". The core list's and LSJ's own meanings have no line, as
+   before: they are the usual sources, named in the credits. A pointer is followed only to a word with one entry ("ἕ …
+   v. οὗ" is not: LSJ has three οὗ), and a dictionary's headword written twice is not used.
 3. **The word here**: the form as the text writes it in Literata, its grammar after it in words parted by middle dots
    ("ἄνδρες  vocative plural"), what it does in the sentence ("Here, it is the object of εὐλαβεῖσθαι."), and a plain
    warning when the analysis is not of this very word, with the grammar set fainter. The grammar is not in pills: they

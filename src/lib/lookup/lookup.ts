@@ -2,7 +2,8 @@
  * Everything the look-up shows for one word, gathered in one go so that the first layer appears whole rather than filling in
  * under the eye: GLAUx's analysis of the word at its place (or, for a text GLAUx lacks, how GLAUx reads the form in its other texts,
  * or failing that the Morpheus parser's reading), where it stands in the treebank's sentence, how often its dictionary form occurs
- * in the work, its LSJ entry and its core-vocabulary entry, and the card made from them (card.ts).
+ * in the work, its LSJ entry and its core-vocabulary entry, the meaning list's entry where those two give no meaning (meanings.ts),
+ * and the card made from them (card.ts).
  */
 import { candidates, lookupForm } from "@/lib/greek";
 import { loadSyntax } from "@/lib/syntax";
@@ -11,6 +12,7 @@ import { isName, lookupCard, treeAt, type Card, type InSentence } from "./card";
 import { coreEntry, type CoreEntry } from "./core";
 import { formReading } from "./forms";
 import { lsjEntries, type LsjEntry } from "./lsj";
+import { listed, type ListMeaning } from "./meanings";
 import { parserReading } from "./morpheus";
 import { countLemma } from "./occurrences";
 import { lookUpWiktionary, type WiktSense } from "./wiktionary";
@@ -41,6 +43,8 @@ export interface Looked {
   lsjError?: string;
   /** why the core vocabulary could not be loaded, when it could not */
   coreError?: string;
+  /** why the meaning list could not be loaded, when it was needed and could not be */
+  listError?: string;
   /** the core vocabulary's entry for the dictionary form: its full heading, its class, its group and how common it is */
   core: CoreEntry | null;
 }
@@ -76,26 +80,32 @@ export async function lookUp(at: WordAt): Promise<Looked> {
   } catch (e) { lsjError = message(e); }
   let coreError: string | undefined;
   const core = await coreEntry(analysis?.lemma ?? lookupForm(at.word)).catch((e) => { coreError = message(e); return null; });
-  const wikt = await nameSenses(analysis?.lemma ?? lsj?.head ?? null, core, lsj);
+  const { list, wikt, listError } = await beyond(analysis?.lemma ?? lsj?.head ?? null, core, lsj);
 
-  const card = lookupCard({ analysis, tree, core, lsj, wikt });
-  return { card, analysis, analysisError, tree, occurs, lsj, lsjError, coreError, core };
+  const card = lookupCard({ analysis, tree, core, lsj, wikt, listed: list });
+  return { card, analysis, analysisError, tree, occurs, lsj, lsjError, coreError, listError, core };
 }
 
 /**
- * Wiktionary's senses for a proper name neither dictionary gives a meaning, so the card can say what it names ("Glaucon, a man's
- * name"); null for any other word, or when Wiktionary cannot be reached (the card then says it is a name, and no more). Only the
- * name is sent, as in More about it.
+ * For a word neither the core list nor LSJ gives a meaning: the meaning list's meaning; for a proper name, the list's lines from
+ * Wiktionary, or failing those Wiktionary's own, asked live, so the card can say what it names ("Glaucon, a man's name"). Nothing
+ * when Wiktionary cannot be reached (the card then says it is a name, and no more). Only the name is sent, as in More about it.
  */
-async function nameSenses(lemma: string | null, core: CoreEntry | null, lsj: Looked["lsj"]): Promise<WiktSense[] | null> {
-  if (!lemma || !isName(lemma) || core?.def || lsj?.entries[0]?.s) return null;
+async function beyond(lemma: string | null, core: CoreEntry | null, lsj: Looked["lsj"]):
+  Promise<{ list: ListMeaning | null; wikt: WiktSense[] | null; listError?: string }> {
+  if (!lemma || core?.def || lsj?.entries.some((e) => e.s)) return { list: null, wikt: null };
+  let listError: string | undefined;
+  const got = await listed(lemma).catch((e) => { listError = message(e); return null; });
+  if (got?.meaning) return { list: got.meaning, wikt: null };
+  if (got?.name) return { list: null, wikt: got.name };
+  if (!isName(lemma)) return { list: null, wikt: null, listError };
   const found = await lookUpWiktionary([lemma]).catch(() => null);
-  return found?.senses ?? null;
+  return { list: null, wikt: found?.senses ?? null, listError };
 }
 
 /**
- * A word met outside the text (one of a word's family, followed from the look-up): its LSJ entry and its core-vocabulary entry
- * only. With no place in a passage it has no analysis, no sentence and no count.
+ * A word met outside the text (one of a word's family, followed from the look-up): its LSJ entry, its core-vocabulary entry and
+ * the meaning list's entry only. With no place in a passage it has no analysis, no sentence and no count.
  */
 export async function lookUpHeadword(word: string): Promise<Looked> {
   let lsj: Looked["lsj"] = null, lsjError: string | undefined;
@@ -107,7 +117,7 @@ export async function lookUpHeadword(word: string): Promise<Looked> {
   } catch (e) { lsjError = message(e); }
   let coreError: string | undefined;
   const core = await coreEntry(lsj?.head ?? lookupForm(word)).catch((e) => { coreError = message(e); return null; });
-  const wikt = await nameSenses(lsj?.head ?? lookupForm(word), core, lsj);
-  const card = lookupCard({ analysis: null, tree: null, core, lsj, wikt });
-  return { card, analysis: null, tree: null, occurs: null, lsj, lsjError, coreError, core };
+  const { list, wikt, listError } = await beyond(lsj?.head ?? lookupForm(word), core, lsj);
+  const card = lookupCard({ analysis: null, tree: null, core, lsj, wikt, listed: list });
+  return { card, analysis: null, tree: null, occurs: null, lsj, lsjError, coreError, listError, core };
 }

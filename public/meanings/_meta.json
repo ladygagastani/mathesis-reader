@@ -1,0 +1,51 @@
+{
+  "sources": {
+    "middleLiddell": "Liddell and Scott, An Intermediate Greek-English Lexicon (1889). Text provided by Perseus Digital Library, with funding from The Annenberg CPB/Project (Perseus text 1999.04.0058, through github.com/blinskey/middle-liddell, CC BY-SA 3.0 US)",
+    "wiktionary": "English Wiktionary (CC BY-SA 4.0), Ancient Greek entries as extracted by kaikki.org (wiktextract, Tatu Ylonen)",
+    "lsj": "LSJ, Perseus Digital Library (CC BY-SA), through the data packs of mathesisstoicheion.com"
+  },
+  "licence": "CC BY-SA 4.0",
+  "built": "2026-11-15",
+  "forms": 125385,
+  "words": 16393811,
+  "entries": 9307,
+  "shards": 312,
+  "coverage": {
+    "core": {
+      "forms": 1272,
+      "words": 11669964
+    },
+    "lsj": {
+      "forms": 59725,
+      "words": 4049280
+    },
+    "ml": {
+      "forms": 1586,
+      "words": 84322
+    },
+    "name": {
+      "forms": 3993,
+      "words": 253556
+    },
+    "wikt": {
+      "forms": 565,
+      "words": 40806
+    },
+    "lsjUnder": {
+      "forms": 810,
+      "words": 5191
+    },
+    "mlUnder": {
+      "forms": 1753,
+      "words": 13700
+    },
+    "wiktUnder": {
+      "forms": 600,
+      "words": 12270
+    },
+    "none": {
+      "forms": 55081,
+      "words": 264722
+    }
+  }
+}

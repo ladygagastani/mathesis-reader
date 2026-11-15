@@ -17,7 +17,9 @@ the sentence.
 2. **The look-up.** Clicking or tapping a Greek word, or pressing Enter on it, opens the look-up. On a wide
    window it is a panel that slides in from the right, and the text moves aside so the panel never covers the Greek.
    Where there is no room for that, it is a low sheet over about a quarter of the screen, and the text scrolls so the word stays above it. Layer one shows the
-   dictionary form, one meaning line with its source, the word as the text writes it with its grammar in plain words
+   dictionary form, one meaning line with its source (the core list, LSJ, or, for a word those two leave without one,
+   the meaning list built from the Middle Liddell, Wiktionary and LSJ's pointers; never a meaning made up), the word as
+   the text writes it with its grammar in plain words
    and what it does in the sentence (only where the treebank says), then the kind of word. "More about it" opens layer
    two: every analysis the data gives, Wiktionary's senses, the full LSJ entry, the word family, and links to Logeion
    and Perseus. An uncertain parsing says so. Escape or the close button shuts it and puts the focus back on the word;

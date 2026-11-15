@@ -10,6 +10,7 @@ import { governor, packForms, readSentence, sentenceOf, type Sentence, type Synt
 import { unitWords } from "@/lib/tei/words";
 import { placeAnalyses, positionsFor } from "./placed";
 import { kindOf, plainGrammar } from "./postag";
+import type { ListMeaning } from "./meanings";
 import type { WiktSense } from "./wiktionary";
 import type { WordPack } from "./words";
 import type { TeiDoc } from "@/lib/tei/types";
@@ -28,6 +29,8 @@ export interface CardInput {
   lsj: { head: string; entries: { s: string }[] } | null;
   /** Wiktionary's senses for a proper name's dictionary form, asked only when neither dictionary gives the name a meaning */
   wikt?: WiktSense[] | null;
+  /** the meaning list's meaning for the dictionary form (meanings.ts), asked only when neither dictionary gives one */
+  listed?: ListMeaning | null;
 }
 
 export interface Card {
@@ -37,9 +40,11 @@ export interface Card {
   kind: string | null;
   meaning: {
     text: string;
-    /** where the text comes from: the core list, LSJ, Wiktionary (for a name), or nowhere (the text is then a plain statement,
-     *  not a meaning) */
-    source: "core" | "lsj" | "wikt" | null;
+    /** where the text comes from: the core list, LSJ, the Middle Liddell, Wiktionary, or nowhere (the text is then a plain
+     *  statement, not a meaning) */
+    source: "core" | "lsj" | "ml" | "wikt" | null;
+    /** the word the dictionary gives this meaning under, when it is another ("ἐπειδή … v. ἐπεί": under ἐπεί) */
+    under?: string | null;
   };
   /** what the word does in its sentence: "object of ἄειδε", only where the treebank says */
   role: Role | null;
@@ -55,7 +60,9 @@ export interface Role {
   governor: string | null;
 }
 
-export const SOURCE_NAMES = { core: "the core vocabulary list", lsj: "LSJ", wikt: "Wiktionary" } as const;
+export const SOURCE_NAMES = { core: "the core vocabulary list", lsj: "LSJ", ml: "the Middle Liddell", wikt: "Wiktionary" } as const;
+/** the same, as the line under a meaning given under another word names them ("Under ἐπεί in LSJ") */
+export const SOURCE_SHORT = { core: "the core vocabulary", lsj: "LSJ", ml: "the Middle Liddell", wikt: "Wiktionary" } as const;
 /** said plainly when neither dictionary has the word */
 export const NO_ENTRY = "Not in the dictionaries this site uses.";
 /** True when the card says the dictionaries lack the word but a dictionary could not be loaded: then nobody knows, and the
@@ -147,7 +154,8 @@ export function nameMeaning(senses: WiktSense[] | null | undefined): string | nu
     const any = senses?.find((x) => x.lines.length);
     return any ? tidyLine(any.lines[0]) : null;
   }
-  const line = tidyLine(proper.lines[0]);
+  // (a name Wiktionary gives as a title first, Ἀλέξανδρος "a title held by Hera and Paris", is named by its given-name line)
+  const line = tidyLine(proper.lines.find((l) => /given name/i.test(l)) ?? proper.lines[0]);
   const what = nameKind(line);
   const given = /given name,?\s*(?:equivalent to English\s+)?([^,;(.]+)/i.exec(line)?.[1]?.trim();
   const english = (given ?? line.split(/[,;(/]/)[0])
@@ -177,13 +185,20 @@ const KINDS: [RegExp, string][] = [
 ];
 const nameKind = (line: string) => KINDS.find(([re]) => re.test(line))?.[1] ?? "a proper name";
 
+/** the meaning list's sources by the card's names for them */
+const LIST_SOURCES = { m: "ml", w: "wikt", l: "lsj" } as const;
+
 /**
- * One meaning: the core list's definition, otherwise LSJ's short definition; for a proper name neither gives, what Wiktionary
- * says it names; or a plain statement that there is none (that it is a name, at least, where it is one).
+ * One meaning: the core list's definition, otherwise LSJ's short definition (of the first of its entries for the word that has
+ * one: ὥρα's first is a part of a victim, with none), otherwise the meaning list's (the Middle Liddell's, Wiktionary's, or LSJ's
+ * under the word its entry sends the reader to); for a proper name none gives, what Wiktionary says it names; or a plain
+ * statement that there is none (that it is a name, at least, where it is one).
  */
-function meaningOf(core: CardInput["core"], lsj: CardInput["lsj"], wikt: CardInput["wikt"], name: boolean): Card["meaning"] {
+function meaningOf(core: CardInput["core"], lsj: CardInput["lsj"], wikt: CardInput["wikt"], listed: CardInput["listed"], name: boolean): Card["meaning"] {
   if (core?.def) return { text: trimShort(core.def), source: "core" };
-  if (lsj?.entries[0]?.s) return { text: trimShort(lsj.entries[0].s), source: "lsj" };
+  const short = lsj?.entries.find((e) => e.s)?.s;
+  if (short) return { text: trimShort(short), source: "lsj" };
+  if (listed) return { text: listed.source === "w" ? listed.text : trimShort(listed.text), source: LIST_SOURCES[listed.source], under: listed.under };
   const named = name ? nameMeaning(wikt) : null;
   if (named) return { text: named, source: "wikt" };
   if (lsj?.entries.length) return { text: name ? NAME_NO_SHORT : NO_SHORT, source: null };
@@ -196,13 +211,13 @@ function kindFor(tag: string, name: boolean): string {
   return name && kind.startsWith("noun") ? `proper ${kind}` : kind;
 }
 
-export function lookupCard({ analysis, tree, core, lsj, wikt }: CardInput): Card {
+export function lookupCard({ analysis, tree, core, lsj, wikt, listed }: CardInput): Card {
   const lemma = analysis?.lemma ?? lsj?.head ?? null;
   const name = isName(lemma);
   return {
     lemma,
     kind: analysis ? kindFor(analysis.tag, name) : null,
-    meaning: meaningOf(core, lsj, wikt, name),
+    meaning: meaningOf(core, lsj, wikt, listed, name),
     role: tree ? roleIn(tree) : null,
     grammar: analysis ? plainGrammar(analysis.tag) || null : null,
   };

@@ -134,6 +134,31 @@ describe("the meaning line", () => {
     // a common word is never given Wiktionary's line: the card says the dictionaries lack it
     expect(lookupCard({ ...input("1.1", 3), analysis: { lemma: "πηληϊάδης", tag: "n-s---mg-" }, wikt: sense("Noun", "x") }).meaning.source).toBeNull();
   });
+  it("takes LSJ's short definition from the first of its entries for the word that has one", () => {
+    // ὥρα: LSJ's first ὥρα is "some part of a sacrificial victim", with no short definition; its next is the season
+    const lsjOf = { head: "ὥρα", entries: [{ s: "" }, { s: "any period, part of the year, season" }] };
+    const c = lookupCard({ ...input("1.1", 3), analysis: { lemma: "ὥρα", tag: "n-s---fn-" }, core: null, lsj: lsjOf });
+    expect(c.meaning).toEqual({ text: "any period, part of the year, season", source: "lsj" });
+  });
+  it("gives the meaning list's meaning where neither the core list nor LSJ gives one, with the word it is given under", () => {
+    const at = { ...input("1.1", 4), analysis: { lemma: "ἐπειδή", tag: "c--------" }, core: null };
+    // LSJ's whole entry for ἐπειδή is "v. ἐπεί": no short definition
+    const lsjOf = { head: "ἐπειδή", entries: [{ s: "" }] };
+    expect(lookupCard({ ...at, lsj: lsjOf, listed: { text: "after, since", source: "w", under: null } }).meaning)
+      .toEqual({ text: "after, since", source: "wikt", under: null });
+    expect(lookupCard({ ...at, lsj: lsjOf, listed: { text: "since, when, when, after", source: "l", under: "ἐπεί" } }).meaning)
+      .toEqual({ text: "since, when, after", source: "lsj", under: "ἐπεί" });
+    expect(lookupCard({ ...at, lsj: null, listed: { text: "a watching or guarding, watch, guard, ward", source: "m", under: null } }).meaning)
+      .toEqual({ text: "a watching or guarding, watch, guard, ward", source: "ml", under: null });
+    // the core list and LSJ come first
+    expect(lookupCard({ ...at, lsj: { head: "ἐπειδή", entries: [{ s: "since" }] }, listed: { text: "x", source: "w", under: null } }).meaning.source).toBe("lsj");
+    // and without the list, the plain statement as before
+    expect(lookupCard({ ...at, lsj: lsjOf }).meaning).toEqual({ text: NO_SHORT, source: null });
+  });
+  it("names a name by Wiktionary's given-name line where its first line is something else", () => {
+    const lines = ["a title held by Hera and Paris, among others", "a male given name, equivalent to English Alexander, most famously held by Alexander the Great"];
+    expect(nameMeaning([{ pos: "Proper noun", lines, lemma: null }])).toBe("Alexander, a man’s name");
+  });
   it("gives each gloss once, where it first stands, and keeps LSJ's semicolons between senses", () => {
     expect(trimShort("appearing, appearance, appearing, appearance, presentation, appearance")).toBe("appearing, appearance, presentation");
     expect(trimShort("every, all; whole (with article)")).toBe("every, all; whole (with article)");

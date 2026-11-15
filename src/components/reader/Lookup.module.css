@@ -148,6 +148,10 @@
 /* the meaning: the largest English on the screen, never smaller than the Greek it explains; in Literata, the face made for
    reading, at its regular weight (the owner, 2026-11-14: in Noto Serif Display's light weight it was too thin to read) */
 .meaning { font: 400 var(--t-head) / 1.22 var(--f-prose); color: var(--ink); overflow-wrap: anywhere; }
+/* the meaning with, under it, where it comes from when that is not the core list or LSJ ("Under ἐπεί in LSJ"), in the second ink */
+.said { display: grid; gap: var(--space-1); }
+.from { font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
+.from [lang="grc"] { font-family: var(--f-greek); }
 /* this word where it stands: the form as the text writes it, its grammar after it in words, then its part in the sentence */
 .here { display: grid; gap: var(--space-1); }
 .formLine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-3); }
