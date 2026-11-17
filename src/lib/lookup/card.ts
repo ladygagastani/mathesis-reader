@@ -10,6 +10,8 @@ import { governor, packForms, readSentence, sentenceOf, type Sentence, type Synt
 import { unitWords } from "@/lib/tei/words";
 import { placeAnalyses, positionsFor } from "./placed";
 import { kindOf, plainGrammar } from "./postag";
+import type { ListMeaning } from "./meanings";
+import type { WiktSense } from "./wiktionary";
 import type { WordPack } from "./words";
 import type { TeiDoc } from "@/lib/tei/types";
 
@@ -25,6 +27,10 @@ export interface CardInput {
   core: { def: string } | null;
   /** LSJ's entries for the dictionary form (or for the word, with no analysis) */
   lsj: { head: string; entries: { s: string }[] } | null;
+  /** Wiktionary's senses for a proper name's dictionary form, asked only when neither dictionary gives the name a meaning */
+  wikt?: WiktSense[] | null;
+  /** the meaning list's meaning for the dictionary form (meanings.ts), asked only when neither dictionary gives one */
+  listed?: ListMeaning | null;
 }
 
 export interface Card {
@@ -34,8 +40,11 @@ export interface Card {
   kind: string | null;
   meaning: {
     text: string;
-    /** where the text comes from: the core list, LSJ, or nowhere (the text is then a plain statement, not a meaning) */
-    source: "core" | "lsj" | null;
+    /** where the text comes from: the core list, LSJ, the Middle Liddell, Wiktionary, or nowhere (the text is then a plain
+     *  statement, not a meaning) */
+    source: "core" | "lsj" | "ml" | "wikt" | null;
+    /** the word the dictionary gives this meaning under, when it is another ("ἐπειδή … v. ἐπεί": under ἐπεί) */
+    under?: string | null;
   };
   /** what the word does in its sentence: "object of ἄειδε", only where the treebank says */
   role: Role | null;
@@ -43,22 +52,33 @@ export interface Card {
   grammar: string | null;
 }
 
-/** "Here it is the object of ἄειδε.": the words before the governor, and the governor (none for the main verb). */
+/** "Here, it is the object of ἄειδε.": the words before the governor, and the governor (none for the main verb). */
 export interface Role {
   text: string;
-  /** "Here it is the object of" */
+  /** "Here, it is the object of" */
   lead: string;
   governor: string | null;
 }
 
-export const SOURCE_NAMES = { core: "the core vocabulary list", lsj: "LSJ" } as const;
+export const SOURCE_NAMES = { core: "the core vocabulary list", lsj: "LSJ", ml: "the Middle Liddell", wikt: "Wiktionary" } as const;
+/** the same, as the line under a meaning given under another word names them ("Under ἐπεί in LSJ") */
+export const SOURCE_SHORT = { core: "the core vocabulary", lsj: "LSJ", ml: "the Middle Liddell", wikt: "Wiktionary" } as const;
 /** said plainly when neither dictionary has the word */
 export const NO_ENTRY = "Not in the dictionaries this site uses.";
+/** True when the card says the dictionaries lack the word but a dictionary could not be loaded: then nobody knows, and the
+ *  look-up must say the load failed, never that the word is missing (PRODUCT.md, principle 3). */
+export const couldNotLoad = (meaning: string, errors: (string | undefined)[]) => (meaning === NO_ENTRY || meaning === NAME_NO_ENTRY) && errors.some(Boolean);
 /** said plainly when LSJ has an entry but gives no short definition */
 export const NO_SHORT = "LSJ has no short definition for it. See More about it.";
+/** the same two statements for a proper name Wiktionary does not describe either: at least it is said to be a name */
+export const NAME_NO_ENTRY = "A proper name, not in the dictionaries this site uses.";
+export const NAME_NO_SHORT = "A proper name. LSJ has no short definition for it: see More about it.";
+
+/** A proper name: the dictionaries spell names with a capital, and only names (a sentence's first word is looked up without it). */
+export const isName = (lemma: string | null | undefined) => !!lemma && /^\p{Lu}/u.test(lemma.normalize("NFC"));
 
 /**
- * The treebank's relations in plain words (after ROLES in lib/syntax.ts), written to follow "Here it is …" and the word
+ * The treebank's relations in plain words (after ROLES in lib/syntax.ts), written to follow "Here, it is …" and the word
  * the relation hangs on: the article, then the phrase. A relation not listed here (a vocative, a particle, a comma…)
  * shows no role, rather than a guess.
  */
@@ -78,26 +98,126 @@ function roleIn(tree: InSentence): Role | null {
   if (!s.nodes[at]) return null;
   const { g, rel } = governor(s, at);
   // the main verb hangs on nothing
-  if (g < 0) return rel === "PRED" ? { text: "main verb of the sentence", lead: "Here it is the main verb of the sentence", governor: null } : null;
+  if (g < 0) return rel === "PRED" ? { text: "main verb of the sentence", lead: "Here, it is the main verb of the sentence", governor: null } : null;
   const on = s.nodes[g]?.form;
   const words = RELATIONS[rel];
   if (!on || !words) return null;   // a supplied word has no name to give; an unlisted relation is not guessed
   const [article, phrase] = words;
-  return { text: `${phrase} ${on}`, lead: ["Here it is", article, phrase].filter(Boolean).join(" "), governor: on };
+  return { text: `${phrase} ${on}`, lead: ["Here, it is", article, phrase].filter(Boolean).join(" "), governor: on };
 }
 
-/** One meaning: the core list's definition, otherwise LSJ's short definition; or a plain statement that there is none. */
-function meaningOf(core: CardInput["core"], lsj: CardInput["lsj"]): Card["meaning"] {
-  if (core?.def) return { text: core.def, source: "core" };
-  if (lsj?.entries.length) return lsj.entries[0].s ? { text: lsj.entries[0].s, source: "lsj" } : { text: NO_SHORT, source: null };
-  return { text: NO_ENTRY, source: null };
+/**
+ * LSJ's short definition (or the core list's) tidied, with nothing added. Two things are taken out:
+ * - A dangling end. The short definitions were cut out of the entries by a program, and some stop on a word that only led into the
+ *   next phrase: ἐξαπατάω's is "deceive, beguile, deceive thoroughly, seduce, in", where the entry goes on "in a thing". A last
+ *   phrase of one such word (a preposition, an article, "or", "and") is dropped.
+ * - A gloss given again. The program took a gloss from each sense, so φαντασία's reads "appearing, appearance, appearing,
+ *   appearance, presentation, appearance". Each gloss is kept once, where it first stands. Between two kept glosses stands the
+ *   strongest mark that stood between them (a semicolon over a comma), so the senses stay parted as LSJ parted them.
+ */
+export function trimShort(s: string): string {
+  const cut = s.replace(/[,;:]\s*(?:in|of|to|with|by|for|from|on|at|into|upon|as|a|an|the|or|and)\s*$/i, "").trim();
+  // the glosses and the marks between them, parted only outside brackets: "whole (with article, or not)" is one gloss
+  const glosses: string[] = [], marks: string[] = [];
+  let depth = 0, from = 0;
+  for (let i = 0; i < cut.length; i++) {
+    const c = cut[i];
+    if (c === "(" || c === "[") depth++;
+    else if ((c === ")" || c === "]") && depth > 0) depth--;
+    else if (depth === 0 && (c === "," || c === ";")) { glosses.push(cut.slice(from, i)); marks.push(c); from = i + 1; }
+  }
+  glosses.push(cut.slice(from));
+  const seen = new Set<string>();
+  let out = "", mark = "";
+  glosses.forEach((g, i) => {
+    const text = g.trim(), key = text.toLowerCase().replace(/\s+/g, " ");
+    if (text && !seen.has(key)) {
+      seen.add(key);
+      out += out ? `${mark} ${text}` : text;
+      mark = "";
+    }
+    const m = marks[i];
+    if (m && (m === ";" || !mark)) mark = m;
+  });
+  return out;
 }
 
-export function lookupCard({ analysis, tree, core, lsj }: CardInput): Card {
+/**
+ * What a proper name is, from Wiktionary's first line for it, as "Glaucon, a man’s name": the English name, then what it names
+ * where Wiktionary's words say so (a man or a woman, a god, a city, a river, a mountain, an island, a region, a people, a
+ * festival), otherwise "a proper name". For a name that is not a noun, Wiktionary's line stands as it is ("to Athens" for
+ * Ἀθήναζε). Null when Wiktionary has nothing for it.
+ */
+export function nameMeaning(senses: WiktSense[] | null | undefined): string | null {
+  const proper = senses?.find((x) => /proper noun/i.test(x.pos) && x.lines.length);
+  if (!proper) {
+    const any = senses?.find((x) => x.lines.length);
+    return any ? tidyLine(any.lines[0]) : null;
+  }
+  // (a name Wiktionary gives as a title first, Ἀλέξανδρος "a title held by Hera and Paris", is named by its given-name line)
+  const line = tidyLine(proper.lines.find((l) => /given name/i.test(l)) ?? proper.lines[0]);
+  const what = nameKind(line);
+  const given = /given name,?\s*(?:equivalent to English\s+)?([^,;(.]+)/i.exec(line)?.[1]?.trim();
+  const english = (given ?? line.split(/[,;(/]/)[0])
+    .replace(/^(?:the\s+)?(?:river|mount|mountain|island|city|town|sea|gulf)\s+/i, "").replace(/^the\s+/i, "").trim();
+  if (!english || /given name/i.test(english)) return `${capital(what)}.`;
+  return `${english}, ${what}`;
+}
+const capital = (s: string) => s.charAt(0).toLocaleUpperCase("en") + s.slice(1);
+/** a Wiktionary line made a meaning: one space between words, and no reference marks */
+const tidyLine = (s: string) => s.replace(/\s+/g, " ").replace(/\s*\[\d+\]/g, "").trim();
+/** what a name names, from the words of Wiktionary's line, the first that matches */
+const KINDS: [RegExp, string][] = [
+  [/\bfemale (?:given )?name\b|\bwoman's name\b/i, "a woman’s name"],
+  [/\bmale (?:given )?name\b|\bman's name\b/i, "a man’s name"],
+  [/\bgoddess\b|\bnymph\b|\bmuse\b/i, "a goddess"],
+  [/\bgod\b|\bdeity\b|\btitan\b/i, "a god"],
+  [/\bfestival\b/i, "a festival"],
+  [/\bcity\b|\btown\b|\bpolis\b/i, "a city"],
+  [/\briver\b/i, "a river"],
+  [/\bmountain\b|\bmount\b/i, "a mountain"],
+  [/\bisland\b/i, "an island"],
+  [/\bsea\b|\bgulf\b|\blake\b/i, "a sea"],
+  [/\bregion\b|\bcountry\b|\bdistrict\b|\bkingdom\b|\bprovince\b|\bpeninsula\b/i, "a region"],
+  [/\bpeople\b|\btribe\b|\binhabitants?\b/i, "a people"],
+  [/,\s*(?:Turkey|Greece|Italy|Sicily|Egypt|Cyprus|Albania|Bulgaria|Libya|Syria|Lebanon|Israel|France|Spain|Ukraine)\b/, "a place"],
+  [/\b(?:king|queen|hero|heroine|philosopher|poet|historian|orator|general|tyrant|patriarch|son of|daughter of|wife of)\b/i, "a person"],
+];
+const nameKind = (line: string) => KINDS.find(([re]) => re.test(line))?.[1] ?? "a proper name";
+
+/** the meaning list's sources by the card's names for them */
+const LIST_SOURCES = { m: "ml", w: "wikt", l: "lsj" } as const;
+
+/**
+ * One meaning: the core list's definition, otherwise LSJ's short definition (of the first of its entries for the word that has
+ * one: ὥρα's first is a part of a victim, with none), otherwise the meaning list's (the Middle Liddell's, Wiktionary's, or LSJ's
+ * under the word its entry sends the reader to); for a proper name none gives, what Wiktionary says it names; or a plain
+ * statement that there is none (that it is a name, at least, where it is one).
+ */
+function meaningOf(core: CardInput["core"], lsj: CardInput["lsj"], wikt: CardInput["wikt"], listed: CardInput["listed"], name: boolean): Card["meaning"] {
+  if (core?.def) return { text: trimShort(core.def), source: "core" };
+  const short = lsj?.entries.find((e) => e.s)?.s;
+  if (short) return { text: trimShort(short), source: "lsj" };
+  if (listed) return { text: listed.source === "w" ? listed.text : trimShort(listed.text), source: LIST_SOURCES[listed.source], under: listed.under };
+  const named = name ? nameMeaning(wikt) : null;
+  if (named) return { text: named, source: "wikt" };
+  if (lsj?.entries.length) return { text: name ? NAME_NO_SHORT : NO_SHORT, source: null };
+  return { text: name ? NAME_NO_ENTRY : NO_ENTRY, source: null };
+}
+
+/** The kind of word, a proper name's as a proper noun: "proper noun, masculine". */
+function kindFor(tag: string, name: boolean): string {
+  const kind = kindOf(tag);
+  return name && kind.startsWith("noun") ? `proper ${kind}` : kind;
+}
+
+export function lookupCard({ analysis, tree, core, lsj, wikt, listed }: CardInput): Card {
+  const lemma = analysis?.lemma ?? lsj?.head ?? null;
+  const name = isName(lemma);
   return {
-    lemma: analysis?.lemma ?? lsj?.head ?? null,
-    kind: analysis ? kindOf(analysis.tag) : null,
-    meaning: meaningOf(core, lsj),
+    lemma,
+    kind: analysis ? kindFor(analysis.tag, name) : null,
+    meaning: meaningOf(core, lsj, wikt, listed, name),
     role: tree ? roleIn(tree) : null,
     grammar: analysis ? plainGrammar(analysis.tag) || null : null,
   };

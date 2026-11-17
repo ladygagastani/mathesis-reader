@@ -27,7 +27,7 @@ const SOURCES: { part: string; items: { name: string; href: string; what: string
   {
     part: "Type and signs",
     items: [
-      { name: "EB Garamond, GFS Didot and Gentium Book Plus", href: "https://openfontlicense.org/", what: "The three typefaces, by Georg Duffner and Octavio Pardo, the Greek Font Society, and SIL International.", licence: "SIL Open Font License 1.1" },
+      { name: "Literata, Noto Serif Display and Hanken Grotesk", href: "https://openfontlicense.org/", what: "The three typefaces, by TypeTogether, the Noto Project Authors, and Alfredo Marco Pradil.", licence: "SIL Open Font License 1.1" },
       { name: "Lucide", href: "https://lucide.dev", what: "The signs on the buttons.", licence: "ISC" },
     ],
   },
@@ -49,7 +49,7 @@ export default function Credits() {
               {s.items.map((i) => (
                 <li key={i.name}>
                   <a href={i.href}>{i.name}</a>
-                  <p>{i.what} <span className={styles.licence}>{i.licence}</span></p>
+                  <p>{i.what} <span className={i.licence.length > 24 ? `${styles.licence} ${styles.long}` : styles.licence}>{i.licence}</span></p>
                 </li>
               ))}
             </ul>

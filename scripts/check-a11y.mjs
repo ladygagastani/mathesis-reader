@@ -11,25 +11,26 @@
 // lists "Close the look-up 20×20" and "Close Page and text 20×20" under tap.
 import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
-import { SCREENS, forWidth, open, prepare } from "./screens.mjs";
+import { SCREENS, forWidth, open, prepare, within } from "./screens.mjs";
 
 const [base = "http://localhost:3300"] = process.argv.slice(2);
 const browser = await chromium.launch();
 const found = [];
 
 for (const [w, h, phone, theme] of [[1440, 900, false, "paper"], [1440, 900, false, "night"], [390, 844, true, "paper"], [390, 844, true, "night"]]) {
-  for (const s of SCREENS.filter(forWidth(w))) {
+  for (const s of SCREENS.filter(forWidth(w)).filter((s) => !process.env.ONLY || new RegExp(process.env.ONLY).test(s.name))) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: phone, isMobile: phone, reducedMotion: "reduce" });
-    await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes, words: s.words });
+    await prepare(ctx, { theme, columns: s.columns, synced: s.synced, notes: s.notes, words: s.words, reading: s.reading });
     if (process.env.PROVE_CSS) await ctx.addInitScript((c) => addEventListener("load", () => document.head.append(Object.assign(document.createElement("style"), { textContent: c }))), process.env.PROVE_CSS);
     const page = await ctx.newPage();
     const at = `${s.name} ${w}px ${theme}`;
     try {
+      await within(at, async () => {
       await open(page, base, s);
       const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
       for (const v of axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical"))
         found.push(`axe ${at}: ${v.id} (${v.nodes.length}) ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" · ")}`);
-      if (theme === "night") continue;   // the rest does not change with the look
+      if (theme === "night") return;   // the rest does not change with the look
 
       const r = await page.evaluate((phone) => {
         const shown = (e) => { const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && getComputedStyle(e).visibility !== "hidden"; };
@@ -70,6 +71,7 @@ for (const [w, h, phone, theme] of [[1440, 900, false, "paper"], [1440, 900, fal
       }, phone);
       for (const t of r.empty) found.push(`empty ${at}: ${t}`);
       if (r.tap.length) found.push(`tap ${at}: ${r.tap.length} target(s) under 44 × 44 px: ${r.tap.slice(0, 12).join(" · ")}`);
+      });
     } catch (e) {
       found.push(`load ${at}: ${String(e).split("\n")[0]}`);
     }

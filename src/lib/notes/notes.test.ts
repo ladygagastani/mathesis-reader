@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeNotes, newId, newerThan, parseNote, parseNotes, placeName, shortQuote, shown, type Note } from "./notes";
+import { bare, bookNote, mayBeBare, mergeNotes, newId, newerThan, parseNote, parseNotes, passageNote, placeName, shortQuote, shown, type Note } from "./notes";
 
 const note = (id: string, updated: number, extra: Partial<Note> = {}): Note => ({
   id, work: "tlg0059.tlg002", book: "Plato, Apology", anchor: { kind: "word", unit: "17a", i: 3, word: "λόγος" }, colour: "red", text: "a note", updated, ...extra,
@@ -64,5 +64,30 @@ describe("a note on a run of words", () => {
   it("is named by its words, a long run by its first and last two", () => {
     expect(placeName({ kind: "words", unit: "17", i: 3, n: 2, words: "ὦ ἄνδρες" })).toBe("ὦ ἄνδρες in 17");
     expect(shortQuote("ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι")).toBe("ὅτι μὲν … ἄνδρες Ἀθηναῖοι");
+  });
+});
+
+describe("a saved book or passage", () => {
+  const book = note("bk1", 4, { anchor: { kind: "book", unit: "" }, text: "" });
+  it("reads back a note on the whole book, which stands at the book's start", () => {
+    expect(parseNote(book)?.anchor).toEqual({ kind: "book", unit: "" });
+    expect(parseNote({ ...book, anchor: { kind: "book", unit: "17a" } })?.anchor).toEqual({ kind: "book", unit: "" });
+    expect(placeName({ kind: "book", unit: "" })).toBe("the whole book");
+  });
+  it("may have no words, except on a single word", () => {
+    expect(parseNote(book)?.text).toBe("");
+    expect(bare(book)).toBe(true);
+    expect(mayBeBare({ kind: "book", unit: "" })).toBe(true);
+    expect(mayBeBare({ kind: "passage", unit: "17a" })).toBe(true);
+    expect(mayBeBare({ kind: "word", unit: "17a", i: 0, word: "λόγος" })).toBe(false);
+  });
+  it("is found for its book or its passage, the newest when two devices each saved one, and not once removed", () => {
+    const later = note("bk2", 9, { anchor: { kind: "book", unit: "" }, text: "My favourite." });
+    const passage = note("p1", 3, { anchor: { kind: "passage", unit: "19" }, text: "" });
+    expect(bookNote([book, later, passage], "tlg0059.tlg002")?.id).toBe("bk2");
+    expect(bookNote([book, passage], "tlg0012.tlg001")).toBeNull();
+    expect(bookNote([{ ...book, deleted: true }], "tlg0059.tlg002")).toBeNull();
+    expect(passageNote([book, passage], "tlg0059.tlg002", "19")?.id).toBe("p1");
+    expect(passageNote([book, passage], "tlg0059.tlg002", "20")).toBeNull();
   });
 });

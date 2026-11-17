@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "_archive/**",
     "_old-reference/**",
+    // the design skills installed under .claude/skills and the taste skill's working folder: their code is theirs, not the app's
+    ".claude/**",
+    ".taste-skill/**",
   ]),
 ]);
 

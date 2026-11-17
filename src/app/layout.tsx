@@ -1,30 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { EB_Garamond, GFS_Didot, Gentium_Book_Plus } from "next/font/google";
-import localFont from "next/font/local";
+import { Hanken_Grotesk, Literata, Noto_Serif_Display } from "next/font/google";
 import { BOOT_SCRIPT, THEME_COLOURS } from "@/lib/settings";
 import SlashSearch from "@/components/site/SlashSearch";
 import "./globals.css";
 
-// The three typefaces of the printed page, downloaded at build time and served from this app: EB Garamond for English,
-// GFS Didot for titles, Gentium Book Plus for Greek. Their own arrows and signs ("→", "×", "❦"), which Google Fonts leaves out,
-// come from the old app's copies in src/fonts (OFL), fetched only where such a sign is drawn.
-const garamond = EB_Garamond({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-garamond", display: "swap" });
-const didot = GFS_Didot({ weight: "400", subsets: ["greek"], variable: "--font-didot", display: "swap" });
-// (Gentium in its regular weight only: the reader sets no Greek in bold or italic, and each style is a file a phone downloads)
-const gentium = Gentium_Book_Plus({ weight: "400", style: "normal", subsets: ["greek-ext"], variable: "--font-gentium", display: "swap" });
-const garamondSigns = localFont({
-  src: [
-    { path: "../fonts/eb-garamond-signs-normal-400-800.woff2", weight: "400 800", style: "normal" },
-    { path: "../fonts/eb-garamond-signs-italic-400-800.woff2", weight: "400 800", style: "italic" },
-  ],
-  variable: "--font-garamond-signs", display: "swap", preload: false, adjustFontFallback: false,
-});
-const gentiumSigns = localFont({
-  src: [
-    { path: "../fonts/gentium-book-plus-signs-normal-400.woff2", weight: "400", style: "normal" },
-  ],
-  variable: "--font-gentium-signs", display: "swap", preload: false, adjustFontFallback: false,
-});
+// The three typefaces of Tondo (DESIGN.md), downloaded at build time and served from this app: Literata for the Greek and the
+// English read, Noto Serif Display for titles and the looked-up word, Hanken Grotesk for the interface. Each Greek face's whole
+// polytonic set is declared (next/font lists every subset; `subsets` only picks what is preloaded). Literata preloads its Greek
+// alone: the page opens on Greek, and its Latin (the English, titles) loads when drawn. With Latin preloaded too, 466 KB of
+// fonts came before the first Greek word on a slow phone (8.4 s, against the old reader's 7.8 s); without it, 177 KB (6.9 s).
+// No automatic fallback faces: next/font's are Arial and Times, which have Greek of their own and would draw a Greek letter
+// inside a label before Literata could (tokens.css lists the fallbacks by hand).
+const literata = Literata({ subsets: ["greek-ext", "greek"], style: ["normal", "italic"], axes: ["opsz"], variable: "--font-literata", display: "swap", adjustFontFallback: false });
+const display = Noto_Serif_Display({ subsets: ["greek-ext", "greek", "latin"], weight: ["300", "400"], variable: "--font-display", display: "swap", preload: false, adjustFontFallback: false });
+const hanken = Hanken_Grotesk({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-hanken", display: "swap", adjustFontFallback: false });
 
 export const metadata: Metadata = {
   title: { default: "Mathesis Reader", template: "%s · Mathesis Reader" },
@@ -43,7 +32,7 @@ const FIRST_PAPER = `:where(html){background-color:${THEME_COLOURS.paper}}@media
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${garamond.variable} ${didot.variable} ${gentium.variable} ${garamondSigns.variable} ${gentiumSigns.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${literata.variable} ${display.variable} ${hanken.variable}`} suppressHydrationWarning>
       <head>
         <style dangerouslySetInnerHTML={{ __html: FIRST_PAPER }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />

@@ -40,22 +40,18 @@
 @media (hover: hover) { .readingLink:hover .readingBook { color: var(--accent); } }
 .readingLink:focus-visible .readingBook { color: var(--accent); }
 
-/* where to begin: folded to one line */
-.begin { box-shadow: var(--rule-over); }
-.begin summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); min-height: var(--tap); padding-block: var(--space-3); cursor: pointer; list-style: none; }
-.begin summary::-webkit-details-marker { display: none; }
-.begin summary::before { content: ""; align-self: center; width: var(--tri-size); height: var(--tri-size); background: var(--accent); clip-path: var(--tri-right); }
-.begin[open] summary::before { clip-path: var(--tri-down); }
-.beginName { font-size: var(--t-body); }
-.beginWhy { font-size: var(--t-small); color: var(--ink-2); }
-@media (hover: hover) { .begin summary:hover .beginName { color: var(--accent); } }
-.beginBody { display: grid; gap: var(--space-3); padding-bottom: var(--space-4); }
+/* (where to begin is on the start page now: Home.module.css) */
 .note { max-width: 46em; font-size: var(--t-small); line-height: 1.5; color: var(--ink-2); }
 
 /* every work: a part under a strong rule with room above it */
 .all { display: grid; gap: var(--space-2); margin-top: var(--space-5); padding-top: var(--space-5); box-shadow: inset 0 1px 0 var(--rule-strong); }
+/* a choice made, the new list still being drawn: the old one dims after a beat (so a quick change never flickers), and the new
+   one stands in full ink at once, so it is never read half-faded (Library.tsx, useDeferredValue) */
+.all[data-stale] { opacity: 0.45; transition: opacity var(--dur) var(--ease) 80ms; }
+/* (content-visibility: auto on the rows was tried, 2026-11-14: it cut a choice's layout from 800 ms to 5 ms at a quarter of the
+   speed, but with the deferred list, leaving the library sometimes took 5 to 7 s instead of 2) */
 .allHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-4); }
-.allHead h2 { font-size: var(--t-head); }
+.allHead h2 { font-size: var(--t-head); scroll-margin-top: calc(var(--bar-h) + var(--space-4)); }
 .count, .partCount { font-size: var(--t-small); color: var(--ink-2); font-variant-numeric: lining-nums; }
 .status { display: grid; gap: var(--space-2); padding-block: var(--space-5); }
 
@@ -67,7 +63,8 @@
 }
 .rail a, .rail span { display: grid; place-items: center; height: 26px; }
 .rail a { color: var(--ink-2); text-decoration: none; transition: color var(--dur-quick) var(--ease); }
-.rail span { color: var(--rule-strong); }
+/* a letter no work starts with: the faintest words colour that still reads (impeccable detect, 2026-11-14: the rule colour was 3.1 : 1) */
+.rail span { color: var(--ink-3); }
 @media (hover: hover) { .rail a:hover { color: var(--accent); } }
 .rail a[aria-current] { color: var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
 .listCol { min-width: 0; }
@@ -112,9 +109,35 @@
 /* the search's letters, marked in a title or a name */
 .library mark { background: var(--word-on); color: inherit; }
 
-/* a narrow window (phones come later): the author over their works, no rail */
+/* a narrow window: the author over their works, no rail */
 @media (max-width: 760px) {
   .author { grid-template-columns: minmax(0, 1fr); }
   .withRail { grid-template-columns: minmax(0, 1fr); }
   .rail { display: none; }
+}
+
+/* a phone. The search's line kept to the page (its grid track took the field's own width and ran past the edge), and no "/"
+   key, which a phone has no use for; the four orders two by two, as one row of them ran off the right; the filters one under
+   another, each the page's width, instead of three widths set by their longest choice. */
+.field { grid-template-columns: minmax(0, 1fr); }
+@media (pointer: coarse), (max-width: 760px) { .key { display: none; } }
+@media (max-width: 600px) {
+  .field input { font-size: var(--t-body); }
+  .controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .control { min-width: 0; }
+  .control > :global(.segmented) > button { flex: 1 1 auto; }
+  .order:global(.segmented) { display: grid; grid-template-columns: 1fr 1fr; border-radius: var(--radius-sheet); }
+  .selects { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .selects select { width: 100%; max-width: none; }
+  .selects :global(.text-btn) { justify-self: start; }
+}
+
+/* pressed under a finger (globals.css, "pressing"): a work's row and a book you are reading take the tapped word's tint */
+@media (pointer: coarse) {
+  .work, .readingLink {
+    border-radius: 6px; outline: var(--space-2) solid transparent; outline-offset: 0;
+    transition: background-color var(--dur) var(--ease), outline-color var(--dur) var(--ease);
+  }
+  .work:active, .readingLink:active { background-color: var(--press); outline-color: var(--press); transition-duration: 0s; }
+  .work:focus-visible, .readingLink:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 }

@@ -1,3 +1,5 @@
+import { trimShort } from "./card";
+
 /**
  * Saying a meaning once (the quiet desk, ticket 06). The look-up's first layer gives one meaning line; the second layer must
  * not give it again, in LSJ's short definition.
@@ -20,5 +22,5 @@ export function repeatsMeaning(line: string, meaning: string): boolean {
  * When none is left, "Dictionary · LSJ" shows the start of the entry itself instead, so that it is never an empty heading.
  */
 export function otherDefinitions<T extends { s: string }>(entries: readonly T[], meaning: string | null | undefined): T[] {
-  return entries.filter((e) => e.s && (!meaning || sameText(e.s) !== sameText(meaning)));
+  return entries.filter((e) => e.s && (!meaning || sameText(trimShort(e.s)) !== sameText(meaning)));
 }

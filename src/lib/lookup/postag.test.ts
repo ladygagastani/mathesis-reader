@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { grammarParts, kindOf, plainGrammar, readTag } from "./postag";
+import { grammarParts, grammarPhrases, kindOf, plainGrammar, readTag } from "./postag";
 import fixture from "./fixtures/iliad-1-1.json";
 
 describe("reading grammar tags", () => {
@@ -76,6 +76,8 @@ describe("the look-up card's wording of real tags", () => {
 describe("the grammar one word to a part", () => {
   it("gives the same words as the plain grammar, in the same order", () => {
     expect(grammarParts("v1sria---")).toEqual(["perfect", "active", "indicative", "1st person", "singular"]);
+    expect(grammarPhrases("v1sria---")).toEqual(["perfect active indicative", "1st person singular"]);
+    expect(grammarPhrases("v-sapmmn-")).toEqual(["aorist middle participle", "nominative singular masculine"]);
     expect(grammarParts("v-sapmmn-")).toEqual(["aorist", "middle", "participle", "nominative", "singular", "masculine"]);
     expect(grammarParts("n-s---fa-")).toEqual(["accusative", "singular"]);
     expect(grammarParts("g--------")).toEqual([]);

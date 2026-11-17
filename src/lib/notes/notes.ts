@@ -5,9 +5,10 @@
 
 /**
  * Where a note stands: a word, a run of words (selected in the text: `n` words from the `i`th, quoted in `words`), a line of verse,
- * or a whole passage, inside the passage (unit) the reader cites as `unit`.
+ * or a whole passage, inside the passage (unit) the reader cites as `unit`; or the whole book (its `unit` is "", the book's start).
  */
 export type Anchor =
+  | { kind: "book"; unit: "" }
   | { kind: "passage"; unit: string }
   | { kind: "line"; unit: string; line: number; lines: number }
   | { kind: "word"; unit: string; i: number; word: string }
@@ -26,6 +27,7 @@ export interface Note {
   book: string;
   anchor: Anchor;
   colour: Colour;
+  /** the note's words; "" for a book, a passage, a line or words saved without a note (a word is saved as a SavedWord, words.ts) */
   text: string;
   /** ms since 1970, set on every change; the later copy of a note wins */
   updated: number;
@@ -39,6 +41,7 @@ const isStr = (x: unknown, max = 200): x is string => typeof x === "string" && x
 const isInt = (x: unknown): x is number => Number.isInteger(x) && (x as number) >= 0;
 
 function parseAnchor(x: unknown): Anchor | null {
+  if (isObj(x) && x.kind === "book") return { kind: "book", unit: "" };
   if (!isObj(x) || !isStr(x.unit) || !x.unit) return null;
   if (x.kind === "passage") return { kind: "passage", unit: x.unit };
   if (x.kind === "line" && isInt(x.line) && isInt(x.lines)) return { kind: "line", unit: x.unit, line: x.line, lines: x.lines };
@@ -75,8 +78,12 @@ export function newerThan<T extends { id: string; updated: number }>(mine: T[], 
 
 export const shown = (notes: Note[]) => notes.filter((n) => !n.deleted);
 
-/** Where the note stands, in words: "17a", "line 1.5" (a passage that is one line), "3, line 2", "λόγος in 17a", "ὦ ἄνδρες in 17". */
+/**
+ * Where the note stands, in words: "the whole book", "17a", "line 1.5" (a passage that is one line), "3, line 2", "λόγος in 17a",
+ * "ὦ ἄνδρες in 17".
+ */
 export function placeName(a: Anchor): string {
+  if (a.kind === "book") return "the whole book";
   if (a.kind === "passage") return a.unit;
   if (a.kind === "line") return a.lines > 1 ? `${a.unit}, line ${a.line + 1}` : `line ${a.unit}`;
   if (a.kind === "words") return `${shortQuote(a.words)} in ${a.unit}`;
@@ -89,7 +96,16 @@ export function shortQuote(words: string): string {
   return w.length <= 5 ? w.join(" ") : `${w.slice(0, 2).join(" ")} … ${w.slice(-2).join(" ")}`;
 }
 
-export const KIND_NAMES: Record<AnchorKind, string> = { word: "The word", words: "The words", line: "The line", passage: "The passage" };
+export const KIND_NAMES: Record<AnchorKind, string> = { word: "The word", words: "The words", line: "The line", passage: "The passage", book: "The book" };
+
+/** A note saved without words: a book, a passage, a line or a run of words kept as a favourite. */
+export const bare = (n: Note) => !n.text;
+/** Whether a note on this place may be saved without words. A single word has Save word in the look-up instead. */
+export const mayBeBare = (a: Anchor) => a.kind !== "word";
+
+/** The note on the whole of `work`, if the book is saved (there is at most one; the newest wins if two devices each saved it). */
+export const bookNote = (notes: Note[], work: string) =>
+  notes.filter((n) => !n.deleted && n.work === work && n.anchor.kind === "book").sort(byNewest)[0] ?? null;
 
 /** A new note's id: random, short, and allowed by the database's check. */
 export function newId(): string {
@@ -99,3 +115,7 @@ export function newId(): string {
 
 /** The order the Saved page and the notes menu show: by book, then newest first. */
 export const byNewest = (a: Note, b: Note) => b.updated - a.updated;
+
+/** The newest note on the passage `unit` of `work`, if there is one (what the passage's number in the reader opens). */
+export const passageNote = (notes: Note[], work: string, unit: string) =>
+  notes.filter((n) => !n.deleted && n.work === work && n.anchor.kind === "passage" && n.anchor.unit === unit).sort(byNewest)[0] ?? null;

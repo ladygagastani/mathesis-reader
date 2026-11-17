@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction C · Scholion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Piazzolla:ital,opsz,wght@0,8..30,400;0,8..30,500;1,8..30,400&display=block" rel="stylesheet">
+<style>
+/* Direction C, Scholion. Drawn from how the Greeks themselves read their classics: a column of text with the
+   commentary written in its margin. A scholion quotes its word, closes it with a bracket, then explains:
+   "οἶδα] I know". The look-up is that scholion, written in the margin beside the line it explains.
+   A new passage begins with its first letter set out into the margin (ekthesis) and a short rule under the line
+   before it (paragraphos), as on a papyrus. */
+:root {
+  --bg: #efeee6;          /* unbleached linen, faintly green: papyrus pith, not cream */
+  --ink: #1c1c19;         /* carbon ink */
+  --ink-2: #4b4a42;
+  --ink-3: #6e6c61;
+  --accent: #56622a;      /* olive, Athena's tree */
+  --word-on: rgb(86 98 42 / 0.13);
+  --rule: rgb(28 28 25 / 0.14);
+  --face: "Piazzolla", serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font-family: var(--face); font-optical-sizing: auto; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the bar: a running head, as at the top of a printed page */
+.bar { position: fixed; inset: 0 0 auto 0; height: 56px; display: flex; align-items: center; gap: 4px; padding: 0 24px; background: var(--bg); z-index: 5; }
+.bar::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; border-bottom: 1px solid var(--rule); }
+.bar .btn { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 10px; font-size: 16px; color: var(--ink-2); }
+.bar .head { margin: 0 auto; font-size: 15px; font-style: italic; color: var(--ink-3); }
+.bar .head b { font-style: normal; font-weight: 400; color: var(--ink); }
+
+/* the page: text on the left, the margin for scholia on the right */
+.page { display: grid; grid-template-columns: 72px 600px 360px; column-gap: 40px; justify-content: center; padding: 120px 24px 120px; }
+.title { grid-column: 2; margin: 0 0 64px; }
+.title h1 { font-weight: 400; font-size: 48px; line-height: 1.1; margin: 0; letter-spacing: -0.01em; }
+.title p { margin: 10px 0 0; font-size: 17px; font-style: italic; color: var(--ink-3); }
+.num { grid-column: 1; text-align: right; font-size: 15px; color: var(--accent); padding-top: 7px; font-variant-numeric: oldstyle-nums; }
+.text { grid-column: 2; position: relative; }
+.text::before { content: ""; position: absolute; left: -0.5em; top: -10px; width: 44px; border-top: 1.5px solid var(--ink-2); }
+.greek { font-size: 23px; line-height: 1.78; margin: 0; }
+.greek { text-indent: -0.85em; }
+.greek .ek { font-size: 1.35em; line-height: 0; color: var(--accent); }
+.st { font-size: 12px; font-style: italic; color: var(--ink-3); vertical-align: 0.6em; margin: 0 2px; }
+.w-on { background: var(--word-on); border-radius: 3px; padding: 0 2px; margin: 0 -2px; }
+.eng { margin-top: 18px; height: 44px; font-size: 16px; font-style: italic; color: var(--accent); display: inline-flex; align-items: center; gap: 6px; }
+
+/* the scholion */
+.margin { grid-column: 3; position: relative; }
+.scholion { position: absolute; left: 0; right: 0; padding-left: 20px; border-left: 1px solid var(--accent); }
+.leader { position: absolute; height: 0; border-top: 1px dotted var(--accent); opacity: 0.8; }
+.sch-head { font-size: 26px; line-height: 1.2; margin: 0; }
+.sch-head .br { color: var(--accent); margin-left: 2px; }
+.sch-head .gl { font-style: italic; }
+.sch-kind { font-size: 15px; font-style: italic; color: var(--ink-3); margin: 6px 0 0; }
+.sch-body { font-size: 17px; line-height: 1.55; margin: 14px 0 0; color: var(--ink); }
+.sch-body .g { font-size: 18px; }
+.sch-here { font-size: 16px; line-height: 1.55; margin: 12px 0 0; color: var(--ink-2); }
+.sch-here i { color: var(--ink); }
+.sch-foot { margin: 16px 0 0; font-size: 14px; color: var(--ink-3); font-style: italic; }
+.sch-acts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
+.sch-acts button { height: 44px; display: inline-flex; align-items: center; gap: 6px; font-size: 16px; color: var(--accent); }
+.sch-close { position: absolute; top: -10px; right: -10px; width: 44px; height: 44px; display: grid; place-items: center; color: var(--ink-3); }
+
+/* phone: no margin wide enough, so the scholion is written at the foot of the page, as a footnote */
+@media (max-width: 760px) {
+  .bar { height: 52px; padding: 0 4px; }
+  .bar::after { left: 16px; right: 16px; }
+  .bar .btn span { display: none; }
+  .bar .btn { width: 44px; padding: 0; justify-content: center; }
+  .bar .head .lat { display: none; }
+  .page { display: block; padding: 76px 20px 0; }
+  .title { margin-bottom: 32px; }
+  .title h1 { font-size: 34px; }
+  .num { text-align: left; padding: 0 0 14px; }
+  .text::before { left: 0; }
+  .greek { font-size: 20px; line-height: 1.72; text-align: left; }
+  .greek { text-indent: 0; }
+  .margin { position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg); padding: 22px 20px 20px; z-index: 6;
+    box-shadow: 0 -24px 24px -8px var(--bg); }
+  .margin::before { content: ""; position: absolute; top: 0; left: 20px; width: 96px; border-top: 1px solid var(--accent); }
+  .scholion { position: static; border: 0; padding: 0; }
+  .leader { display: none; }
+  .sch-close { top: -14px; right: 0; }
+  .sch-head { font-size: 24px; }
+  .sch-body { font-size: 16px; margin-top: 10px; }
+  .sch-here { font-size: 15px; margin-top: 8px; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="btn"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Library</span></button>
+  <div class="head"><b>Ἀπολογία Σωκράτους</b> <span class="lat">· Plato · 17a</span></div>
+  <button class="btn"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Notes</span></button>
+  <button class="btn"><svg viewBox="0 0 24 24"><path d="M4 18L9 6l5 12M6 14h6M15 18l3-7 3 7M16 16h4"/></svg><span>Text</span></button>
+</header>
+
+<div class="page">
+  <div class="title"><h1>Ἀπολογία Σωκράτους</h1><p>Plato, the Apology of Socrates</p></div>
+  <div class="num">17</div>
+  <div class="text">
+    <p class="greek"><span class="ek">ὅ</span>τι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ <span class="w-on" id="word">οἶδα</span>· ἐγὼ δʼ οὖν καὶ αὐτὸς ὑπʼ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην, οὕτω πιθανῶς ἔλεγον. καίτοι ἀληθές γε ὡς ἔπος εἰπεῖν οὐδὲν εἰρήκασιν. μάλιστα δὲ αὐτῶν ἓν ἐθαύμασα τῶν πολλῶν ὧν ἐψεύσαντο, τοῦτο ἐν ᾧ ἔλεγον ὡς χρῆν ὑμᾶς εὐλαβεῖσθαι μὴ ὑπʼ ἐμοῦ ἐξαπατηθῆτε <span class="st">17b</span> ὡς δεινοῦ ὄντος λέγειν. τὸ γὰρ μὴ αἰσχυνθῆναι ὅτι αὐτίκα ὑπʼ ἐμοῦ ἐξελεγχθήσονται ἔργῳ, ἐπειδὰν μηδʼ ὁπωστιοῦν φαίνωμαι δεινὸς λέγειν, τοῦτό μοι ἔδοξεν αὐτῶν ἀναισχυντότατον εἶναι, εἰ μὴ ἄρα δεινὸν καλοῦσιν οὗτοι λέγειν τὸν τἀληθῆ λέγοντα· εἰ μὲν γὰρ τοῦτο λέγουσιν, ὁμολογοίην ἂν ἔγωγε οὐ κατὰ τούτους εἶναι ῥήτωρ. οὗτοι μὲν οὖν, ὥσπερ ἐγὼ λέγω, ἤ τι ἢ οὐδὲν ἀληθὲς εἰρήκασιν, ὑμεῖς δέ μου ἀκούσεσθε πᾶσαν τὴν ἀλήθειαν—οὐ μέντοι μὰ Δία, ὦ ἄνδρες Ἀθηναῖοι, κεκαλλιεπημένους γε λόγους, ὥσπερ οἱ τούτων, <span class="st">17c</span> ῥήμασί τε καὶ ὀνόμασιν οὐδὲ κεκοσμημένους, ἀλλʼ ἀκούσεσθε εἰκῇ λεγόμενα τοῖς ἐπιτυχοῦσιν ὀνόμασιν—πιστεύω γὰρ δίκαια εἶναι ἃ λέγω—καὶ μηδεὶς ὑμῶν προσδοκησάτω ἄλλως.</p>
+    <button class="eng"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Show the English</button>
+    <span class="leader" id="leader"></span>
+  </div>
+  <aside class="margin" aria-label="Look-up">
+    <div class="scholion" id="scholion">
+      <button class="sch-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <p class="sch-head">οἶδα<span class="br">]</span> <span class="gl">I know</span></p>
+      <p class="sch-kind">verb, irregular · <span class="g">εἰδέναι, ἴσθι, ᾔδειν</span></p>
+      <p class="sch-body">A perfect in form, “I have seen”, so “I know”, with a present sense.</p>
+      <p class="sch-here">Here <i>perfect active indicative, first singular</i>, the main verb: “I do not know”.</p>
+      <p class="sch-foot">42 times in the Apology</p>
+      <div class="sch-acts"><button>Note</button><button>Save word</button><button>LSJ entry →</button></div>
+    </div>
+  </aside>
+</div>
+<script>
+  // put the scholion level with the line it explains, and draw the dotted leader from the word to the margin
+  const w = document.getElementById("word"), s = document.getElementById("scholion"), l = document.getElementById("leader");
+  const text = w.closest(".text"), margin = s.parentElement;
+  if (matchMedia("(min-width: 761px)").matches) {
+    // the leader runs only through the gutter, from the end of the word's line to the scholion, never across the Greek
+    const wr = w.getBoundingClientRect(), tr = text.getBoundingClientRect(), mr = margin.getBoundingClientRect();
+    s.style.top = (wr.top - mr.top - 4) + "px";
+    l.style.top = (wr.top - tr.top + wr.height * 0.55) + "px";
+    l.style.left = (tr.width + 8) + "px";
+    l.style.width = (mr.left - tr.right - 8) + "px";
+  }
+</script>
+</body>
+</html>

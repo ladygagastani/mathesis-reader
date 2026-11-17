@@ -34,16 +34,23 @@ WORDS AND DICTIONARIES
   Humanities. Data accessed from https://github.com/PerseusDL/lexica/.
 - Dickinson College Commentaries Greek Core Vocabulary, by Christopher Francese and collaborators.
   CC BY-SA 3.0. The library's measure of how familiar a work's words are counts them against it.
+- Liddell and Scott, An Intermediate Greek-English Lexicon (1889), the "Middle Liddell": meanings
+  for words the core list and LSJ leave without one. Text provided by Perseus Digital Library, with
+  funding from The Annenberg CPB/Project. Original version available for viewing and download at
+  http://www.perseus.tufts.edu/hopper/. Read from https://github.com/blinskey/middle-liddell, which
+  gives it under CC BY-SA 3.0 US, with the request to offer Perseus any changes.
 - English Wiktionary (meanings, etymologies and word families, fetched live in the look-up's second
-  layer; only the word is sent). CC BY-SA 4.0.
+  layer; only the word is sent; and meanings for words the dictionaries above leave without one,
+  from kaikki.org's extract of its Ancient Greek entries, by Tatu Ylonen's wiktextract). CC BY-SA 4.0.
 - Wikidata (authors' Greek names, other names, occupations and descriptions). CC0.
 
 
 FONTS AND SOFTWARE
 
-- EB Garamond (Georg Duffner and Octavio Pardo), GFS Didot (Greek Font Society) and Gentium Book
-  Plus (SIL International). SIL Open Font License 1.1. The old site's copies of the arrows and signs
-  of EB Garamond and Gentium Book Plus are in src/fonts/, with their licences beside them.
+- Literata (TypeTogether), Noto Serif Display (the Noto Project Authors) and Hanken Grotesk (Alfredo
+  Marco Pradil). SIL Open Font License 1.1. Downloaded from Google Fonts at build time and served
+  from this app. (The printed-page look's sign fonts, EB Garamond's and Gentium Book Plus's, are in
+  _archive/fonts-printed-page with their licences.)
 - Next.js, React: MIT. saxes: ISC.
 - The icons on the buttons are Lucide's (https://lucide.dev), ISC License, Copyright (c) Lucide
   Contributors 2022, portions Copyright (c) Cole Bemis 2013-2022 as part of Feather (MIT); copied as
@@ -58,6 +65,11 @@ As CC BY-SA asks, the changes made to the material above:
   file writes as a base letter and a separate mark is drawn as the one letter it is.
 - LSJ entries keep their wording; Beta Code is turned into Greek letters, and a short gloss is taken
   from each entry for the look-up (both done by the old site's pipeline).
+- The meaning list (public/meanings, built by scripts/build-meanings.mjs) keeps each dictionary's
+  wording. From the Middle Liddell it takes the first translation of each sense, with its Beta Code
+  turned into Greek letters and its ":—" between senses written "; ". From Wiktionary it takes the
+  first glosses of an entry, without quotation marks around them and without a gloss about other
+  Greek words with their transliterations.
 - Works are grouped by kind of writing, from GLAUx's genres and Wikidata's occupations.
 - Wikidata's descriptions are shown with BCE and CE written as BC and AD.
 - Wiktionary's etymologies keep a cognate in a script the site's typefaces cannot draw as its

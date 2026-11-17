@@ -9,10 +9,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { Found } from "@/lib/reader/find";
-import Icon from "@/components/Icon";
+import Icon, { type IconName } from "@/components/Icon";
 import { GREEK_SIZES, LEADINGS, setSettings, stepLeading, stepSize, type Columns, type Theme } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
-import { placeName, type Note } from "@/lib/notes/notes";
+import type { Note } from "@/lib/notes/notes";
+import NotesMenu from "./NotesMenu";
 import styles from "./ReaderBar.module.css";
 
 export type Open = "" | "aa" | "pages" | "notes" | "keys";
@@ -24,12 +25,18 @@ export interface TextOption { value: string; label: string }
 const KEYS: [keys: string[], what: string][] = [
   [["←", "→"], "The page before, the page after. With a word looked up: the word before, the word after."],
   [["g"], "Go to a passage, or find a word anywhere in the book."],
-  [["Tab"], "Into the text, then ← → from word to word, ↑ ↓ from line to line, Home and End to the first and last word."],
+  [["Tab"], "Into the text, then the left and right arrows from word to word, up and down from line to line, Home and End to the first and last word."],
   [["Enter"], "Look up the word."],
   [["Esc"], "Close the look-up or a menu."],
   [["/"], "Search the library, from any page."],
+  [["l"], "Listen: the English read aloud from where you are. Then l pauses and reads on."],
+  [["[", "]"], "While it reads: the sentence before, the sentence after."],
+  [["{", "}"], "While it reads: the passage before, the passage after."],
   [["?"], "These keys."],
 ];
+
+/** The arrow keys are drawn with the app's arrows: none of the three typefaces has "←" or "→", and the check found them in Arial. */
+const ARROWS: Record<string, [IconName, string]> = { "←": ["back", "Left arrow"], "→": ["next", "Right arrow"] };
 
 /** Go to: a passage by its reference, and a word anywhere in the book. */
 function GoTo({ example, goTo, find, onFound, onDone }: {
@@ -120,7 +127,30 @@ function Choice<T extends string>({ label, value, options, onChange, unavailable
   );
 }
 
-const THEMES: [Theme, string][] = [["auto", "Follow device"], ["paper", "Paper"], ["night", "Night"]];
+/** The bar's page marker (DESIGN.md, "Ornament"): a short row of tongues, one for each page, like the band at the top of the
+ *  look-up's panel; the pages up to this one are terracotta. (A ring was tried first, whole and then in pieces: either way it
+ *  read as something loading.) A book of more than 12 pages gets a plain line that fills instead, as the tongues would be too
+ *  thin to tell apart. */
+function PageRing({ page, pages }: { page: number; pages: number }) {
+  const n = Math.max(1, pages);
+  if (n > 12) {
+    const w = Math.max(2, Math.round(((page + 1) / n) * 36));
+    return (
+      <svg className={styles.rule} viewBox="0 0 36 12" width="36" height="12" aria-hidden="true" focusable="false">
+        <rect x="0" y="5" width="36" height="2" rx="1" className={styles.track} />
+        <rect x="0" y="5" width={w} height="2" rx="1" className={styles.mark} />
+      </svg>
+    );
+  }
+  const step = 6, width = n * step - 2;
+  return (
+    <svg className={styles.rule} viewBox={`0 0 ${width} 12`} width={width} height="12" aria-hidden="true" focusable="false">
+      {Array.from({ length: n }, (_, i) => <rect key={i} x={i * step} y="0" width="4" height="12" rx="2" className={i <= page ? styles.mark : styles.track} />)}
+    </svg>
+  );
+}
+
+const THEMES: [Theme, string][] = [["auto", "Follow device"], ["paper", "Day"], ["night", "Night"]];
 const COLUMNS: [Columns, string][] = [["greek", "Greek"], ["both", "Both"], ["trans", "English"]];
 
 /** The Greek's size as the page shows it now, in rem (for the first step from the device's own size). */
@@ -130,8 +160,8 @@ function shownRem(): number {
   return probe ? parseFloat(getComputedStyle(probe).fontSize) / root : 1.5;
 }
 
-export default function ReaderBar({ title, showTitle, onTop, where, at, pages, page, onPage, hasEnglish, notes, onNote, ask,
-  example, goTo, find, onFound, editions, edition, onEdition, englishes, english, onEnglish }: {
+export default function ReaderBar({ title, showTitle, onTop, where, at, pages, page, onPage, hasEnglish, notes, onNote, here, onSaveBook, onSavePassage, ask,
+  example, goTo, find, onFound, editions, edition, onEdition, englishes, english, onEnglish, listening, onListen }: {
   /** the book: its Greek title, author and English title, and the lock of a private text */
   title: React.ReactNode;
   /** to the top of the page */
@@ -146,6 +176,8 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
   hasEnglish: boolean;
   /** this book's notes, in the order of the book */
   notes: Note[]; onNote: (n: Note) => void;
+  /** the passage at the top of the screen (its unit), asked as the Notes menu opens; saving the book or that passage */
+  here: () => string | null; onSaveBook: () => void; onSavePassage: (unit: string) => void;
   /** a menu the keyboard asks for; n changes with every asking */
   ask: { menu: Open; n: number } | null;
   /** Go to: a reference to show as an example, the way to a passage (a message when there is none), the search of the book */
@@ -153,9 +185,12 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
   /** the Greek editions and the translations to choose from (Text shows a choice only where there is one) */
   editions: TextOption[]; edition: string; onEdition: (v: string) => void;
   englishes: TextOption[]; english: string; onEnglish: (v: string) => void;
+  /** the narrator open, and the way to open or close it (Narrator.tsx); it reads the English, so a book without English has none */
+  listening: boolean; onListen: () => void;
 }) {
   const s = useSettings();
   const [open, setOpen] = useState<Open>("");
+  const [hereNow, setHereNow] = useState<string | null>(null);
   const aaBtn = useRef<HTMLButtonElement>(null);
   const pagesBtn = useRef<HTMLButtonElement>(null);
   const notesBtn = useRef<HTMLButtonElement>(null);
@@ -177,17 +212,18 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
   return (
     <header className={styles.bar} data-reader-bar="">
       <div className={styles.in}>
-        <Link href="/" className={`${styles.quiet} ${styles.back}`}><Icon name="back" />Library</Link>
+        <Link href="/library" className={`${styles.quiet} ${styles.back}`}><Icon name="back" />Library</Link>
         {showTitle ? <h1 className={styles.title}><button type="button" className={styles.top} onClick={onTop} title="To the top of the page">{title}</button></h1> : <span />}
 
         <nav className={styles.end} aria-label="The reader">
-          {/* where you are: the page's name, a thin rule with a short red mark at the place in the book, "page 1 of 5" */}
+          {/* where you are: the page's name, a short row of tongues, one to a page, the ones read so far in terracotta, and
+              "page 1 of 5" */}
           <div className={styles.slot}>
             <button ref={pagesBtn} type="button" data-menu-opener="" className={`${styles.quiet} ${styles.where}`} aria-expanded={open === "pages"} aria-haspopup="dialog"
               onClick={() => toggle("pages")}>
               <Icon name="goto" />
               <span className="visually-hidden">Go to: </span><span className={styles.part}>{where}</span><span className="visually-hidden">, </span>
-              <span className={styles.rule} aria-hidden="true"><span className={styles.mark} style={{ "--p": pages.length > 1 ? page / (pages.length - 1) : 0 } as React.CSSProperties} /></span>
+              <PageRing page={page} pages={pages.length} />
               <span className={styles.at}>{at}</span>
             </button>
             {open === "pages" && (
@@ -208,26 +244,25 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
 
           <div className={styles.slot}>
             <button ref={notesBtn} type="button" data-menu-opener="" className={styles.quiet} aria-expanded={open === "notes"} aria-haspopup="dialog"
-              onClick={() => toggle("notes")}><Icon name="note" />Notes{notes.length > 0 && <span className={styles.count}>{notes.length}</span>}</button>
+              onClick={() => { if (open !== "notes") setHereNow(here()); toggle("notes"); }}>
+              <Icon name="note" />Notes{notes.length > 0 && <span className={styles.count}>{notes.length}</span>}
+            </button>
             {open === "notes" && (
               <Menu title="Notes in this book" onClose={onClose} className={styles.notesMenu}>
-                {notes.length === 0 && <p className={styles.empty}>No notes in this book yet. Click a word, then Note, to write one on the word, its line or its passage.</p>}
-                {notes.length > 0 && (
-                  <ol className={styles.pages}>
-                    {notes.map((n) => (
-                      <li key={n.id}>
-                        <button type="button" className={`${styles.pageBtn} ${styles.noteBtn}`} onClick={() => { onClose(false); onNote(n); }}>
-                          <span className={styles.swatch} data-colour={n.colour} aria-hidden="true" />
-                          <span className={styles.noteText}><span className={styles.notePlace}>{placeName(n.anchor)}</span>{n.text}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-                <Link className={styles.allLink} href="/saved">All your notes, in every book<Icon name="next" /></Link>
+                <NotesMenu notes={notes} here={hereNow} onOpen={(n) => { onClose(false); onNote(n); }}
+                  onSaveBook={() => { onClose(false); onSaveBook(); }} onSavePassage={(u) => { onClose(false); onSavePassage(u); }} />
               </Menu>
             )}
           </div>
+
+          {hasEnglish && (
+            <div className={`${styles.slot} ${styles.listenSlot}`}>
+              <button type="button" className={styles.quiet} aria-pressed={listening} onClick={onListen}
+                title={listening ? "Stop listening" : "Listen: the English read aloud from where you are (l)"}>
+                <Icon name="listen" />Listen
+              </button>
+            </div>
+          )}
 
           <div className={styles.slot}>
             <button ref={aaBtn} type="button" data-menu-opener="" className={styles.quiet} aria-expanded={open === "aa"} aria-haspopup="dialog"
@@ -292,7 +327,7 @@ export default function ReaderBar({ title, showTitle, onTop, where, at, pages, p
                 <dl className={styles.keys}>
                   {KEYS.map(([keys, what]) => (
                     <div key={what} className={styles.keyRow}>
-                      <dt>{keys.map((k) => <kbd key={k}>{k}</kbd>)}</dt>
+                      <dt>{keys.map((k) => <kbd key={k}>{ARROWS[k] ? <Icon name={ARROWS[k][0]} label={ARROWS[k][1]} /> : k}</kbd>)}</dt>
                       <dd>{what}</dd>
                     </div>
                   ))}

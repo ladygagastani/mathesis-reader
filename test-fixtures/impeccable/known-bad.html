@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- A page made to fail impeccable's detector: each block below is one pattern its catalogue names. `npm run check:impeccable`
+     must report these before its clean result on src/ is trusted (README, Checks). Never linked from the app. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Known bad</title>
+<style>
+  body { font-family: "Inter", sans-serif; background: #0b0b12; color: #e5e7eb; }
+  .hero h1 { background: linear-gradient(90deg, #8b5cf6, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 64px; }
+  .band { background: linear-gradient(135deg, #7c3aed, #a855f7); height: 120px; }
+  .card { border-left: 4px solid #8b5cf6; border-radius: 12px; padding: 24px; background: #151521; }
+  .card .card { border: 1px solid #333; border-radius: 12px; padding: 16px; background: #1d1d2b; }
+  .pop { transition: transform 600ms cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+  .glow { box-shadow: 0 0 24px #22d3ee; }
+</style>
+</head>
+<body>
+  <section class="hero"><h1>Supercharge your workflow</h1></section>
+  <div class="band"></div>
+  <div class="card pop glow"><h2>Feature</h2><div class="card"><p>Inner card</p></div></div>
+</body>
+</html>

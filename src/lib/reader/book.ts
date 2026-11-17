@@ -1,5 +1,5 @@
 /**
- * Opening a book: the work in the catalogue, its Greek edition and its English translation (the first of each, or the ones chosen in
+ * Opening a book: the work's entry in the catalogue (its own small file, lib/catalog.ts, loadWorkCatalog), its Greek edition and its English translation (the first of each, or the ones chosen in
  * Text: `ed` and `tr` in the address, by their version, "perseus-grc2"; tr=none for the Greek alone), both read from GitHub at the
  * catalogue's pinned version and parsed off the main thread, with the English placed beside the Greek passage by passage. The word
  * analyses for the work start loading with the texts, so the first look-up seldom waits for them. (Starting them after the texts
@@ -8,7 +8,7 @@
  * A private text (w=mine:<id>) comes from the database instead, only on a device that holds a sync code, and becomes a book the same way the
  * old app made one (lib/mine/mine.ts). Its words are looked up in the analyses of the work it names (its urn), if it names one.
  */
-import { greekEditions, loadCatalog, translations, versionOf, type CatAuthor, type CatText, type CatWork } from "@/lib/catalog";
+import { greekEditions, loadWorkCatalog, translations, versionOf, type CatAuthor, type CatText, type CatWork } from "@/lib/catalog";
 import { getXml } from "@/lib/texts/source";
 import { parseInWorker } from "@/lib/tei/client";
 import { schemeFor } from "@/lib/tei/versification";
@@ -51,7 +51,7 @@ function prefetch(work: string) {
 
 export async function openBook(workId: string, choice: Choice = {}): Promise<Book> {
   if (isMine(workId)) return openPrivate(workId);
-  const idx = await loadCatalog();
+  const idx = await loadWorkCatalog(workId);
   const work = idx.work.get(workId);
   const author = idx.authorOf.get(workId);
   const editions = work ? greekEditions(work) : [];

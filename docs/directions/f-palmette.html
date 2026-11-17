@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Direction F · Palmette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;1,400&family=Noto+Serif+Display:ital,wght@0,400;0,500;1,400&family=Hanken+Grotesk:wght@400;500&display=block" rel="stylesheet">
+<style>
+/* Direction F, Palmette. Black-figure, the older Attic manner and the reverse of red-figure: the figures are black
+   glaze on the pale clay, and their details are scratched through the black so the clay shows in fine lines. The page
+   is the clay; a looked-up word turns into a black figure, and its entry is a black panel (a metope) with an incised
+   border and a chain of palmettes. Rays rise under the title, as they do from the foot of a vase. */
+:root {
+  --bg: #efe1cd;          /* pale fired clay */
+  --ink: #1b130d;         /* black glaze */
+  --ink-2: #4c3b2c;
+  --ink-3: #715b46;
+  --incise: #dcae84;      /* the clay seen through a scratch in the glaze */
+  --on-black: #f1dcc2;
+  --on-black-2: #c9ac8e;
+  --rule: rgb(27 19 13 / 0.14);
+  --greek: "Alegreya", serif;
+  --display: "Noto Serif Display", serif;
+  --ui: "Hanken Grotesk", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font-family: var(--greek); -webkit-font-smoothing: antialiased;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+svg.i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+.bar { position: fixed; inset: 0 0 auto 0; height: 60px; display: flex; align-items: center; gap: 2px; padding: 0 22px; z-index: 5; font-family: var(--ui);
+  background: linear-gradient(var(--bg) 65%, rgb(239 225 205 / 0)); }
+.bar .btn { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; font-size: 15px; color: var(--ink-2); }
+.bar .head { margin: 0 auto; font-size: 14px; color: var(--ink-3); letter-spacing: 0.02em; }
+.bar .head b { font-family: var(--display); font-weight: 400; font-size: 17px; color: var(--ink); margin-right: 8px; }
+.track { display: inline-flex; gap: 3px; align-items: center; }
+.track i { width: 3px; height: 12px; background: var(--rule); border-radius: 1px; }
+.track i.on { background: var(--ink); }
+
+/* the frieze */
+.frieze { padding: 104px 24px 0; text-align: center; }
+.palm { display: block; height: 30px; width: 100%; max-width: 760px; margin: 0 auto; }
+.frieze .who { font-family: var(--ui); font-size: 12px; letter-spacing: 0.46em; padding-left: 0.46em; margin: 30px 0 10px; color: var(--ink-2); }
+.frieze h1 { font-family: var(--display); font-weight: 400; font-size: 76px; line-height: 1; margin: 0; letter-spacing: -0.015em; }
+.frieze .lat { font-style: italic; font-size: 18px; color: var(--ink-3); margin: 14px 0 34px; }
+.rays { display: block; height: 34px; width: 100%; max-width: 760px; margin: 0 auto; }
+
+.page { display: grid; grid-template-columns: 64px 620px 400px; column-gap: 44px; justify-content: center; padding: 70px 24px 160px; }
+.num { grid-column: 1; justify-self: end; text-align: right; font-family: var(--display); font-size: 34px; line-height: 1; padding-top: 2px; }
+.num::after { content: ""; display: block; width: 22px; height: 3px; background: var(--ink); margin: 10px 0 0 auto; }
+.text { grid-column: 2; }
+.greek { font-size: 23px; line-height: 1.8; margin: 0; }
+.st { font-family: var(--ui); font-size: 11px; color: var(--ink-3); vertical-align: 0.65em; margin: 0 3px; letter-spacing: 0.04em; }
+.w-on { background: var(--ink); color: var(--on-black); border-radius: 3px; padding: 2px 7px; margin: 0 -7px; box-shadow: inset 0 0 0 1px var(--ink), inset 0 0 0 2.5px var(--incise); }
+.eng { margin-top: 24px; height: 44px; font-family: var(--ui); font-size: 15px; color: var(--ink); display: inline-flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--ink); }
+
+/* the metope */
+.margin { grid-column: 3; position: relative; }
+.metope { position: absolute; left: 0; right: 0; background: var(--ink); color: var(--on-black); padding: 0 34px 34px; border-radius: 4px; font-family: var(--ui); }
+.metope::before { content: ""; position: absolute; inset: 9px; border: 1px solid var(--incise); border-radius: 2px; opacity: 0.7; pointer-events: none; }
+.metope .palm { height: 26px; margin: 22px -14px 18px; max-width: none; }
+.close { position: absolute; top: 62px; right: 22px; width: 44px; height: 44px; display: grid; place-items: center; color: var(--on-black-2); z-index: 1; }
+.lemma { font-family: var(--display); font-weight: 400; font-size: 54px; line-height: 1; margin: 0; }
+.kind { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--incise); margin: 14px 0 0; }
+.parts { font-family: var(--greek); font-size: 18px; color: var(--on-black-2); margin: 6px 0 0; }
+.meaning { font-family: var(--display); font-style: italic; font-size: 30px; line-height: 1.15; margin: 22px 0 0; }
+.why { font-family: var(--greek); font-size: 16px; line-height: 1.55; color: var(--on-black-2); margin: 10px 0 0; }
+.parse { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0 0; padding: 0; list-style: none; }
+.parse li { font-size: 13px; padding: 6px 11px; border: 1px solid rgb(220 174 132 / 0.45); border-radius: 999px; color: var(--on-black); }
+.role { font-size: 15px; line-height: 1.55; color: var(--on-black-2); margin: 14px 0 0; }
+.role b { font-weight: 500; color: var(--on-black); }
+.acts { display: flex; gap: 8px; margin-top: 22px; }
+.acts button { height: 46px; padding: 0 18px; border-radius: 999px; font-size: 15px; box-shadow: inset 0 0 0 1px rgb(220 174 132 / 0.55); color: var(--on-black); }
+.acts .lsj { background: var(--incise); color: var(--ink); box-shadow: none; font-weight: 500; margin-left: auto; }
+
+@media (max-width: 760px) {
+  .bar { height: 52px; padding: 0 4px; }
+  .bar .btn span, .bar .head span, .track { display: none; }
+  .bar .btn { width: 44px; padding: 0; justify-content: center; }
+  .frieze { padding-top: 70px; }
+  .frieze h1 { font-size: 42px; }
+  .frieze .who { margin-top: 22px; }
+  .frieze .lat { font-size: 15px; margin-bottom: 24px; }
+  .rays { height: 24px; }
+  .page { display: block; padding: 40px 20px 0; }
+  .num { text-align: left; justify-self: start; font-size: 28px; margin-bottom: 18px; }
+  .num::after { margin: 8px auto 0 0; }
+  .greek { font-size: 20px; line-height: 1.75; }
+  .page { padding-bottom: 70vh; }
+  .margin { position: fixed; left: 0; right: 0; bottom: 0; height: 57%; z-index: 6; }
+  .metope { top: 0; bottom: 0; border-radius: 22px 22px 0 0; padding: 0 22px 22px; }
+  .metope::before { border-radius: 14px 14px 0 0; bottom: -2px; }
+  .metope .palm { margin: 18px -6px 14px; height: 22px; }
+  .close { top: 52px; right: 12px; }
+  .lemma { font-size: 42px; }
+  .meaning { font-size: 25px; margin-top: 16px; }
+  .why { display: none; }
+  .acts { margin-top: 18px; }
+  .acts button { padding: 0 16px; }
+}
+.who { font-family: var(--display) !important; font-weight: 500; }
+.g { font-family: var(--greek); font-size: 1.08em; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>Library</span></button>
+  <div class="head"><b>Ἀπολογία</b><span>Plato · 17a</span></div>
+  <span class="track btn" title="4% read"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+  <button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg><span>Notes</span></button>
+  <button class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M4 18L9 6l5 12M6 14h6M15 18l3-7 3 7M16 16h4"/></svg><span>Text</span></button>
+</header>
+
+<div class="frieze">
+  <svg class="palm" data-colour="#1b130d" aria-hidden="true"></svg>
+  <p class="who">ΠΛΑΤΩΝ</p>
+  <h1>Ἀπολογία Σωκράτους</h1>
+  <p class="lat">The Apology of Socrates</p>
+  <svg class="rays" id="rays" aria-hidden="true"></svg>
+</div>
+
+<div class="page">
+  <div class="num">17</div>
+  <div class="text">
+    <p class="greek">ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ <span class="w-on" id="word">οἶδα</span>· ἐγὼ δʼ οὖν καὶ αὐτὸς ὑπʼ αὐτῶν ὀλίγου ἐμαυτοῦ ἐπελαθόμην, οὕτω πιθανῶς ἔλεγον. καίτοι ἀληθές γε ὡς ἔπος εἰπεῖν οὐδὲν εἰρήκασιν. μάλιστα δὲ αὐτῶν ἓν ἐθαύμασα τῶν πολλῶν ὧν ἐψεύσαντο, τοῦτο ἐν ᾧ ἔλεγον ὡς χρῆν ὑμᾶς εὐλαβεῖσθαι μὴ ὑπʼ ἐμοῦ ἐξαπατηθῆτε <span class="st">17b</span> ὡς δεινοῦ ὄντος λέγειν. τὸ γὰρ μὴ αἰσχυνθῆναι ὅτι αὐτίκα ὑπʼ ἐμοῦ ἐξελεγχθήσονται ἔργῳ, ἐπειδὰν μηδʼ ὁπωστιοῦν φαίνωμαι δεινὸς λέγειν, τοῦτό μοι ἔδοξεν αὐτῶν ἀναισχυντότατον εἶναι, εἰ μὴ ἄρα δεινὸν καλοῦσιν οὗτοι λέγειν τὸν τἀληθῆ λέγοντα· εἰ μὲν γὰρ τοῦτο λέγουσιν, ὁμολογοίην ἂν ἔγωγε οὐ κατὰ τούτους εἶναι ῥήτωρ.</p>
+    <button class="eng">Show the English</button>
+  </div>
+  <aside class="margin" aria-label="Look-up">
+    <div class="metope" id="metope">
+      <svg class="palm" data-colour="#dcae84" aria-hidden="true"></svg>
+      <button class="close" aria-label="Close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h2 class="lemma">οἶδα</h2>
+      <p class="kind">Verb · irregular</p>
+      <p class="parts">εἰδέναι · ἴσθι · ᾔδειν</p>
+      <p class="meaning">I know</p>
+      <p class="why">A perfect in form, “I have seen”, with a present sense: to have seen a thing is to know it.</p>
+      <ul class="parse"><li>perfect</li><li>active</li><li>indicative</li><li>1st singular</li></ul>
+      <p class="role"><b>In this sentence</b> the main verb: <span class="g">οὐκ οἶδα</span>, “I do not know”.</p>
+      <div class="acts"><button>Note</button><button>Save</button><button class="lsj">LSJ entry</button></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+  // a palmette: seven petals fanned from a heart, the middle one longest
+  function palmette(g, x, y, dir, colour) {
+    const p = el("g", { transform: `translate(${x} ${y}) scale(1 ${dir})` }, g);
+    for (let k = -3; k <= 3; k++) {
+      const len = 15 - Math.abs(k) * 1.6;
+      el("path", { d: `M0 0 C-2.6 ${-len * 0.4} -2.4 ${-len * 0.85} 0 ${-len} C2.4 ${-len * 0.85} 2.6 ${-len * 0.4} 0 0Z`, fill: colour, transform: `rotate(${k * 21})` }, p);
+    }
+    el("path", { d: "M-5 2.5 C-5 -1.5 5 -1.5 5 2.5 C3 4 -3 4 -5 2.5Z", fill: colour }, p);
+  }
+  // a chain of palmettes, up and hanging by turns, joined by one running tendril
+  function whole(svg, unit) { const w = svg.getBoundingClientRect().width; svg.style.width = Math.floor(w / unit) * unit + "px"; }
+  document.querySelectorAll("svg.palm").forEach((svg) => {
+    const c = svg.dataset.colour, W = 52, H = 30; whole(svg, W); const id = "p" + Math.random().toString(36).slice(2);
+    const pat = el("pattern", { id, width: W, height: H, patternUnits: "userSpaceOnUse" }, el("defs", {}, svg));
+    el("path", { d: `M0 15 C7 15 8 25 13 25 S19 15 26 15 S33 5 39 5 S45 15 52 15`, fill: "none", stroke: c, "stroke-width": 1.3 }, pat);
+    palmette(pat, 13, 24, 1, c);
+    palmette(pat, 39, 6, -1, c);
+    el("rect", { width: "100%", height: "100%", fill: `url(#${id})` }, svg);
+  });
+  // rays rising from the foot of the vase
+  const rays = document.getElementById("rays"), rw = 18; whole(rays, rw);
+  const rp = el("pattern", { id: "r", width: rw, height: 40, patternUnits: "userSpaceOnUse" }, el("defs", {}, rays));
+  el("path", { d: `M2 40 L${rw / 2} 2 L${rw - 2} 40Z`, fill: "#1b130d" }, rp);
+  el("rect", { width: "100%", height: "100%", fill: "url(#r)", transform: "scale(1 1)" }, rays);
+  el("line", { x1: 0, y1: "100%", x2: "100%", y2: "100%", stroke: "#1b130d", "stroke-width": 3 }, rays);
+  // on a computer the metope lies level with the line of the word
+  if (matchMedia("(min-width: 761px)").matches) {
+    const w = document.getElementById("word"), m = document.getElementById("metope");
+    const wr = w.getBoundingClientRect(), mr = m.parentElement.getBoundingClientRect();
+    // level with the word, but never past the foot of the window
+    const fit = innerHeight - 24 - m.offsetHeight - mr.top;
+    m.style.top = Math.max(76 - mr.top, Math.min(wr.top - mr.top - 70, fit)) + "px";
+  }
+</script>
+</body>
+</html>

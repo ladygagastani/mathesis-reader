@@ -1,6 +1,6 @@
 "use client";
 /**
- * Paper or Night from any page (DESIGN.md, decision 4): one button that turns the page you see now into the other one. It names the
+ * Day or Night from any page (DESIGN.md, decision 4): one button that turns the page you see now into the other one. It names the
  * page it will give you, with its sign. A page that follows the device turns into the other one for good; Text in the reader
  * still offers "Follow device".
  */
@@ -21,8 +21,8 @@ export default function ThemeSwitch() {
   const night = theme === "night" || (theme === "auto" && dark);
   const to = night ? "paper" : "night";
   return (
-    <button type="button" className={styles.link} onClick={() => setSettings({ theme: to })} aria-label={night ? "Switch to the paper page" : "Switch to the night page"}>
-      <Icon name={to} />{night ? "Paper" : "Night"}
+    <button type="button" className={styles.link} onClick={() => setSettings({ theme: to })} aria-label={night ? "Switch to the day page" : "Switch to the night page"}>
+      <Icon name={to} />{night ? "Day" : "Night"}
     </button>
   );
 }

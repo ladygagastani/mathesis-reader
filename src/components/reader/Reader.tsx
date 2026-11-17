@@ -4,8 +4,9 @@
  * opened on this device); the Greek stands alone, each passage with "Show the English"; Aa offers Both and English for the whole book.
  * A click, a tap, or Enter on a Greek word opens the look-up; the arrow keys go from word to word. The address says the book and
  * the page (/read?w=tlg0059.tlg002&p=2), and "at" opens the page holding a passage (&at=17).
- * Notes (SPEC.md, "Notes and Saved"): "Note" in the look-up writes one on the word, its line or its passage; the bar's Notes
- * lists the book's notes; marks at the right edge jump to them. "&note=<id>" opens a note (the Saved page links that way).
+ * Notes (SPEC.md, "Notes and Saved"): "Note" in the look-up writes one on the word, its line or its passage; a passage's number
+ * saves the passage or opens its note; the bar's Notes saves the book or a passage and lists the book's notes and saved places;
+ * marks at the right edge jump to them. "&note=<id>" opens a note (the Saved page links that way).
  * The reader keeps your place in each book (lib/reader/place.ts) and opens there next time; "&find=<word>" marks a search's words on
  * the page; "&ed=" and "&tr=" choose the edition and the translation. The keys are listed in the bar's Keys menu.
  */
@@ -22,16 +23,18 @@ import { findInBook, type Found } from "@/lib/reader/find";
 import { getPlace, savePlace } from "@/lib/reader/place";
 import type { Columns } from "@/lib/settings";
 import { useSettings } from "@/lib/use-settings";
-import { shown, type Anchor, type Note } from "@/lib/notes/notes";
-import { useNotes } from "@/lib/notes/store";
+import { bookNote, newId, passageNote, shown, type Anchor, type Note } from "@/lib/notes/notes";
+import { saveNote, useNotes } from "@/lib/notes/store";
 import { alignChunk, type Row } from "@/lib/tei/align";
 import { chunkOf, findRef } from "@/lib/tei/refs";
 import Icon from "@/components/Icon";
+import Ring from "@/components/Ring";
 import { Blocks } from "./Blocks";
 import ReaderBar, { type Open } from "./ReaderBar";
 import Lookup from "./Lookup";
 import NoteEditor, { type Editing } from "./NoteEditor";
 import NoteMarks, { locate } from "./NoteMarks";
+import Narrator, { ListenButton, type ListenFrom } from "./Narrator";
 import styles from "./Reader.module.css";
 
 const OPENED = "mathesis-reader:opened";
@@ -92,16 +95,24 @@ function AuthorCaps({ id, name }: { id: string; name: string }) {
   );
 }
 
-const RowView = memo(function RowView({ row, cols, open, onToggle, credit, resumed }: {
+const RowView = memo(function RowView({ row, cols, open, onToggle, credit, resumed, onPassage }: {
   row: Row; cols: Columns; open: boolean; onToggle: (key: string) => void; credit: string | null;
   /** the passage you stopped at last time, when the book opened there */
   resumed: boolean;
+  /** the passage's number pressed: save the passage, or open its note (`unit` is its first unit's, as notes cite it) */
+  onPassage: (unit: string, button: HTMLElement) => void;
 }) {
   const english = row.trans.length > 0;
   if (!row.greek.length && cols === "greek") return null;   // English the Greek has no place for shows only beside it
   return (
     <section className={styles.row} id={`p-${row.key}`} aria-label={`Passage ${row.key}`}>
-      <div className={styles.ref} aria-hidden="true">{row.greek.length ? row.key : ""}{resumed && <span className={styles.resumed}>You stopped here</span>}</div>
+      <div className={styles.ref}>
+        {row.greek.length > 0 && (
+          <button type="button" className={styles.refBtn} title="Save this passage, or write a note on it"
+            aria-label={`Passage ${row.key}: save it, or write a note on it`} onClick={(e) => onPassage(row.greek[0].ref.join("."), e.currentTarget)}>{row.key}</button>
+        )}
+        {resumed && <span className={styles.resumed} aria-hidden="true">You stopped here</span>}
+      </div>
       <div className={styles.grc} lang="grc">
         {row.greek.map((u, k) => (
           <div key={k} data-u={u.ref.join(".")}><Blocks blocks={u.blocks} greek margin={k === 0 ? row.key : undefined} /></div>
@@ -201,13 +212,22 @@ export default function Reader() {
     if (open.has(key)) open.delete(key); else open.add(key);
     return { page: pageKey, open };
   }), [pageKey]);
+  // the narrator (Narrator.tsx): open while it reads, and where it was asked to begin; with only the Greek showing, it opens each
+  // passage's English as it reaches it
+  const [listen, setListen] = useState<ListenFrom | null>(null);
+  const showEnglish = useCallback((key: string) => setEnglish((e) => {
+    if (e.page === pageKey && e.open.has(key)) return e;
+    return { page: pageKey, open: new Set([...(e.page === pageKey ? e.open : []), key]) };
+  }), [pageKey]);
   // the word looked up, on this page only: a new page lets it go
   const word = chosen?.page === pageKey ? chosen : null;
   const edit = editing?.page === pageKey ? editing : null;
   // this book's notes, in the order of the book
   const notes = useMemo(() => {
     if (!doc) return [];
-    const at = (n: Note) => findRef(doc, n.anchor.unit) * 1e4 + (n.anchor.kind === "word" || n.anchor.kind === "words" ? n.anchor.i : n.anchor.kind === "line" ? n.anchor.line : -1);
+    // (the whole book first)
+    const at = (n: Note) => n.anchor.kind === "book" ? -1e12
+      : findRef(doc, n.anchor.unit) * 1e4 + (n.anchor.kind === "word" || n.anchor.kind === "words" ? n.anchor.i : n.anchor.kind === "line" ? n.anchor.line : -1);
     return shown(allNotes).filter((n) => n.work === workId).sort((a, b) => at(a) - at(b));
   }, [allNotes, doc, workId]);
 
@@ -241,6 +261,19 @@ export default function Reader() {
     close();
     setEditing({ e: { anchors }, page: pageKey, back });
   };
+  // a note opened in the panel without moving the text: the whole book's, or a passage's from its number in the margin
+  const editNote = useCallback((n: Note, back: HTMLElement | null) => {
+    close();
+    setEditing({ e: { note: n }, page: pageKey, back });
+  }, [close, pageKey]);
+  // a passage's number: the passage's note, or a new one on it, which can be saved without words (kept stable for RowView's memo)
+  const notesNow = useRef(allNotes);
+  useEffect(() => { notesNow.current = allNotes; }, [allNotes]);
+  const onPassage = useCallback((unit: string, button: HTMLElement) => {
+    const n = passageNote(notesNow.current, workId, unit);
+    close();
+    setEditing({ e: n ? { note: n } : { anchors: [{ kind: "passage", unit }] }, page: pageKey, back: button });
+  }, [close, pageKey, workId]);
   const words = () => [...document.querySelectorAll<HTMLElement>(`main .${styles.w}`)];
   const step = (dir: 1 | -1) => {
     if (!word) return;
@@ -291,7 +324,7 @@ export default function Reader() {
   }, [rows, findParam, columns]);
 
   // the keys of the whole page (the text's own keys, from word to word, come first: they mark the key as used)
-  const keys = useRef({ step: (dir: 1 | -1) => { void dir; }, turn: (dir: 1 | -1) => { void dir; }, escape: () => {} });
+  const keys = useRef({ step: (dir: 1 | -1) => { void dir; }, turn: (dir: 1 | -1) => { void dir; }, escape: () => {}, listen: (): boolean => false });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -304,6 +337,8 @@ export default function Reader() {
       } else if (e.key === "Escape") keys.current.escape();
       else if (e.key === "g") { e.preventDefault(); setAsk({ menu: "pages", n: Date.now() }); }
       else if (e.key === "?") { e.preventDefault(); setAsk({ menu: "keys", n: Date.now() }); }
+      // (once the narrator is open, its own keys take l)
+      else if (e.key === "l" && keys.current.listen()) e.preventDefault();
     };
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
@@ -324,6 +359,7 @@ export default function Reader() {
       step,
       turn: (dir) => { const i = page + dir; if (doc && i >= 0 && i < doc.chunks.length) router.push(href({ p: i })); },
       escape: () => { if (word) close(true); },
+      listen: () => { if (listen || !book?.tr) return false; setListen({ n: Date.now() }); return true; },
     };
   });
 
@@ -333,10 +369,11 @@ export default function Reader() {
   useEffect(() => {
     if (!noteParam || opened.current === `${pageKey}|${noteParam}`) return;
     const n = notes.find((x) => x.id === noteParam);
+    if (n?.anchor.kind === "book") { opened.current = `${pageKey}|${noteParam}`; queueMicrotask(() => editNote(n, null)); return; }
     const el = n && locate(n.anchor);
     // (it needs the page drawn, to find the note's place in it: so after this render, not during it)
     if (n && el) { opened.current = `${pageKey}|${noteParam}`; queueMicrotask(() => openNote(n, el)); }
-  }, [noteParam, notes, pageKey, openNote]);
+  }, [noteParam, notes, pageKey, openNote, editNote]);
 
   // the look-up's place (lib/lookup/placement.ts): the panel from the right, with the text moved aside for it where the column fits
   // beside it, or over the English where the Greek ends clear of it; otherwise the sheet
@@ -354,14 +391,16 @@ export default function Reader() {
   }, [rows, columns, greekSize]);
 
   // the word stays in sight, never under the look-up: above the sheet (as the sheet grows when its words arrive, too), or, beside
-  // the panel, inside the screen below the bar
+  // the panel, inside the screen below the bar. The sheet's second layer fills the screen and hides the text on purpose, so the
+  // page is left where it is under it. (The sheet's top is taken from its height at rest, not where it is drawn: it slides
+  // between its heights, and is dragged.)
   useLayoutEffect(() => {
     const panel = document.querySelector<HTMLElement>("[data-lookup]");
-    if (!word || !panel) return;
+    if (!word || !panel || (place === "sheet" && layer === 2)) return;
     const keepClear = () => {
       const r = word.el.getBoundingClientRect();
       const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
-      const bottom = place === "sheet" ? panel.getBoundingClientRect().top : innerHeight;
+      const bottom = place === "sheet" ? innerHeight - panel.offsetHeight : innerHeight;
       const room = 16;
       if (r.bottom > bottom - room) window.scrollBy({ top: r.bottom - bottom + room + (place === "sheet" ? r.height : 0) });
       else if (r.top < bar + room) window.scrollBy({ top: r.top - bar - room * 4 });
@@ -372,11 +411,21 @@ export default function Reader() {
     return () => watch.disconnect();
   }, [word, layer, place]);
 
+  const movesAside = (!!word || !!edit) && place === "drawer" && shift;
+  // When the text moves aside (or back), it slides under a mouse that has not moved, and the word now under the pointer turned
+  // terracotta, louder than the word being looked up (the critique of 2026-11-14). The hover colour waits for the mouse to move.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-still-pointer", "");
+    const moved = (e: PointerEvent) => { if (Math.abs(e.movementX) + Math.abs(e.movementY) > 1) root.removeAttribute("data-still-pointer"); };
+    addEventListener("pointermove", moved);
+    return () => { removeEventListener("pointermove", moved); root.removeAttribute("data-still-pointer"); };
+  }, [movesAside]);
   if (!workId) {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
         <p>No book is chosen.</p>
-        <Link className="btn" href="/">Go to the library</Link>
+        <Link className="btn" href="/library">Go to the library</Link>
       </main>
     );
   }
@@ -392,7 +441,7 @@ export default function Reader() {
     return (
       <main id="main" className={`wrap ${styles.status}`}>
         <p>This book could not be opened. {got.error}</p>
-        <div><button type="button" className="btn" onClick={() => location.reload()}>Try again</button> <Link className="btn ghost" href="/">Library</Link></div>
+        <div><button type="button" className="btn" onClick={() => location.reload()}>Try again</button> <Link className="btn ghost" href="/library">Library</Link></div>
       </main>
     );
   }
@@ -409,9 +458,25 @@ export default function Reader() {
   const aside = (!!word || !!edit) && place === "drawer" && shift;
   const bookName = `${book.author.name}, ${book.work.title}`;
   const fromMenu = (n: Note) => {
+    if (n.anchor.kind === "book") { editNote(n, null); return; }
     const el = locate(n.anchor);
     if (el) openNote(n, el);
     else router.push(`/read?w=${encodeURIComponent(workId)}&at=${encodeURIComponent(n.anchor.unit)}&note=${n.id}`);
+  };
+
+  // the Notes menu's Save this book and Save passage: saved at once, without words, and opened in the panel to colour or write on
+  const saveAt = (anchor: Anchor, had: Note | null) => {
+    const n: Note = had ?? { id: newId(), work: workId, book: bookName, anchor, colour: "red", text: "", updated: Date.now() };
+    if (!had) saveNote(n);
+    editNote(n, null);
+  };
+  const saveBook = () => saveAt({ kind: "book", unit: "" }, bookNote(allNotes, workId));
+  const savePassage = (unit: string) => saveAt({ kind: "passage", unit }, passageNote(allNotes, workId, unit));
+  // the passage at the top of the screen, under the bar
+  const here = () => {
+    const bar = document.querySelector("[data-reader-bar]")?.getBoundingClientRect().bottom ?? 0;
+    const row = [...document.querySelectorAll<HTMLElement>("main section[id^='p-']")].find((r) => r.getBoundingClientRect().bottom > bar + 8);
+    return row?.querySelector<HTMLElement>("[data-u]")?.dataset.u ?? null;
   };
 
   // words selected in one passage (two or more): offer a note on them
@@ -516,26 +581,30 @@ export default function Reader() {
   );
 
   return (
-    <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined} data-shift={aside || undefined}>
+    <main id="main" className={styles.reader} data-screen="reader" data-cols={book.tr ? columns : "greek"} data-sheet={sheetOpen || undefined} data-shift={aside || undefined} data-listening={listen ? "" : undefined}>
       {/* the text column's full width, measured to decide whether the text can move aside for the look-up */}
       <div data-col-probe="" className={styles.colProbe} aria-hidden="true" />
       <ReaderBar title={barTitle} showTitle={!titlePage} onTop={() => window.scrollTo(0, 0)} where={chunk.label} at={`page ${page + 1} of ${doc.chunks.length}`}
-        pages={doc.chunks.map((c) => c.label)} page={page} onPage={go} hasEnglish={!!book.tr} notes={notes} onNote={fromMenu} ask={ask}
+        pages={doc.chunks.map((c) => c.label)} page={page} onPage={go} hasEnglish={!!book.tr} notes={notes} onNote={fromMenu} here={here} onSaveBook={saveBook} onSavePassage={savePassage} ask={ask}
         example={example} goTo={goTo} find={(q) => findInBook(doc, q)} onFound={onFound}
         editions={book.editions.map((t) => option(t, book.editions))} edition={versionOf(book.grc.urn)} onEdition={(v) => choose2("ed", v)}
-        englishes={book.translations.map((t) => option(t, book.translations))} english={book.tr ? versionOf(book.tr.urn) : ""} onEnglish={(v) => choose2("tr", v)} />
+        englishes={book.translations.map((t) => option(t, book.translations))} english={book.tr ? versionOf(book.tr.urn) : ""} onEnglish={(v) => choose2("tr", v)}
+        listening={!!listen} onListen={() => setListen((l) => (l ? null : { n: Date.now() }))} />
 
       {titlePage && (
         <header className={`${styles.tp} enter`}>
-          <AuthorCaps id={book.author.id} name={book.author.name} />
-          <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
-          {greekTitle && <p className={styles.tpEn}>{book.work.title}</p>}
-          <p className={styles.orn} aria-hidden="true">❦</p>
+          {/* the title tondo (DESIGN.md, "Ornament"): the author, the title and its English inside the ring of tongues */}
+          <Ring kind="title" className={styles.tondo}>
+            <AuthorCaps id={book.author.id} name={book.author.name} />
+            <h1 className={styles.tpTitle}>{greekTitle ? <span lang="grc">{greekTitle}</span> : book.work.title}</h1>
+            {greekTitle && <p className={styles.tpEn}>{book.work.title}</p>}
+          </Ring>
           {book.private && <p className={styles.tpPrivate}><Icon name="lock" />Only you can see this</p>}
           <p className={styles.tpEd}>
             <span className={styles.edKind}>Greek</span> {describe(book.grc, book.work.texts)}
             {book.tr && <> · <span className={styles.edKind}>English</span> {describe(book.tr, book.work.texts)}</>}
           </p>
+          <p className={styles.tpHint}>Click or tap any Greek word for its meaning.</p>
         </header>
       )}
 
@@ -545,7 +614,7 @@ export default function Reader() {
             <span data-greek-probe="" lang="grc" className={styles.grc} hidden />
             {rows.map((r) => (
               <RowView key={r.key} row={r} cols={book.tr ? columns : "greek"} open={!!openEnglish?.has(r.key)} onToggle={toggleEnglish} credit={credit}
-                resumed={resumed?.work === workId && resumed.at === r.key && r.key !== doc.units[0].ref.join(".")} />
+                resumed={resumed?.work === workId && resumed.at === r.key && r.key !== doc.units[0].ref.join(".")} onPassage={onPassage} />
             ))}
           </div>
 
@@ -569,6 +638,12 @@ export default function Reader() {
 
       {lookup}
       {editor}
+
+      {!listen && book.tr && <ListenButton onListen={() => setListen({ n: Date.now() })} />}
+      {listen && book.tr && (
+        <Narrator work={workId} title={book.work.title} author={book.author.name} rows={rows} cols={columns} pageKey={pageKey}
+          hasNext={page < doc.chunks.length - 1} onNextPage={() => go(page + 1)} open={showEnglish} from={listen} onClose={() => setListen(null)} />
+      )}
     </main>
   );
 }

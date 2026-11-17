@@ -1,18 +1,16 @@
-/* The logo (Mark.tsx): the Σ in the page's colour on a red diamond, the name beside it in GFS Didot over small capitals */
-.mark { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; flex: none; min-width: 0; }
-.logo { flex: none; display: block; overflow: visible; }
+/* The logo (Mark.tsx), the start page's masthead: the Σ in the page's colour on a terracotta diamond, the name beside it in
+   Noto Serif Display at a page title's size, over the Latin letters in spaced capitals */
+.mark { display: inline-flex; align-items: center; gap: var(--space-4); color: var(--ink); min-width: 0; }
+.logo { flex: none; display: block; width: 72px; height: 72px; overflow: visible; }
 .diamond { fill: var(--accent); }
 .sigma { fill: var(--bg); }
-.words { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
-.words b { font: 400 1.22rem / 1.1 var(--face-didot); letter-spacing: 0.01em; white-space: nowrap; }
-.words i { font: 500 0.62rem / 1.2 var(--face-garamond); font-style: normal; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-2); margin-top: 4px; white-space: nowrap; }
-.mark:focus-visible .diamond { fill: var(--ink); }
-@media (hover: hover) { .mark:hover .diamond { fill: var(--ink); } }
-/* a phone: the logo a little nearer the name, so that Search and Menu stand beside it */
-@media (max-width: 430px) { .mark { gap: var(--space-2); } }
-/* a narrow phone: the name a size smaller, so Private texts, Saved and Sync stand beside it */
-@media (max-width: 420px) { .words b { font-size: 1.05rem; } .words i { letter-spacing: 0.08em; } }
-/* the narrowest phones: the name and its small capitals each break over two lines, so the links beside it keep their room */
-@media (max-width: 380px) { .words b, .words i { white-space: normal; } .words { max-width: 7.5em; } }
-/* the oldest, smallest phones (320 px): the logo alone; the name stays the link's name for a screen reader */
-@media (max-width: 340px) { .words { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
+.words { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.words b { font: 400 var(--t-title) / 1.05 var(--f-title); letter-spacing: -0.01em; }
+.words i { font: 500 var(--t-label) / 1.2 var(--f-label); font-style: normal; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-2); }
+/* a phone: the diamond a size smaller and nearer the name */
+@media (max-width: 760px) {
+  .mark { gap: var(--space-3); }
+  .logo { width: 56px; height: 56px; }
+}
+/* the narrowest phones: the name may break over two lines */
+@media (max-width: 380px) { .words i { letter-spacing: 0.14em; } }

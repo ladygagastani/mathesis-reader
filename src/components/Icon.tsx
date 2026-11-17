@@ -53,18 +53,38 @@ const ICONS = {
   "note": [["path", {d: "M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"}], ["path", {d: "M2 6h4"}], ["path", {d: "M2 10h4"}], ["path", {d: "M2 14h4"}], ["path", {d: "M2 18h4"}], ["path", {d: "M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"}]],
   // sync this device (Lucide "refresh-cw")
   "sync": [["path", {d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"}], ["path", {d: "M21 3v5h-5"}], ["path", {d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"}], ["path", {d: "M8 16H3v5"}]],
-  // a word kept for later (Lucide "bookmark")
+  // kept for later: a word, a passage, a book (Lucide "bookmark")
   "keep": [["path", {d: "m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"}]],
   // the library (Lucide "library")
   "library": [["path", {d: "m16 6 4 14"}], ["path", {d: "M12 6v14"}], ["path", {d: "M8 8v12"}], ["path", {d: "M4 4v16"}]],
-  // the paper page (Lucide "sun")
+  // the day page (Lucide "sun")
   "paper": [["circle", {cx: "12", cy: "12", r: "4"}], ["path", {d: "M12 2v2"}], ["path", {d: "M12 20v2"}], ["path", {d: "m4.93 4.93 1.41 1.41"}], ["path", {d: "m17.66 17.66 1.41 1.41"}], ["path", {d: "M2 12h2"}], ["path", {d: "M20 12h2"}], ["path", {d: "m6.34 17.66-1.41 1.41"}], ["path", {d: "m19.07 4.93-1.41 1.41"}]],
   // the night page (Lucide "moon")
   "night": [["path", {d: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"}]],
   // the keys of the keyboard (Lucide "keyboard")
   "keys": [["rect", {width: "20", height: "16", x: "2", y: "4", rx: "2"}], ["path", {d: "M6 8h.01"}], ["path", {d: "M10 8h.01"}], ["path", {d: "M14 8h.01"}], ["path", {d: "M18 8h.01"}], ["path", {d: "M8 12h.01"}], ["path", {d: "M12 12h.01"}], ["path", {d: "M16 12h.01"}], ["path", {d: "M7 16h10"}]],
+  // listen: the English read aloud (Lucide "headphones")
+  "listen": [["path", {d: "M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"}]],
+  // the voice reads on (Lucide "play")
+  "play": [["polygon", {points: "6 3 20 12 6 21 6 3"}]],
+  // the voice stops where it is (Lucide "pause")
+  "pause": [["rect", {x: "14", y: "4", width: "4", height: "16", rx: "1"}], ["rect", {x: "6", y: "4", width: "4", height: "16", rx: "1"}]],
+  // the passage before (Lucide "skip-back")
+  "passage-back": [["polygon", {points: "19 20 9 12 19 4 19 20"}], ["line", {x1: "5", x2: "5", y1: "19", y2: "5"}]],
+  // the passage after (Lucide "skip-forward")
+  "passage-next": [["polygon", {points: "5 4 15 12 5 20 5 4"}], ["line", {x1: "19", x2: "19", y1: "5", y2: "19"}]],
+  // the voice's settings (Lucide "settings-2")
+  "voice": [["path", {d: "M20 7h-9"}], ["path", {d: "M14 17H5"}], ["circle", {cx: "17", cy: "17", r: "3"}], ["circle", {cx: "7", cy: "7", r: "3"}]],
+  // a timer that stops the voice (Lucide "timer")
+  "timer": [["line", {x1: "10", x2: "14", y1: "2", y2: "2"}], ["line", {x1: "12", x2: "15", y1: "14", y2: "11"}], ["circle", {cx: "12", cy: "14", r: "8"}]],
+  // back to where the voice is (Lucide "locate-fixed")
+  "follow": [["line", {x1: "2", x2: "5", y1: "12", y2: "12"}], ["line", {x1: "19", x2: "22", y1: "12", y2: "12"}], ["line", {x1: "12", x2: "12", y1: "2", y2: "5"}], ["line", {x1: "12", x2: "12", y1: "19", y2: "22"}], ["circle", {cx: "12", cy: "12", r: "7"}], ["circle", {cx: "12", cy: "12", r: "3"}]],
   // opens on another site (Lucide "external-link")
   "outside": [["path", {d: "M15 3h6v6"}], ["path", {d: "M10 14 21 3"}], ["path", {d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"}]],
+  // the start page: what you are reading, what you saved, where to begin (Lucide "house")
+  "home": [["path", {d: "M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"}], ["path", {d: "M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"}]],
+  // the book you read last, opened where you stopped (Lucide "book-open")
+  "reading": [["path", {d: "M12 7v14"}], ["path", {d: "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"}]],
 } satisfies Record<string, Drawing>;
 
 export type IconName = keyof typeof ICONS;

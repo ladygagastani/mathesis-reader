@@ -126,3 +126,10 @@ export async function forgetNotes(): Promise<void> {
   write([]);
   writeWords([]);
 }
+
+/** Puts back a note just removed, as it was before (the menu's Undo). */
+export function restoreNote(n: Note) {
+  const { updated: _u, deleted: _d, ...rest } = n;
+  void _u; void _d;
+  saveNote(rest);
+}

@@ -1,6 +1,7 @@
-/* The word look-up (the old app's Reader.module.css, .wordNote and .wordSheet; ADR 0009). Paper, a hairline frame or edge, no
-   shadow; the dictionary form large in the Greek face and in ink; the meaning the largest English on the screen; red only for the
-   links and "More about it". */
+/* The word look-up (DESIGN.md, Tondo): the page's moment. A panel (or, on a phone, a sheet) on the second surface, a band of
+   tongues along its top edge, no shadow; the dictionary form in its ring of tongues (Ring.tsx), in Noto Serif Display; the meaning
+   the largest English on the screen, in the display face's light weight; terracotta for the ornament, the links and the one filled
+   button, "More about it". */
 .lookup {
   position: fixed; z-index: var(--z-panel); display: flex; flex-direction: column;
   background: var(--bg); color: var(--ink); line-height: 1.5; outline: none;
@@ -14,43 +15,119 @@
   overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
   padding: 0 var(--space-5) var(--space-5); font-size: var(--t-small); background: var(--surface);
   box-shadow: inset var(--hair) 0 0 var(--rule);
-  animation: drawer-in var(--dur-slow) var(--ease) backwards;
+  animation: drawer-in var(--dur-slide) var(--ease-drawer) backwards;
 }
 @keyframes drawer-in { from { translate: 100% 0; } }
-.drawer .head { position: sticky; top: 0; z-index: 1; padding-top: var(--space-4); background: var(--surface); }
+/* the band of tongues along the top edge (DESIGN.md, "Ornament"): two strengths of terracotta, cut into tongues by a mask */
+.lookup::before {
+  content: ""; flex: none; display: block; height: 10px; margin-inline: calc(-1 * var(--space-5)); position: sticky; top: 0; z-index: 2;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 6px, color-mix(in srgb, var(--accent) 40%, transparent) 6px 12px);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Crect x='1.25' width='3.5' height='10' rx='1.75'/%3E%3Crect x='7.25' width='3.5' height='10' rx='1.75'/%3E%3C/svg%3E") repeat-x;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Crect x='1.25' width='3.5' height='10' rx='1.75'/%3E%3Crect x='7.25' width='3.5' height='10' rx='1.75'/%3E%3C/svg%3E") repeat-x;
+}
+/* the head (and, in More about it, the line of Back and ×) sticks from the very top, under the band of tongues: the band's
+   gaps show the panel's own ground, not the words scrolling under it (the critique of 2026-11-14). In More about it only that
+   line sticks; the word in its ring scrolls away with the rest, so the entry has the panel's height to read in. */
+.drawer .head, .drawer .nav { position: sticky; top: 0; z-index: 1; margin-top: -10px; padding-top: calc(10px + var(--space-5)); background: var(--surface); }
+.drawer .nav { padding-top: calc(10px + var(--space-3)); padding-bottom: var(--space-1); box-shadow: 0 1px 0 var(--rule); }
+.drawer[data-layer="2"] .head { position: static; margin-top: 0; padding-top: var(--space-2); }
 .drawer .row { padding-top: var(--space-3); margin-top: var(--space-3); box-shadow: var(--rule-over); }
 
-/* a phone or a narrower window: a low sheet, about a quarter of the screen and as tall as its first layer needs (at most 45%), so
-   the meaning and the form both show without scrolling; a hairline along its top; "More about it" makes it tall */
+/* a phone or a narrower window: a low sheet, as tall as its first layer needs, up to 72 % of the screen, so the whole card shows
+   without scrolling: the meaning, this word here, the entry and how common it is (the owner, 2026-11-14: at 58 % the entry and
+   the counts were cut off on most words); a hairline along its top; "More about it" makes it tall */
 .sheet {
-  left: 0; right: 0; bottom: 0; min-height: clamp(180px, 25dvh, 400px); max-height: 45dvh;
-  box-shadow: 0 -1px 0 var(--rule);
-  animation: sheet-up 0.5s var(--ease) backwards;
+  left: 0; right: 0; bottom: 0; min-height: clamp(180px, 25dvh, 400px); max-height: 72dvh;
+  background: var(--surface); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; overflow: hidden;
+  /* a hairline along its top; and under it, the sheet's own ground carried far below the screen, so no gap shows beneath it
+     while it slides up from lower down (Lookup.tsx, goLayer). The ground starts below the rounded corners, so they stay round. */
+  box-shadow: 0 -1px 0 var(--rule), 0 calc(100vh + var(--radius-sheet)) 0 100vh var(--surface);
+  animation: sheet-up var(--dur-sheet) var(--ease-drawer) backwards;
 }
-.sheet[data-layer="2"] { height: 70dvh; max-height: none; }
-@keyframes sheet-up { from { transform: translateY(30px); opacity: 0; } }
-.sheet .head { padding: var(--space-2) var(--space-3) 0 var(--space-4); }
-.sheet .card { gap: var(--space-1); }
-.sheet .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-1) var(--space-4) var(--space-3); }
-.sheet .row { flex: none; padding: 0 var(--space-4) calc(var(--space-1) + env(safe-area-inset-bottom, 0px)); box-shadow: var(--rule-over); }
+.sheet::before { margin-inline: 0; }
+/* the second layer fills the screen, over the reader's bar, and hides the text (the owner, 2026-11-14: "take up the remaining
+   visual space"); its handle drags it back down to the low sheet. (Before, it stood at 64 % so the word stayed in sight.) */
+.sheet[data-layer="2"] {
+  top: 0; max-height: none; z-index: var(--z-menu); border-radius: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+/* the handle: a short bar in the hairline's ink, under the band of tongues; the head beside it drags too (Lookup.tsx, drag) */
+.grab {
+  position: absolute; top: calc(var(--space-4) + env(safe-area-inset-top, 0px)); left: 50%; z-index: 3;
+  width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--rule-strong); pointer-events: none;
+}
+.sheet:not([data-layer="2"]) .grab { top: var(--space-4); }
+.sheet .head, .sheet .nav { touch-action: none; cursor: grab; }
+.sheet .nav { padding: var(--space-5) var(--space-2) 0 var(--space-4); }
+.sheet[data-layer="2"] .head { padding-top: var(--space-1); }
+@keyframes sheet-up { from { translate: 0 100%; } }
+.sheet .head { padding: var(--space-5) var(--space-2) 0 var(--space-4); }
+/* the sheet's groups a little closer than the panel's, still apart: the meaning, the word here, the entry, the counts */
+.sheet .card { gap: var(--space-3); }
+.sheet .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-2) var(--space-4) var(--space-3); }
+/* the sheet's buttons on a grid, so none is left alone on a line at a phone's width: the arrows either side of More about it,
+   then Note and Save word, a half each */
+.sheet .row {
+  flex: none; display: grid; grid-template-columns: 46px 1fr 1fr 46px; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); box-shadow: var(--rule-over);
+}
+.sheet .prev:global(.text-btn) { grid-area: 1 / 1; }
+.sheet .more:global(.text-btn) { grid-area: 1 / 2 / 2 / 4; }
+.sheet .next:global(.text-btn) { grid-area: 1 / 4; }
+.sheet .note:global(.text-btn) { grid-area: 2 / 1 / 3 / 3; }
+.sheet .keep:global(.text-btn) { grid-area: 2 / 3 / 3 / 5; }
+.sheet .step:global(.text-btn) { width: 46px; min-height: 46px; margin: 0; }
+.sheet .act:global(.text-btn) { padding-inline: var(--space-3); }
 .sheet[data-layer="2"] .body { padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); }
+/* more under the fold of a short phone's sheet: its last lines fade, so the cut reads as "scroll", not as the end */
+.sheet .body[data-more] { mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent); }
 /* a wide sheet keeps its lines to a reading measure, in the middle */
 @media (min-width: 761px) {
-  .sheet .head, .sheet .body, .sheet .row { padding-inline: max(var(--space-5), calc((100% - 46rem) / 2)); }
+  .sheet .head, .sheet .nav, .sheet .body, .sheet .row { padding-inline: max(var(--space-5), calc((100% - 46rem) / 2)); }
+}
+/* a sheet wider than a phone: the buttons on one line, as in the panel, More about it at its own width (at 800 px the grid
+   stretched each across half the screen) */
+@media (min-width: 600px) {
+  .sheet .row { display: flex; }
+  .sheet .more:global(.text-btn) { flex: none; padding-inline: var(--space-6); }
 }
 
-/* the head: Back, the word, × */
-.head { display: flex; align-items: center; gap: var(--space-1); flex: none; }
-.pw {
-  flex: 1; min-width: 0; margin: 0; font-family: var(--f-greek); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  /* one line: a long word is set smaller to fit, never broken (--chars: its letters) */
-  font-size: max(var(--t-body), calc(var(--t-head) * min(1, 9.5 / var(--chars, 1)))); line-height: calc(1.1 * var(--t-head));
+/* the head: the word in its ring, and × on the first layer; in More about it a line above it of Back, Save word and × */
+.head { display: flex; align-items: center; gap: var(--space-2); flex: none; }
+.nav { display: flex; align-items: center; gap: var(--space-2); flex: none; }
+.nav .x:global(.icon-btn) { margin-left: 0; }
+.navSave:global(.text-btn) {
+  display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--space-6); margin-left: auto; padding-inline: var(--space-2);
+  font-size: var(--t-ui); color: var(--ink-2); text-decoration: none;
 }
-/* in the sheet the word is a size smaller, so the card's lines have the room (the old sheet's) */
-.sheet .pw { font-size: var(--t-lead); line-height: 1.2; }
-.drawer[data-layer="2"] .pw { font-size: max(var(--t-body), calc(var(--t-lead) * min(1, 9 / var(--chars, 1)))); line-height: calc(1.1 * var(--t-lead)); }
-.x:global(.icon-btn) { min-width: var(--space-6); width: var(--space-6); height: var(--space-6); font-size: var(--t-body); }
-@media (pointer: coarse) { .x:global(.icon-btn) { width: var(--tap); height: var(--tap); } }
+@media (hover: hover) { .navSave:global(.text-btn):hover { color: var(--accent); } }
+@media (pointer: coarse) { .navSave:global(.text-btn) { min-height: var(--tap); padding-inline: var(--space-3); } }
+.navSave[aria-pressed="true"]:global(.text-btn) { color: var(--ink); }
+.navSave[aria-pressed="true"] :global(svg) { fill: currentColor; }
+.pw {
+  flex: 1; min-width: 0; margin: 0; font-family: var(--f-title); font-weight: 400; color: var(--ink); white-space: nowrap;
+  /* one line in its ring: a long word is set smaller, down to --t-lead, never broken (--chars: its letters); past that the ring
+     grows into a stadium */
+  font-size: max(var(--t-lead), calc(var(--t-title) * min(1, 7 / var(--chars, 1)))); line-height: 1.15;
+}
+.pw [lang="grc"], .pw { font-family: var(--f-title); }
+/* in the sheet the word has no ring: it stands on a terracotta line, drawn in from the left as the sheet rises (the ring's
+   turning, in a line), and a long word wraps rather than being cut */
+.sheet .pw { font-size: max(var(--t-lead), calc(var(--t-head) * min(1, 9 / var(--chars, 1)))); line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
+.under {
+  display: inline-block; max-width: 100%; padding-bottom: var(--space-1);
+  background: linear-gradient(var(--accent), var(--accent)) left bottom / 100% var(--hair-2) no-repeat;
+  animation: underline var(--dur-ring) var(--ease-out) 40ms backwards;
+}
+@keyframes underline { from { background-size: 0 var(--hair-2); } }
+.drawer[data-layer="2"] .pw { font-size: max(var(--t-body), calc(var(--t-head) * min(1, 7 / var(--chars, 1)))); }
+/* the word rises into its ring as the ring turns in (DESIGN.md, "Motion") */
+.pw > span > span:last-child { animation: ink var(--dur-word) var(--ease-out) 40ms backwards; }
+/* a word of five letters or fewer stands in a circle, as the title does */
+.round { aspect-ratio: 1; }
+@media (max-height: 520px) { .sheet .head { padding-top: var(--space-2); } }
+.x:global(.icon-btn) { flex: none; min-width: var(--tap); width: var(--tap); height: var(--tap); margin-left: auto; font-size: var(--t-body); }
+@media (pointer: coarse) { .x:global(.icon-btn) { width: 44px; height: 44px; } }
 .back:global(.text-btn) {
   flex: none; display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--space-6);
   padding-inline: var(--space-2); margin-left: calc(-1 * var(--space-2)); font-size: var(--t-ui); color: var(--ink-2); text-decoration: none;
@@ -58,25 +135,37 @@
 @media (hover: hover) { .back:global(.text-btn):hover { color: var(--accent); } }
 @media (pointer: coarse) { .back:global(.text-btn) { min-height: var(--tap); padding-inline: var(--space-3); margin-left: calc(-1 * var(--space-3)); } }
 
-.body { display: grid; align-content: start; gap: var(--space-3); }
+.body { display: grid; align-content: start; gap: var(--space-3); padding-top: var(--space-3); }
 
-/* layer one */
-.card { display: grid; gap: var(--space-2); align-content: start; }
-/* the kind of word in the rubric's small capitals, then the form tapped in the Greek face */
-.kind { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-2); font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
-.kindName { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
-.tapped { color: var(--ink); }
-/* the core list's full heading: the genitive and article, or the principal parts */
+/* layer one: the meaning, this word here, the dictionary's heading and the kind of word, how common it is */
+.card { display: grid; gap: var(--space-4); align-content: start; }
+/* the rest of the dictionary's heading in the Greek face, and the kind of word under it in plain words: quiet, after the
+   meaning and the word here (no longer terracotta capitals between the word and its meaning) */
+.entry { display: grid; gap: 2px; }
 .heading { font-family: var(--f-greek); font-size: var(--t-ui); line-height: 1.4; color: var(--ink-2); overflow-wrap: anywhere; }
-/* the meaning is never smaller than the Greek it explains */
-.meaning { font: 400 var(--t-lead) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; font-size: max(var(--t-lead), var(--greek-size)); }
-/* the grammar, one word to a part, each in a hairline frame */
-.parts { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: var(--space-1) 0 0; padding: 0; list-style: none; }
-.parts li {
-  font-family: var(--f-label); font-size: var(--t-label); line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);
-  padding: 0.45em 0.7em 0.4em; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: transparent;
-}
-.role { font-size: var(--t-ui); line-height: 1.4; color: var(--ink-2); }
+.kind { font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
+.kind::first-letter { text-transform: uppercase; }
+/* the meaning: the largest English on the screen, never smaller than the Greek it explains; in Literata, the face made for
+   reading, at its regular weight (the owner, 2026-11-14: in Noto Serif Display's light weight it was too thin to read) */
+.meaning { font: 400 var(--t-head) / 1.22 var(--f-prose); color: var(--ink); overflow-wrap: anywhere; }
+/* the meaning with, under it, where it comes from when that is not the core list or LSJ ("Under ἐπεί in LSJ"), in the second ink */
+.said { display: grid; gap: var(--space-1); }
+.from { font-size: var(--t-small); line-height: 1.4; color: var(--ink-2); }
+.from [lang="grc"] { font-family: var(--f-greek); }
+/* this word where it stands: the form as the text writes it, its grammar after it in words, then its part in the sentence */
+.here { display: grid; gap: var(--space-1); }
+.formLine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-3); }
+.form { font-family: var(--f-greek); font-size: var(--t-body); line-height: 1.35; color: var(--ink); }
+/* a meaning longer than about two lines of the panel steps down to the lead size, the sheet's down to the body size */
+.meaning[data-long] { font-size: var(--t-lead); line-height: 1.22; }
+.sheet .meaning { font-size: var(--t-lead); }
+.sheet .meaning[data-long] { font-size: var(--t-body); line-height: 1.3; }
+/* the grammar in words, its phrases parted by a middle dot: not pills, which looked like the buttons and did nothing */
+.parts { display: flex; flex-wrap: wrap; gap: 0 0.45em; margin: 0; padding: 0; list-style: none; font-family: var(--f-body); font-size: var(--t-small); line-height: 1.45; color: var(--ink-2); }
+.parts li + li::before { content: "·"; margin-right: 0.45em; color: var(--ink-3); }
+/* an analysis that is not of this very word is set fainter, under its plain warning, so it does not look as sure */
+.here[data-unsure] .parts { color: var(--ink-3); }
+.role { font-size: var(--t-ui); line-height: 1.5; color: var(--ink-2); }
 .gov { font-family: var(--f-greek); color: var(--ink); }
 .unsure { font-size: var(--t-small); font-style: italic; color: var(--ink-2); }
 /* how common the word is: a quiet line under a short rule */
@@ -85,28 +174,55 @@
   border-top: 1px solid var(--rule); font-size: var(--t-small); line-height: 1.4; color: var(--ink-2);
 }
 .facts span { display: inline-flex; align-items: baseline; gap: 0.5em; }
-.facts span::before { content: ""; flex: none; width: 0.35em; height: 0.35em; border-radius: 50%; background: var(--accent); translate: 0 -0.15em; }
+.facts span::before { content: ""; flex: none; width: 0.3em; height: 0.3em; border-radius: 50%; background: var(--ink-3); translate: 0 -0.15em; }
+.facts { font-variant-numeric: lining-nums; }
 
-/* Previous, Next and More about it */
-.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4); }
-.row :global(.text-btn) { display: inline-flex; align-items: center; gap: var(--space-1); }
-.step:global(.text-btn) { color: var(--ink-2); text-decoration: none; }
-@media (hover: hover) { .step:global(.text-btn):hover { color: var(--accent); } }
-.more:global(.text-btn) { margin-left: auto; color: var(--accent); }
-.more:global(.text-btn):disabled { opacity: 0.45; cursor: default; }
-@media (pointer: coarse) { .row :global(.text-btn) { min-height: var(--tap); padding-inline: var(--space-1); } }
+/* while it loads: the meaning's and the grammar's places in faint lines, still (nothing shimmers while you read) */
+.waiting { display: grid; gap: var(--space-3); padding-top: var(--space-1); }
+.ghost { display: block; border-radius: 6px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.ghost[data-w="long"] { width: 78%; height: 30px; }
+.ghost[data-w="short"] { width: 46%; height: 14px; }
+.waitWords { font-size: var(--t-small); color: var(--ink-3); }
+/* could not be loaded: what happened in plain words, at the reading size, and Try again */
+.failure { display: grid; justify-items: start; gap: var(--space-3); }
+.failure p { font-size: var(--t-ui); line-height: 1.5; color: var(--ink); }
+.retry:global(.text-btn) {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--tap); padding-inline: var(--space-4);
+  border-radius: var(--pill); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); text-decoration: none; font-size: var(--t-ui);
+}
+@media (hover: hover) { .retry:global(.text-btn):hover { color: var(--accent); background: var(--word-on); } }
+/* pressed, the look-up's own buttons sink to 97 % (DESIGN.md, "Motion"), as those in its row do */
+.retry:global(.text-btn), .navSave:global(.text-btn) { transition: color var(--dur-quick) var(--ease), background-color var(--dur-quick) var(--ease), scale var(--dur-press) var(--ease); }
+.retry:global(.text-btn):active, .navSave:global(.text-btn):active { scale: 0.97; }
 
-/* layer two: the word's kind and meaning a size smaller under a hairline, then each part under a small-capitals heading and a hairline */
+/* More about it, the one filled pill, across the panel; Note and Save word, hairline pills; the arrows to the word before and
+   after, round, at the end of the line (DESIGN.md, "Touch": 46 px pills, 44 px arrows) */
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.row :global(.text-btn) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 46px; text-decoration: none; font-family: var(--f-body); font-size: var(--t-ui); transition: color var(--dur-quick) var(--ease), background-color var(--dur-quick) var(--ease), scale var(--dur-press) var(--ease); }
+.row :global(.text-btn):where(:not(:disabled)):active { scale: 0.97; }
+.act:global(.text-btn) { color: var(--ink); padding-inline: var(--space-4); border-radius: var(--pill); box-shadow: inset 0 0 0 1px var(--line); }
+@media (hover: hover) { .act:global(.text-btn):hover { color: var(--accent); background: var(--word-on); } }
+.step:global(.text-btn) { width: 44px; min-height: 44px; padding: 0; border-radius: 50%; color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+.act + .step:global(.text-btn) { margin-left: auto; }
+@media (hover: hover) { .step:global(.text-btn):hover { color: var(--accent); box-shadow: inset 0 0 0 1px var(--line); } }
+.more:global(.text-btn) { flex: 1 0 100%; padding-inline: var(--space-5); border-radius: var(--pill); background: var(--btn-bg); color: var(--btn-ink); font-weight: 500; }
+@media (hover: hover) { .more:global(.text-btn):where(:not(:disabled)):hover { background: color-mix(in srgb, var(--accent) 86%, var(--ink)); } }
+.more:global(.text-btn):disabled { background: transparent; color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--rule); cursor: default; }
+/* pressed under a finger, the filled pill goes a shade deeper, as under the mouse, and never takes the light tint the others do */
+.row .more:global(.text-btn):where(:not(:disabled)):active { background: color-mix(in srgb, var(--accent) 86%, var(--ink)); }
+
+/* layer two: the meaning a size smaller, the dictionary's heading and how common it is, then each part under a small-capitals
+   heading and a hairline */
 .second { display: grid; gap: var(--space-3); animation: ink var(--dur) var(--ease) backwards; }
 .second > * + * { padding-top: var(--space-4); box-shadow: var(--rule-over); }
-.recap { display: grid; gap: var(--space-1); }
-.recapMeaning { font: 400 var(--t-body) / 1.25 var(--f-body); color: var(--ink); overflow-wrap: anywhere; }
+.recap { display: grid; gap: var(--space-2); }
+.recapMeaning { font: 400 var(--t-lead) / 1.25 var(--f-prose); color: var(--ink); overflow-wrap: anywhere; }
 .sec { display: grid; gap: var(--space-2); }
-.sec :global(h3.label) { font-size: var(--t-label); letter-spacing: 0.08em; color: var(--ink-3); }
-.lsj { display: grid; gap: var(--space-2); line-height: 1.55; }
+.sec :global(h2.label) { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.14em; color: var(--accent); }
+.lsj { display: grid; gap: var(--space-2); line-height: 1.55; font-family: var(--f-prose); }
 .lsj[data-clip] { max-height: calc(6 * 1.55em + var(--space-2)); overflow: hidden; }
 .lsj[data-clipped] { mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 2.5em), transparent); }
-.senseN { font-family: var(--f-label); color: var(--accent); }
+.senseN { font-family: var(--f-label); font-weight: 500; color: var(--accent); }
 .cite { color: var(--ink-2); text-decoration-color: var(--accent); text-underline-offset: 2px; }
 @media (hover: hover) { .cite:hover { color: var(--accent); } }
 .quietBtn:global(.text-btn) { justify-self: start; }
@@ -114,12 +230,14 @@
 .fine { font-size: var(--t-label); color: var(--ink-2); }
 /* Wiktionary: each part of speech under its name, the senses numbered in the rubric, an example indented under its sense */
 .wsense { display: grid; gap: var(--space-1); }
-.wpos { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
-.wlist { display: grid; gap: var(--space-1); margin: 0; padding-left: 1.6em; }
+.wpos { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+/* Wiktionary's senses in the prose face, as LSJ and the etymology are */
+.wlist { display: grid; gap: var(--space-1); margin: 0; padding-left: 1.6em; font-family: var(--f-prose); line-height: 1.5; }
 .wlist li::marker { font-family: var(--f-label); font-size: 0.85em; color: var(--accent); }
 .wnote { display: block; margin-top: 0.15em; padding-left: var(--space-2); border-left: 1px solid var(--rule); font-size: var(--t-small); font-style: italic; color: var(--ink-2); }
 /* the word's family: where it comes from, then the words built on it as a run of words */
-.etym { line-height: 1.5; color: var(--ink); }
+/* where the word comes from: after its relatives, quieter, as the deep history it is */
+.etym { line-height: 1.5; color: var(--ink-2); font-family: var(--f-prose); font-size: var(--t-small); }
 .kin { display: grid; gap: var(--space-1); }
 .words { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); line-height: 1.4; list-style: none; margin: 0; padding: 0; }
 .words > [lang="grc"], .words[lang="grc"] > span { font-family: var(--f-greek); }
@@ -129,11 +247,14 @@
   text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px;
 }
 @media (hover: hover) { .kinWord:hover { color: var(--accent); } }
-@media (pointer: coarse) { .kinWord { min-height: var(--tap); } }
+.words .kinWord { min-height: 32px; }
+/* a word LSJ sends the reader to ("see εἴδω") is a link inside its line, inline like one (WCAG 2.5.8, inline targets) */
+.lsj .kinWord { display: inline; }
+@media (pointer: coarse) { .words .kinWord { min-height: var(--tap); min-width: var(--tap); } }
 
 /* other dictionaries: a link each, and what it holds */
 .dicts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
-.dicts a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 2px; }
+.dicts a { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 32px; color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 2px; }
 @media (hover: hover) { .dicts a:hover { color: var(--accent); } }
 @media (pointer: coarse) { .dicts a { min-height: var(--tap); } }
 /* Save word: the sign filled once the word is saved */

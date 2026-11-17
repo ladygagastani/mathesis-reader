@@ -32,8 +32,9 @@ export function locateAll(a: Anchor): HTMLElement[] {
   return ws.slice(i, i + a.n);
 }
 
-/** The element a note stands on (a run of words: its first word), on this page; null when it is on another page. */
+/** The element a note stands on (a run of words: its first word), on this page; null when it is on another page, or on the whole book. */
 export function locate(a: Anchor): HTMLElement | null {
+  if (a.kind === "book") return null;
   const unit = document.querySelector<HTMLElement>(`main [data-u="${CSS.escape(a.unit)}"]`);
   if (!unit) return null;
   if (a.kind === "passage") return unit.closest("section");
@@ -85,7 +86,7 @@ export default function NoteMarks({ notes, layout, onOpen }: {
     <nav className={styles.marks} aria-label="Notes on this page">
       {marks.map((m) => {
         const first = m.notes[0];
-        const label = m.notes.length > 1 ? `${m.notes.length} notes, from ${placeName(first.anchor)}` : `Note on ${placeName(first.anchor)}: ${first.text.slice(0, 60)}`;
+        const label = m.notes.length > 1 ? `${m.notes.length} notes, from ${placeName(first.anchor)}` : first.text ? `Note on ${placeName(first.anchor)}: ${first.text.slice(0, 60)}` : `Saved: ${placeName(first.anchor)}`;
         return (
           <button key={first.id} type="button" className={styles.markBtn} style={{ top: m.top }} aria-label={label} title={label}
             onClick={() => { const el = locate(first.anchor); if (el) onOpen(first, el); }}>

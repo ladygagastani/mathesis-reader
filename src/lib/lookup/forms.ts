@@ -7,7 +7,8 @@ import { lookupForm } from "@/lib/greek";
 import { shardOf } from "./lsj";
 import { norm, type Analysis } from "./words";
 
-export const FORMS = "/forms";
+/** under the site's folder when it is served from one (next.config.ts, basePath) */
+export const FORMS = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/forms`;
 
 interface Shard { l: string[]; t: string[]; f: Record<string, number[]> }
 const shards = new Map<string, Promise<Shard | null>>();

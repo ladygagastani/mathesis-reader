@@ -2,10 +2,11 @@
 // Lighthouse's "slow 4G" phone (1.6 Mbit/s down, 150 ms round trip, the processor slowed 4 times), an empty cache, offline helpers
 // blocked, three runs each (the middle one reported). It reports what crossed the network until the first Greek word showed, by
 // kind, and the time to that word; then the time and bytes until the first look-up (the 15th word) was ready.
-// usage: node scripts/weigh.mjs <new-base-url>      (the old reader is read from the live site; nothing there is changed)
+// usage: node scripts/weigh.mjs <new-base-url> [new]  (the old reader is read from the live site; nothing there is changed;
+//        with "new", only the new reader is weighed)
 import { chromium } from "playwright";
 
-const [base = "http://localhost:3300"] = process.argv.slice(2);
+const [base = "http://localhost:3300", only] = process.argv.slice(2);
 const READERS = {
   new: { url: `${base}/read?w=tlg0059.tlg002`, word: "main [role=button]", ready: "[data-lookup] [aria-busy=false]" },
   old: { url: "https://mathesisstoicheion.com/read?w=tlg0059.tlg002", word: "main span[data-w]", ready: "text=you tapped" },
@@ -44,7 +45,7 @@ async function run(r) {
 }
 
 const kb = (n) => `${Math.round(n / 1024)} KB`;
-for (const [name, r] of Object.entries(READERS)) {
+for (const [name, r] of Object.entries(READERS).filter(([name]) => !only || name === only)) {
   const runs = [];
   for (let i = 0; i < 3; i++) runs.push(await run(r));
   runs.sort((a, b) => a.firstWord - b.firstWord);

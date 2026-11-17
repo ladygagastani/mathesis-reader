@@ -16,14 +16,56 @@
 }
 @media (hover: hover) { .link:hover { color: var(--accent); } }
 .link[aria-current="page"] { color: var(--ink); }
+/* pressed under a finger: a pill of the tapped word's tint behind the words (globals.css, "pressing") */
+.link { isolation: isolate; transition: color var(--dur-quick) var(--ease), scale var(--dur-press) var(--ease); }
+.link::before {
+  content: ""; position: absolute; inset: var(--space-1) 0; z-index: -1; border-radius: var(--pill); background: var(--press);
+  opacity: 0; transition: opacity var(--dur) var(--ease);
+}
+@media (pointer: coarse) { .link:active { scale: 0.97; } .link:active::before { opacity: 1; transition-duration: 0s; } }
 .link[aria-current="page"]::after { content: ""; position: absolute; left: var(--space-2); right: var(--space-2); bottom: 0; height: 2px; background: var(--accent); }
 /* the switch's room before the page knows the device's choice, so nothing moves when it appears */
 .themeSpace { display: inline-block; width: 5.5em; }
 
-/* a narrow window (phones come later): the bar scrolls away with the page and wraps, so nothing stands over the page or off it */
+/* the foot bar is a phone's alone */
+.foot { display: none; }
+
+/* a phone (the owner, 2026-11-14): Home, Library and Reading move to a bar at the foot; what is left at the top,
+   Saved, Sync and Day/Night (and your private texts), is spaced evenly across a slim bar that scrolls away with the page */
 @media (max-width: 760px) {
-  .bar { position: static; }
-  .in { flex-wrap: wrap; height: auto; min-height: var(--bar-h); gap: 0 var(--space-3); }
-  .links { margin-left: 0; flex-wrap: wrap; }
+  /* relative, not static: the private texts' list is placed against the bar (static, the list fell to the middle of the page) */
+  .bar { position: relative; }
+  .main { display: none; }
+  .in { height: 52px; gap: 0; }
+  .links { flex: 1; justify-content: space-evenly; gap: 0; margin-left: 0; }
   .link { height: 44px; }
+
+  /* the bar at the foot: three tabs of equal width, each its sign over its name, on the second surface with a hairline over it.
+     The page you are on is in terracotta, with a short terracotta rule along the top edge (the top bar's rule, turned over). */
+  .foot {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-bar);
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0 max(var(--space-2), env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(var(--space-2), env(safe-area-inset-left, 0px));
+    background: color-mix(in srgb, var(--surface) 92%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 var(--rule);
+  }
+  .tab {
+    position: relative; isolation: isolate; display: grid; justify-items: center; align-content: center; gap: 2px; min-height: 58px;
+    color: var(--ink-2); font: 500 var(--t-label) / 1.2 var(--f-body); letter-spacing: 0.02em; text-decoration: none;
+    transition: color var(--dur-quick) var(--ease), scale var(--dur-press) var(--ease);
+  }
+  .tab svg { width: 24px; height: 24px; }
+  .tab[aria-current="page"] { color: var(--accent); }
+  .tab[aria-current="page"]::after { content: ""; position: absolute; top: 0; left: 50%; width: 32px; height: 2px; margin-left: -16px; background: var(--accent); border-radius: 0 0 2px 2px; }
+  /* pressed: the tapped word's tint, a pill behind the sign and the name (globals.css, "pressing") */
+  .tab::before {
+    content: ""; position: absolute; inset: 6px 10%; z-index: -1; border-radius: var(--radius); background: var(--press);
+    opacity: 0; transition: opacity var(--dur) var(--ease);
+  }
+  .tab:active { scale: 0.97; }
+  .tab:active::before { opacity: 1; transition-duration: 0s; }
+  .tab:focus-visible { outline-offset: -4px; }
+
+  /* the page's foot stays clear of the bar */
+  :global(body:has([data-foot-bar])) { padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
 }

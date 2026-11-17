@@ -39,10 +39,31 @@ export function loadCatalog(): Promise<CatalogIndex> {
   return pending;
 }
 
+/** under the site's folder when it is served from one (next.config.ts, basePath) */
+export const WORK_CATALOG = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/catalog`;
+const workCatalogs = new Map<string, Promise<CatalogIndex>>();
+
+/**
+ * One work's entry, with its author and the collections' pinned versions, as a catalogue of its own (scripts/build-catalog.mjs,
+ * served by this app): about 1 KB, where the whole catalogue is 237 KB, so a book opens without waiting for the library. The
+ * whole catalogue is used instead when it is already loaded, and when the work has no entry of its own.
+ */
+export function loadWorkCatalog(workId: string): Promise<CatalogIndex> {
+  if (pending) return pending;
+  if (!workCatalogs.has(workId)) {
+    workCatalogs.set(workId, fetch(`${WORK_CATALOG}/${encodeURIComponent(workId)}.json`)
+      .then((r) => { if (!r.ok) throw new Error(`no entry for ${workId} (${r.status})`); return r.json() as Promise<Catalog>; })
+      .then((c) => indexCatalog(c, false))
+      .catch(() => { workCatalogs.delete(workId); return loadCatalog(); }));
+  }
+  return workCatalogs.get(workId)!;
+}
+
 /** The catalogue indexed last, which describe() asks for a text's fellow editions when it is not given them. */
 let lastIndex: CatalogIndex | null = null;
 
-export function indexCatalog(catalog: Catalog): CatalogIndex {
+/** `remember`: false for one work's entry, which must not stand in for the whole catalogue in describe() */
+export function indexCatalog(catalog: Catalog, remember = true): CatalogIndex {
   const idx: CatalogIndex = { catalog, work: new Map(), authorOf: new Map(), text: new Map(), author: new Map() };
   for (const a of catalog.authors) {
     idx.author.set(a.id, a);
@@ -52,7 +73,7 @@ export function indexCatalog(catalog: Catalog): CatalogIndex {
       for (const t of w.texts) idx.text.set(t.urn, t);
     }
   }
-  lastIndex = idx;
+  if (remember || !lastIndex) lastIndex = idx;
   return idx;
 }
 

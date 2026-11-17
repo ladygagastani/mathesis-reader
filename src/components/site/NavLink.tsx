@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./SiteBar.module.css";
 
-export default function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+export default function NavLink({ href, className = styles.link, children }: { href: string; className?: string; children: React.ReactNode }) {
   const here = usePathname() === href;
-  return <Link className={styles.link} href={href} aria-current={here ? "page" : undefined}>{children}</Link>;
+  return <Link className={className} href={href} aria-current={here ? "page" : undefined}>{children}</Link>;
 }

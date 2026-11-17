@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { lookupCard, NO_ENTRY, NO_SHORT, treeAt, type CardInput } from "./card";
+import { couldNotLoad, lookupCard, NAME_NO_ENTRY, NAME_NO_SHORT, nameMeaning, NO_ENTRY, NO_SHORT, treeAt, trimShort, type CardInput } from "./card";
+
+describe("couldNotLoad", () => {
+  it("tells a dictionary that failed to load from a word it lacks", () => {
+    expect(couldNotLoad(NO_ENTRY, [undefined, "Failed to fetch"])).toBe(true);
+    expect(couldNotLoad(NO_ENTRY, [undefined, undefined])).toBe(false);
+    expect(couldNotLoad("to know", ["Failed to fetch"])).toBe(false);
+  });
+});
 import { analyse, type WordPack } from "./words";
 import { readSyntax } from "@/lib/syntax";
 import type { TeiDoc } from "@/lib/tei/types";
@@ -45,7 +53,7 @@ describe("the look-up card for μῆνιν, Iliad 1.1", () => {
   });
   it("gives the grammar in plain words", () => expect(c.grammar).toBe("Accusative singular"));
   it("says what it does in the sentence, from the treebank", () => {
-    expect(c.role).toEqual({ text: "object of ἄειδε", lead: "Here it is the object of", governor: "ἄειδε" });
+    expect(c.role).toEqual({ text: "object of ἄειδε", lead: "Here, it is the object of", governor: "ἄειδε" });
   });
 });
 
@@ -54,7 +62,7 @@ describe("the role in the sentence", () => {
     const c = card("1.1", 1);   // ἄειδε
     expect(c.kind).toBe("verb");
     expect(c.grammar).toBe("Present active imperative, 2nd person singular");
-    expect(c.role).toEqual({ text: "main verb of the sentence", lead: "Here it is the main verb of the sentence", governor: null });
+    expect(c.role).toEqual({ text: "main verb of the sentence", lead: "Here, it is the main verb of the sentence", governor: null });
   });
   it("reaches the word a genitive describes", () => {
     expect(card("1.1", 3).role?.text).toBe("attribute of Ἀχιλῆος");   // Πηληϊάδεω
@@ -94,34 +102,94 @@ describe("the meaning line", () => {
     expect(lsj["ψυχή"].entries[0].s).not.toBe("breath, life, soul");   // LSJ's own short definition is a different one
     expect(c.grammar).toBe("Accusative plural");
   });
-  it("says plainly when neither dictionary has the word", () => {
+  it("says plainly when neither dictionary has the word, and that a name is a name", () => {
     const c = card("1.1", 3);   // Πηληϊάδεω: Πηληϊάδης is in neither
     expect(c.lemma).toBe("Πηληϊάδης");
-    expect(c.meaning).toEqual({ text: NO_ENTRY, source: null });
+    expect(c.meaning).toEqual({ text: NAME_NO_ENTRY, source: null });
+    expect(c.kind).toMatch(/^proper noun/);
+    expect(lookupCard({ ...input("1.1", 3), analysis: { lemma: "πηληϊάδης", tag: "n-s---mg-" } }).meaning).toEqual({ text: NO_ENTRY, source: null });
     expect(NO_ENTRY).toBe("Not in the dictionaries this site uses.");
   });
   it("says plainly when LSJ has an entry but no short definition", () => {
     const c = card("1.1", 4);   // Ἀχιλῆος: LSJ's Ἀχιλλεύς has no short definition
     expect(lsj["Ἀχιλλεύς"].entries[0].s).toBe("");
-    expect(c.meaning).toEqual({ text: NO_SHORT, source: null });
+    expect(c.meaning).toEqual({ text: NAME_NO_SHORT, source: null });
+    expect(lookupCard({ ...input("1.1", 4), analysis: { lemma: "ἀχιλλεύς", tag: "n-s---mg-" } }).meaning).toEqual({ text: NO_SHORT, source: null });
   });
-  it("never makes one up: every meaning is a core definition or LSJ's short definition, word for word", () => {
+  it("says what a name names, from Wiktionary, where neither dictionary does", () => {
+    const sense = (pos: string, line: string) => [{ pos, lines: [line], lemma: null }];
+    const said = (line: string, pos = "Proper noun") => nameMeaning(sense(pos, line));
+    expect(said("a male given name, equivalent to English Adeimantus")).toBe("Adeimantus, a man’s name");
+    expect(said("a male given name, Parmenides, notably borne by the pre-Socratic philosopher Parmenides of Elea")).toBe("Parmenides, a man’s name");
+    expect(said("a female given name, equivalent to English Phaedra")).toBe("Phaedra, a woman’s name");
+    expect(said("Athens (the largest city in Attica, Greece)")).toBe("Athens, a city");
+    expect(said("the river Scamander; the river Karamenderes")).toBe("Scamander, a river");
+    expect(said("Olympus (a mountain in Greece)")).toBe("Olympus, a mountain");
+    expect(said("Clazomenae; Klazomenai; Kilizman, Turkey")).toBe("Clazomenae, a place");
+    expect(said("Homer")).toBe("Homer, a proper name");
+    expect(said("to Athens", "Adverb")).toBe("to Athens");
+    expect(nameMeaning(null)).toBeNull();
+    const c = lookupCard({ ...input("1.1", 3), wikt: sense("Proper noun", "a male given name, Peleides") });
+    expect(c.meaning).toEqual({ text: "Peleides, a man’s name", source: "wikt" });
+    // a common word is never given Wiktionary's line: the card says the dictionaries lack it
+    expect(lookupCard({ ...input("1.1", 3), analysis: { lemma: "πηληϊάδης", tag: "n-s---mg-" }, wikt: sense("Noun", "x") }).meaning.source).toBeNull();
+  });
+  it("takes LSJ's short definition from the first of its entries for the word that has one", () => {
+    // ὥρα: LSJ's first ὥρα is "some part of a sacrificial victim", with no short definition; its next is the season
+    const lsjOf = { head: "ὥρα", entries: [{ s: "" }, { s: "any period, part of the year, season" }] };
+    const c = lookupCard({ ...input("1.1", 3), analysis: { lemma: "ὥρα", tag: "n-s---fn-" }, core: null, lsj: lsjOf });
+    expect(c.meaning).toEqual({ text: "any period, part of the year, season", source: "lsj" });
+  });
+  it("gives the meaning list's meaning where neither the core list nor LSJ gives one, with the word it is given under", () => {
+    const at = { ...input("1.1", 4), analysis: { lemma: "ἐπειδή", tag: "c--------" }, core: null };
+    // LSJ's whole entry for ἐπειδή is "v. ἐπεί": no short definition
+    const lsjOf = { head: "ἐπειδή", entries: [{ s: "" }] };
+    expect(lookupCard({ ...at, lsj: lsjOf, listed: { text: "after, since", source: "w", under: null } }).meaning)
+      .toEqual({ text: "after, since", source: "wikt", under: null });
+    expect(lookupCard({ ...at, lsj: lsjOf, listed: { text: "since, when, when, after", source: "l", under: "ἐπεί" } }).meaning)
+      .toEqual({ text: "since, when, after", source: "lsj", under: "ἐπεί" });
+    expect(lookupCard({ ...at, lsj: null, listed: { text: "a watching or guarding, watch, guard, ward", source: "m", under: null } }).meaning)
+      .toEqual({ text: "a watching or guarding, watch, guard, ward", source: "ml", under: null });
+    // the core list and LSJ come first
+    expect(lookupCard({ ...at, lsj: { head: "ἐπειδή", entries: [{ s: "since" }] }, listed: { text: "x", source: "w", under: null } }).meaning.source).toBe("lsj");
+    // and without the list, the plain statement as before
+    expect(lookupCard({ ...at, lsj: lsjOf }).meaning).toEqual({ text: NO_SHORT, source: null });
+  });
+  it("names a name by Wiktionary's given-name line where its first line is something else", () => {
+    const lines = ["a title held by Hera and Paris, among others", "a male given name, equivalent to English Alexander, most famously held by Alexander the Great"];
+    expect(nameMeaning([{ pos: "Proper noun", lines, lemma: null }])).toBe("Alexander, a man’s name");
+  });
+  it("gives each gloss once, where it first stands, and keeps LSJ's semicolons between senses", () => {
+    expect(trimShort("appearing, appearance, appearing, appearance, presentation, appearance")).toBe("appearing, appearance, presentation");
+    expect(trimShort("every, all; whole (with article)")).toBe("every, all; whole (with article)");
+    expect(trimShort("loose, free; free, set free; at large")).toBe("loose, free; set free; at large");
+    expect(trimShort("a (with gen., or dat.), b (with gen., or dat.)")).toBe("a (with gen., or dat.), b (with gen., or dat.)");
+    expect(trimShort("Speak, speak")).toBe("Speak");
+  });
+  it("drops a short definition's dangling last word, and nothing else", () => {
+    expect(trimShort("deceive, beguile, deceive thoroughly, seduce, in")).toBe("deceive, beguile, deceive thoroughly, seduce");
+    expect(trimShort("wrath; of")).toBe("wrath");
+    expect(trimShort("to know (+ infinitive)")).toBe("to know (+ infinitive)");
+    expect(trimShort("give in")).toBe("give in");   // a phrasal verb, not a cut: no comma before it
+    expect(trimShort("the")).toBe("the");
+  });
+  it("never makes one up: every meaning is a core definition or LSJ's short definition, tidied by trimShort", () => {
     let n = 0;
     for (const u of pack.units) words(u[0][0]).forEach((_, i) => {
       const inp = input(u[0][0], i), m = lookupCard(inp).meaning;
       n++;
-      if (m.source === "core") expect(m.text).toBe(inp.core!.def);
-      else if (m.source === "lsj") expect(m.text).toBe(inp.lsj!.entries[0].s);
-      else expect([NO_ENTRY, NO_SHORT]).toContain(m.text);
+      if (m.source === "core") expect(m.text).toBe(trimShort(inp.core!.def));
+      else if (m.source === "lsj") expect(m.text).toBe(trimShort(inp.lsj!.entries[0].s));
+      else expect([NO_ENTRY, NO_SHORT, NAME_NO_ENTRY, NAME_NO_SHORT]).toContain(m.text);
       // and the statement is only ever made where it is true
-      if (m.text === NO_ENTRY) expect(inp.core?.def || inp.lsj?.entries.length).toBeFalsy();
-      if (m.text === NO_SHORT) expect(inp.lsj!.entries[0].s).toBe("");
+      if (m.text === NO_ENTRY || m.text === NAME_NO_ENTRY) expect(inp.core?.def || inp.lsj?.entries.length).toBeFalsy();
+      if (m.text === NO_SHORT || m.text === NAME_NO_SHORT) expect(inp.lsj!.entries[0].s).toBe("");
     });
     expect(n).toBe(44 - pack.units.filter((u) => u[2].includes(".")).length);
   });
   it("falls back to LSJ when the core list lacks the word, and to the plain statement when LSJ does too", () => {
     const base = input("1.3", 3);
-    expect(lookupCard({ ...base, core: null }).meaning).toEqual({ text: lsj["ψυχή"].entries[0].s, source: "lsj" });
+    expect(lookupCard({ ...base, core: null }).meaning).toEqual({ text: trimShort(lsj["ψυχή"].entries[0].s), source: "lsj" });
     expect(lookupCard({ ...base, core: null, lsj: null }).meaning).toEqual({ text: NO_ENTRY, source: null });
   });
 });
