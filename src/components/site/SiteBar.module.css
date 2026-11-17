@@ -33,7 +33,8 @@
 /* a phone (the owner, 2026-11-14): Home, Library and Reading move to a bar at the foot; what is left at the top,
    Saved, Sync and Day/Night (and your private texts), is spaced evenly across a slim bar that scrolls away with the page */
 @media (max-width: 760px) {
-  .bar { position: static; }
+  /* relative, not static: the private texts' list is placed against the bar (static, the list fell to the middle of the page) */
+  .bar { position: relative; }
   .main { display: none; }
   .in { height: 52px; gap: 0; }
   .links { flex: 1; justify-content: space-evenly; gap: 0; margin-left: 0; }

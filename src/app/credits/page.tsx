@@ -49,7 +49,7 @@ export default function Credits() {
               {s.items.map((i) => (
                 <li key={i.name}>
                   <a href={i.href}>{i.name}</a>
-                  <p>{i.what} <span className={styles.licence}>{i.licence}</span></p>
+                  <p>{i.what} <span className={i.licence.length > 24 ? `${styles.licence} ${styles.long}` : styles.licence}>{i.licence}</span></p>
                 </li>
               ))}
             </ul>

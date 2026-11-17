@@ -15,4 +15,6 @@
 .licence { font-family: var(--f-label); font-size: var(--t-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
 /* a phone: a long licence wraps rather than running 300 px past the edge */
 @media (max-width: 600px) { .licence { white-space: normal; } }
+/* a licence that is a sentence (Morpheus's) wraps at every width: on one line it ran past its column and off the page */
+.long { white-space: normal; }
 .note { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--rule); max-width: 46em; font-size: var(--t-small); color: var(--ink-2); }
