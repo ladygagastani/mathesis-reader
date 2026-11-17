@@ -6,10 +6,12 @@ import "./globals.css";
 
 // The three typefaces of Tondo (DESIGN.md), downloaded at build time and served from this app: Literata for the Greek and the
 // English read, Noto Serif Display for titles and the looked-up word, Hanken Grotesk for the interface. Each Greek face's whole
-// polytonic set is declared (next/font lists every subset; `subsets` only picks what is preloaded). No automatic fallback faces:
-// next/font's are Arial and Times, which have Greek of their own and would draw a Greek letter inside a label before Literata
-// could (tokens.css lists the fallbacks by hand).
-const literata = Literata({ subsets: ["greek-ext", "greek", "latin"], style: ["normal", "italic"], axes: ["opsz"], variable: "--font-literata", display: "swap", adjustFontFallback: false });
+// polytonic set is declared (next/font lists every subset; `subsets` only picks what is preloaded). Literata preloads its Greek
+// alone: the page opens on Greek, and its Latin (the English, titles) loads when drawn. With Latin preloaded too, 466 KB of
+// fonts came before the first Greek word on a slow phone (8.4 s, against the old reader's 7.8 s); without it, 177 KB (6.9 s).
+// No automatic fallback faces: next/font's are Arial and Times, which have Greek of their own and would draw a Greek letter
+// inside a label before Literata could (tokens.css lists the fallbacks by hand).
+const literata = Literata({ subsets: ["greek-ext", "greek"], style: ["normal", "italic"], axes: ["opsz"], variable: "--font-literata", display: "swap", adjustFontFallback: false });
 const display = Noto_Serif_Display({ subsets: ["greek-ext", "greek", "latin"], weight: ["300", "400"], variable: "--font-display", display: "swap", preload: false, adjustFontFallback: false });
 const hanken = Hanken_Grotesk({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-hanken", display: "swap", adjustFontFallback: false });
 
