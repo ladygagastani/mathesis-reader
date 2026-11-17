@@ -84,12 +84,12 @@ Every control has been clicked in a real browser. Keyboard use, screen-reader na
 
 ## Open questions for you
 
-1. **The Academy.** Leave it out of version 1, or bring back a part of it (which)?
+1. **The Academy.** Answered 2026-11-17: a new Academy, with lessons in a different style from the old one. Its shape
+   is still to settle.
 2. **The Treasury** (saved words, notes). Answered 2026-11-12: notes and saved words are in; notebooks are not.
-3. **Offline reading.** Leave it out, or keep "download this book for reading offline"?
+3. **Offline reading.** Answered 2026-11-17: kept. A book can be downloaded for reading offline.
 4. **The texts come from GitHub, not from `/packs/`.** The old app works this way. Is reading them from GitHub fine?
-5. **Admin of private texts.** Do you add private texts through the old app's admin page, or another way? If the
-   new app should have that page, say so.
+5. **Admin of private texts.** Answered 2026-11-17: private texts stay as they are. The new app only reads them.
 
 Until you answer 1 to 3, the build goes on without them. If there is no answer when the reader works, they stay out
 of version 1. For 4 I go on reading from GitHub, and for 5 the new app only reads private texts.
